@@ -172,6 +172,16 @@ pub fn file_exists(location: String) -> bool
 {
     std::path::Path::new(&location).exists()
 }
+use rand::{distributions::Alphanumeric, Rng};
+pub fn generate_rand_str(length: usize) -> String
+{
+    let s: String = rand::thread_rng()
+        .sample_iter(Alphanumeric)
+        .take(length)
+        .map(char::from)
+        .collect();
+    s.to_uppercase()
+}
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
