@@ -34,6 +34,7 @@ impl WizardContext
 
     /// Show the menu
     /// When an invalid option is selected, this will be re-called.
+    #[async_recursion]
     pub async fn menu<'a>(&'a mut self)
     {
         println!();
