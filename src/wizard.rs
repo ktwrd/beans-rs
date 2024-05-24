@@ -1,6 +1,6 @@
 use crate::helper;
 use crate::helper::{find_sourcemod_path, InstallType};
-use crate::version::{RemoteVersion, RemoteVersionResponse};
+use crate::version::{AdastralVersionFile, RemotePatch, RemoteVersion, RemoteVersionResponse};
 use async_recursion::async_recursion;
 
 pub struct WizardContext
@@ -91,12 +91,49 @@ impl WizardContext
             }
         }
         let presz_loc = Self::download_package(latest_remote).await?;
-        if helper::file_exists(presz_loc) == false {
+        if helper::file_exists(presz_loc.clone()) == false {
             eprintln!("Failed to find downloaded file!");
             std::process::exit(1);
         }
-        todo!("zstd extraction from presz_loc to the sourcemod mod directory")
+
+        match find_sourcemod_path() {
+            Some(v) => {
+                println!("Extracting game");
+                Self::extract_package(presz_loc, v)?;
+                AdastralVersionFile {
+                    version: latest_remote_id.to_string()
+                }.write()?;
+                println!("Done! Make sure to restart steam before playing");
+                Ok(())
+            },
+            None => {
+                panic!("Failed to find sourcemod folder!");
+            }
+        }
     }
+
+    fn extract_package(zstd_location: String, out_dir: String) -> Result<(), BeansError>
+    {
+        let zstd_content = std::fs::read(&zstd_location).unwrap();
+        let zstd_decoded: Vec<u8> = zstd::decode_all(zstd_content.as_slice()).unwrap();
+        let tar_tmp_location = helper::get_tmp_file("data.tar".to_string());
+        if let Err(e) = std::fs::write(&tar_tmp_location, zstd_decoded) {
+            return Err(BeansError::FileWriteFailure(tar_tmp_location.clone(), e));
+        }
+
+        let tar_tmp_file = match std::fs::File::open(tar_tmp_location.clone()) {
+            Ok(v) => v,
+            Err(e) => {
+                return Err(BeansError::FileOpenFailure(tar_tmp_location.clone(), e));
+            }
+        };
+        let mut archive = tar::Archive::new(tar_tmp_file);
+        match archive.unpack(&out_dir) {
+            Err(e) => Err(BeansError::TarExtractFailure(tar_tmp_location, out_dir, e)),
+            Ok(_) => Ok(())
+        }
+    }
+
     async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
     {
         if let Some(size) = version.pre_sz {
@@ -183,6 +220,7 @@ pub enum BeansError
     SourceModLocationNotFound,
     FileOpenFailure(String, std::io::Error),
     FileWriteFailure(String, std::io::Error),
+    TarExtractFailure(String, String, std::io::Error),
     DownloadFailure(String, reqwest::Error),
     Reqwest(reqwest::Error),
     SerdeJson(serde_json::Error)
