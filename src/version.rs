@@ -1,7 +1,9 @@
 use std::collections::HashMap;
 use std::fs::read_to_string;
+use std::io::Write;
 use crate::helper;
 use crate::helper::{find_sourcemod_path, InstallType};
+use crate::wizard::BeansError;
 
 /// get the current version installed via the .adastral file in the sourcemod mod folder.
 /// will parse the value of `version` as usize.
@@ -19,6 +21,13 @@ pub fn get_current_version() -> Option<usize>
             let parsed = data.version.parse::<usize>().expect(format!("Failed to convert version to usize! ({})", data.version).as_str());
             Some(parsed)
         },
+        None => None
+    }
+}
+fn get_version_location() -> Option<String>
+{
+    match get_mod_location() {
+        Some(v) => Some(format!("{}{}.adastral", v, crate::DATA_DIR)),
         None => None
     }
 }
@@ -106,6 +115,33 @@ pub async fn get_version_list() -> RemoteVersionResponse
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AdastralVersionFile {
     pub version: String
+}
+impl AdastralVersionFile {
+    pub fn write(&self) -> Result<(), BeansError> {
+        match get_version_location() {
+            Some(vl) => {
+                match std::fs::OpenOptions::new()
+                    .create_new(true)
+                    .write(true)
+                    .append(false)
+                    .open(&vl) {
+                    Ok(mut file) => {
+                        match serde_json::to_string(self) {
+                            Ok(ser) => {
+                                match file.write_all(ser.as_bytes()) {
+                                    Ok(_) => Ok(()),
+                                    Err(e) => Err(BeansError::FileWriteFailure(vl, e))
+                                }
+                            },
+                            Err(e) => Err(BeansError::SerdeJson(e))
+                        }
+                    },
+                    Err(e) => Err(BeansError::FileOpenFailure(vl, e))
+                }
+            },
+            None => Err(BeansError::SourceModLocationNotFound)
+        }
+    }
 }
 /// Value of the `versions` property in `RemoteVersionResponse`
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
