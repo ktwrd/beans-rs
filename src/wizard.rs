@@ -113,7 +113,7 @@ impl WizardContext
         println!("[debug] writing output file to {}", out_loc);
 
         helper::download_with_progress(
-            format!("{}{}", crate::SOURCE_URL, version.url.expect("No URL for latest package!")),
+            format!("{}{}", crate::SOURCE_URL, version.file.expect("No URL for latest package!")),
             out_loc.clone()).await?;
 
 
