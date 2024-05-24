@@ -183,6 +183,19 @@ pub fn generate_rand_str(length: usize) -> String
     s.to_uppercase()
 }
 
+/// Get the amount of free space on the drive in the location provided.
+pub fn get_free_space(location: String) -> Result<u64, BeansError>
+{
+    for disk in sysinfo::Disks::new_with_refreshed_list().list() {
+        if let Some(mp) = disk.mount_point().to_str() {
+            if location.starts_with(&mp) {
+                return Ok(disk.available_space())
+            }
+        }
+    }
+
+    Err(BeansError::FreeSpaceCheckFailure(location))
+}
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
 pub fn try_write_deps()
