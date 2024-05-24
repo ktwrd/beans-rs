@@ -1,9 +1,7 @@
-use std::cmp::PartialEq;
-use std::collections::HashMap;
-use std::fs::read_to_string;
 use crate::helper;
 use crate::helper::{find_sourcemod_path, InstallType};
-use crate::version::RemoteVersionResponse;
+use crate::version::{RemoteVersion, RemoteVersionResponse};
+use async_recursion::async_recursion;
 
 pub struct WizardContext
 {
@@ -36,7 +34,7 @@ impl WizardContext
 
     /// Show the menu
     /// When an invalid option is selected, this will be re-called.
-    pub async fn menu(&mut self)
+    pub async fn menu<'a>(&'a mut self)
     {
         println!();
         println!("1 - Install or reinstall the game");
@@ -46,28 +44,39 @@ impl WizardContext
         println!("q - Quit");
         let user_input = helper::get_input("-- Enter option below --");
         match user_input.to_lowercase().as_str() {
-            "1" => self.task_install().await,
-            "2" => self.task_update().await,
-            "3" => self.task_verify().await,
+            "1" => WizardContext::menu_error_catch(self.task_install().await),
+            "2" => WizardContext::menu_error_catch(self.task_update().await),
+            "3" => WizardContext::menu_error_catch(self.task_verify().await),
             "q" => std::process::exit(0),
             _ => {
                 println!("Unknown option \"{}\"", user_input);
                 self.menu().await;
+                std::process::exit(0)
+            }
+        };
+    }
+    fn menu_error_catch(v: Result<(), BeansError>) -> ! {
+        if let Err(e) = v {
+            eprintln!("Failed to run action!");
+            panic!("{:#?}", e);
+        }
+        std::process::exit(0)
+    }
             }
         }
     }
     /// Install the target game.
-    pub async fn task_install(&mut self)
+    pub async fn task_install(&mut self) -> Result<(), BeansError>
     {
         todo!()
     }
     /// Check for any updates, and if there are any, we install them.
-    pub async fn task_update(&mut self)
+    pub async fn task_update(&mut self) -> Result<(), BeansError>
     {
         todo!()
     }
     /// Verify the current data for the target sourcemod.
-    pub async fn task_verify(&mut self)
+    pub async fn task_verify(&mut self) -> Result<(), BeansError>
     {
         todo!()
     }
