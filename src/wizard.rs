@@ -138,7 +138,7 @@ impl WizardContext
 
 fn get_path() -> String
 {
-    let current_path = helper::find_sourcemod_path();
+    let current_path = find_sourcemod_path();
     if let Some(x) = current_path {
         println!("Found sourcemods directory!\n{}", x);
         return x;
