@@ -116,9 +116,28 @@ impl WizardContext
             format!("{}{}", crate::SOURCE_URL, version.file.expect("No URL for latest package!")),
             out_loc.clone()).await?;
 
-
         Ok(out_loc)
     }
+
+    /// When self.current_version is some, iterate through patches and fetch the patch that is available
+    /// to bring the current version in-line with the latest version.
+    pub fn has_patch_available(&mut self) -> Option<RemotePatch>
+    {
+        let current_version = self.current_version.clone();
+        let (remote_version, _) = self.latest_remote_version();
+        match current_version {
+            Some(cv) => {
+                for (_, patch) in self.remote_version_list.clone().patches.into_iter() {
+                    if patch.file == format!("of-{}to{}.pwr", cv, remote_version) {
+                        return Some(patch);
+                    }
+                }
+                return None;
+            },
+            _ => None
+        }
+    }
+
     /// Check if the sourcemod mod folder has enough free space.
     fn has_free_space(size: usize) -> Result<bool, BeansError>
     {
