@@ -186,6 +186,22 @@ pub fn generate_rand_str(length: usize) -> String
         .collect();
     s.to_uppercase()
 }
+#[cfg(not(windows))]
+pub fn get_tmp_file(filename: String) -> String
+{
+    let mut loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
+    if loc.ends_with("/") == false && loc.len() > 1{
+        loc.push_str("/");
+    }
+    loc.push_str(generate_rand_str(8).as_str());
+    loc.push_str(format!("_{}", filename).as_str());
+    loc
+}
+#[cfg(windows)]
+pub fn get_tmp_file(filename: String) -> String
+{
+    todo!("implement temp file location, with custom filename!")
+}
 
 /// Get the amount of free space on the drive in the location provided.
 pub fn get_free_space(location: String) -> Result<u64, BeansError>
