@@ -163,5 +163,14 @@ pub struct RemoteVersion
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RemoteVersionResponse
 {
-    pub versions: HashMap<usize, RemoteVersion>
+    pub versions: HashMap<usize, RemoteVersion>,
+    pub patches: HashMap<usize, RemotePatch>
+}
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct RemotePatch
+{
+    pub url: String,
+    pub file: String,
+    /// Amount of file space required for temporary file. Assumed to be measured in bytes.
+    pub tempreq: usize
 }
