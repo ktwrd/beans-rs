@@ -79,7 +79,17 @@ impl WizardContext
     /// Install the target game.
     pub async fn task_install(&mut self) -> Result<(), BeansError>
     {
-        let (_, latest_remote) = self.latest_remote_version();
+        let (latest_remote_id, latest_remote) = self.latest_remote_version();
+        if let Some(cv) = self.current_version {
+            if latest_remote_id < cv {
+                println!("Installed version is newer than the latest remote version? (local: {}, remote: {})", cv, latest_remote_id);
+                return Ok(());
+            }
+            if latest_remote_id == cv {
+                println!("You've got the latest version installed already! (local: {}, remote: {})", cv, latest_remote_id);
+                return Ok(());
+            }
+        }
         let presz_loc = Self::download_package(latest_remote).await?;
         if helper::file_exists(presz_loc) == false {
             eprintln!("Failed to find downloaded file!");
