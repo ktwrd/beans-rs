@@ -63,13 +63,64 @@ impl WizardContext
         }
         std::process::exit(0)
     }
+
+    fn latest_remote_version(&mut self) -> (usize, RemoteVersion)
+    {
+        let mut highest = usize::MIN;
+        for (key, _) in self.remote_version_list.clone().versions.into_iter() {
+            if key > highest {
+                highest = key;
             }
         }
+        let x = self.remote_version_list.versions.get(&highest).unwrap();
+        (highest, x.clone())
     }
+
     /// Install the target game.
     pub async fn task_install(&mut self) -> Result<(), BeansError>
     {
-        todo!()
+        let (_, latest_remote) = self.latest_remote_version();
+        let presz_loc = Self::download_package(latest_remote).await?;
+        if helper::file_exists(presz_loc) == false {
+            eprintln!("Failed to find downloaded file!");
+            std::process::exit(1);
+        }
+        todo!("zstd extraction from presz_loc to the sourcemod mod directory")
+    }
+    async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
+    {
+        if let Some(size) = version.pre_sz {
+            if Self::has_free_space(size)? == false {
+                panic!("Not enough free space to install latest version!");
+            }
+        }
+
+        let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
+        if out_loc.ends_with("/") == false {
+            out_loc.push_str("/");
+        }
+        out_loc.push_str(format!("presz_{}", helper::generate_rand_str(12)).as_str());
+        println!("[debug] writing output file to {}", out_loc);
+
+        helper::download_with_progress(
+            format!("{}{}", crate::SOURCE_URL, version.url.expect("No URL for latest package!")),
+            out_loc.clone()).await?;
+
+
+        Ok(out_loc)
+    }
+    /// Check if the sourcemod mod folder has enough free space.
+    fn has_free_space(size: usize) -> Result<bool, BeansError>
+    {
+        match find_sourcemod_path() {
+            Some(v) => {
+                let space = helper::get_free_space(v)?;
+                return Ok((size as u64) < space);
+            },
+            None => {
+                Err(BeansError::SourceModLocationNotFound)
+            }
+        }
     }
     /// Check for any updates, and if there are any, we install them.
     pub async fn task_update(&mut self) -> Result<(), BeansError>
