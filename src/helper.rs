@@ -1,5 +1,9 @@
 use std::fs::read_to_string;
+use std::io::Write;
+use indicatif::{ProgressBar, ProgressStyle};
+use futures::StreamExt;
 use crate::{ARIA2C_BINARY, BUTLER_BINARY};
+use crate::wizard::BeansError;
 
 #[derive(Clone, Debug)]
 pub enum InstallType
@@ -196,6 +200,55 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
 
     Err(BeansError::FreeSpaceCheckFailure(location))
 }
+
+/// Download file at the URL provided to the output location provided
+/// This function will also show a progress bar with indicatif.
+pub async fn download_with_progress(url: String, out_location: String) -> Result<(), BeansError>
+{
+    let res = match reqwest::Client::new()
+        .get(&url)
+        .send()
+        .await {
+        Ok(v) => v,
+        Err(e) => {
+            return Err(BeansError::DownloadFailure(url, e));
+        }
+    };
+
+    let total_size = res
+        .content_length()
+        .expect("Failed to get length of data to download");
+
+    let pb = ProgressBar::new(total_size);
+    pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({eta})")
+        .unwrap()
+        .with_key("eta", |state: &indicatif::ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
+        .progress_chars("#>-"));
+    pb.set_message(format!("Downloading {}", &url));
+
+    // download chunks
+    let mut file = match std::fs::File::create(out_location.clone()) {
+        Ok(v) => v,
+        Err(e) => {
+            return Err(BeansError::FileOpenFailure(out_location, e));
+        }
+    };
+    let mut downloaded: u64 = 0;
+    let mut stream = res.bytes_stream();
+
+    while let Some(item) = stream.next().await {
+        let chunk = item.expect("Failed to write content to file");
+        file.write_all(&chunk)
+            .expect("Failed to write content to file");
+        let new = std::cmp::min(downloaded + (chunk.len() as u64), total_size);
+        downloaded = new;
+        pb.set_position(new);
+    }
+
+    pb.finish();
+    Ok(())
+}
+
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
 pub fn try_write_deps()
