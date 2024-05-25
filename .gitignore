@@ -1,3 +1,11 @@
 /target
 .idea
 Cargo.lock
+
+butler.exe
+butler
+7z.dll
+7z.so
+c7zip.dll
+libc7zip.so
+!Binaries/*
