@@ -1,4 +1,5 @@
 ﻿use winreg::enums::HKEY_CURRENT_USER;
+use std::backtrace::Backtrace;
 use winreg::RegKey;
 use crate::BeansError;
 use crate::helper::generate_rand_str;
@@ -21,7 +22,8 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
                 Err(e) => {
                     return Err(BeansError::RegistryKeyFailure {
                         msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed".to_string(),
-                        error: e
+                        error: e,
+                        backtrace: Backtrace::capture()
                     });
                 }
             }
@@ -29,7 +31,8 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
         Err(e) => {
             return Err(BeansError::RegistryKeyFailure {
                 msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed".to_string(),
-                error: e
+                error: e,
+                backtrace: Backtrace::capture()
             });
         }
     }
