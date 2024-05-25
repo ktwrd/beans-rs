@@ -1,3 +1,4 @@
+use std::backtrace::Backtrace;
 use crate::{BeansError, depends, DownloadFailureReason, helper};
 
 pub fn verify(
@@ -18,7 +19,8 @@ pub fn verify(
                 signature_url,
                 gamedir,
                 remote,
-                error: e
+                error: e,
+                backtrace: Backtrace::capture()
             })
         },
         Ok(mut v) => {
@@ -69,7 +71,8 @@ pub fn patch(
             Err(BeansError::ButlerPatchFailure {
                 patchfile_location,
                 gamedir,
-                error: e
+                error: e,
+                backtrace: Backtrace::capture()
             })
         },
         Ok(mut v) => {

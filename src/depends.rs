@@ -1,3 +1,5 @@
+#[cfg(not(target_os = "windows"))]
+use std::os::unix::fs::PermissionsExt;
 use crate::{BeansError, BUTLER_BINARY, BUTLER_LIB_1, BUTLER_LIB_2, helper};
 
 /// try and write aria2c and butler if it doesn't exist
@@ -7,6 +9,17 @@ pub fn try_write_deps()
     safe_write_file(get_butler_location().as_str(), &**BUTLER_BINARY);
     safe_write_file(get_butler_1_location().as_str(), &**BUTLER_LIB_1);
     safe_write_file(get_butler_2_location().as_str(), &**BUTLER_LIB_2);
+    #[cfg(not(target_os = "windows"))]
+    if helper::file_exists(get_butler_location()) {
+        let p = std::fs::Permissions::from_mode(0744 as u32);
+        if let Err(e) = std::fs::set_permissions(&get_butler_location(), p) {
+            eprintln!("Failed to set permissions for {}", get_butler_location());
+            eprintln!("{:#?}", e);
+        }
+        if helper::do_debug() {
+            println!("[depends::try_write_deps] set perms on {}", get_butler_location());
+        }
+    }
 }
 fn safe_write_file(location: &str, data: &[u8]) {
     if !helper::file_exists(location.to_string())

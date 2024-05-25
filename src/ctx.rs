@@ -191,20 +191,13 @@ impl RunnerContext
     /// TODO replace unwrap/expect with match error handling
     pub fn extract_package(zstd_location: String, out_dir: String) -> Result<(), BeansError>
     {
-        let zstd_content = std::fs::read(&zstd_location).unwrap();
-        let zstd_decoded: Vec<u8> = zstd::decode_all(zstd_content.as_slice()).unwrap();
         let tar_tmp_location = helper::get_tmp_file("data.tar".to_string());
-        if let Err(e) = std::fs::write(&tar_tmp_location, zstd_decoded) {
-            return Err(BeansError::FileWriteFailure(tar_tmp_location.clone(), e));
-        }
 
-        let tar_tmp_file = match std::fs::File::open(tar_tmp_location.clone()) {
-            Ok(v) => v,
-            Err(e) => {
-                return Err(BeansError::FileOpenFailure(tar_tmp_location.clone(), e));
-            }
-        };
-        let mut archive = tar::Archive::new(tar_tmp_file);
+        let zstd_file = std::fs::File::open(&zstd_location)?;
+        let tar_tmp_file = std::fs::File::create_new(&tar_tmp_location)?;
+        zstd::stream::copy_decode(zstd_file, &tar_tmp_file)?;
+
+        let mut archive = tar::Archive::new(&tar_tmp_file);
         match archive.unpack(&out_dir) {
             Err(e) => Err(BeansError::TarExtractFailure{
                 src_file: tar_tmp_location,

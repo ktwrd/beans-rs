@@ -21,9 +21,15 @@ pub enum BeansError
         backtrace: Backtrace
     },
     #[error("Failed to send request")]
-    Reqwest(reqwest::Error),
+    Reqwest {
+        error: reqwest::Error,
+        backtrace: Backtrace
+    },
     #[error("Failed to serialize or deserialize data")]
-    SerdeJson(serde_json::Error),
+    SerdeJson {
+        error: serde_json::Error,
+        backtrace: Backtrace
+    },
 
     #[error("Latest version is already installed. (current: {current}, latest: {latest})")]
     LatestVersionAlreadyInstalled {
@@ -35,12 +41,16 @@ pub enum BeansError
         reason: DownloadFailureReason
     },
 
-    #[error("IO Error\n{0:#?}")]
-    IO(std::io::Error),
+    #[error("IO Error\n{error:#?}")]
+    IO {
+        error: std::io::Error,
+        backtrace: Backtrace
+    },
 
     #[error("Unable to perform action since the mod isn't installed since {missing_file} couldn't be found")]
     TargetSourcemodNotInstalled {
-        missing_file: String
+        missing_file: String,
+        backtrace: Backtrace
     },
 
     #[error("Failed to run the verify command with butler.")]
@@ -48,19 +58,22 @@ pub enum BeansError
         signature_url: String,
         gamedir: String,
         remote: String,
-        error: std::io::Error
+        error: std::io::Error,
+        backtrace: Backtrace
     },
 
     #[error("Failed to run the apply command with butler.")]
     ButlerPatchFailure {
         patchfile_location: String,
         gamedir: String,
-        error: std::io::Error
+        error: std::io::Error,
+        backtrace: Backtrace
     },
 
     #[error("Could not find file {location}")]
     FileNotFound {
-        location: String
+        location: String,
+        backtrace: Backtrace
     },
 
     #[error("Version {version:#?} could not be found on the server.")]
@@ -74,7 +87,8 @@ pub enum BeansError
     #[error("{msg}")]
     RegistryKeyFailure {
         msg: String,
-        error: std::io::Error
+        error: std::io::Error,
+        backtrace: Backtrace
     }
 }
 #[derive(Debug)]
@@ -98,11 +112,25 @@ pub struct TarExtractFailureDetails {
 
 impl From<std::io::Error> for BeansError {
     fn from(e: std::io::Error) -> Self {
-        BeansError::IO(e)
+        BeansError::IO {
+            error: e,
+            backtrace: Backtrace::capture()
+        }
     }
 }
 impl From<reqwest::Error> for BeansError {
     fn from (e: reqwest::Error) -> Self {
-        BeansError::Reqwest(e)
+        BeansError::Reqwest {
+            error: e,
+            backtrace: Backtrace::capture()
+        }
+    }
+}
+impl From<serde_json::Error> for BeansError {
+    fn from(e: serde_json::Error) -> Self {
+        BeansError::SerdeJson {
+            error: e,
+            backtrace: Backtrace::capture()
+        }
     }
 }

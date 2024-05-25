@@ -141,7 +141,7 @@ impl AdastralVersionFile {
                                     Err(e) => Err(BeansError::FileWriteFailure(vl, e))
                                 }
                             },
-                            Err(e) => Err(BeansError::SerdeJson(e))
+                            Err(e) => Err(e.into())
                         }
                     },
                     Err(e) => Err(BeansError::FileOpenFailure(vl, e))
