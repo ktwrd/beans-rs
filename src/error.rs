@@ -61,6 +61,11 @@ pub enum BeansError
     #[error("Could not find file {location}")]
     FileNotFound {
         location: String
+    },
+
+    #[error("Version {version:#?} could not be found on the server.")]
+    RemoteVersionNotFound {
+        version: Option<usize>
     }
 }
 #[derive(Debug)]
