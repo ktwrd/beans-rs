@@ -16,7 +16,7 @@ pub fn get_current_version() -> Option<usize>
     match get_mod_location() {
         Some(smp_x) => {
             // TODO generate BeansError instead of using .expect
-            let location = format!("{}{}.adastral", smp_x, crate::DATA_DIR);
+            let location = format!("{}.adastral", smp_x);
             let content = read_to_string(&location).expect(format!("Failed to open {}", location).as_str());
             let data: AdastralVersionFile = serde_json::from_str(&content).expect(format!("Failed to deserialize data at {}", location).as_str());
             let parsed = data.version.parse::<usize>().expect(format!("Failed to convert version to usize! ({})", data.version).as_str());
@@ -28,7 +28,7 @@ pub fn get_current_version() -> Option<usize>
 fn get_version_location() -> Option<String>
 {
     match get_mod_location() {
-        Some(v) => Some(format!("{}{}.adastral", v, crate::DATA_DIR)),
+        Some(v) => Some(format!("{}.adastral", v)),
         None => None
     }
 }
@@ -157,9 +157,8 @@ pub struct RemoteVersion
     pub post_sz: Option<usize>,
     #[serde(rename = "signature")]
     pub signature_url: Option<String>,
-    // should be set when signature_url is set
-    pub signature_content: Option<String>,
-    pub heal: Option<String>
+    #[serde(rename = "heal")]
+    pub heal_url: Option<String>
 }
 /// `versions.json` response content from remote server.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
