@@ -78,6 +78,27 @@ impl RunnerContext
         (highest, x.clone())
     }
 
+    /// Get the RemoteVersion that matches `self.current_version`
+    pub fn current_remote_version(&mut self) -> Result<RemoteVersion, BeansError> {
+        match self.current_version {
+            Some(cv) => {
+                for (v, i) in self.remote_version_list.clone().versions.into_iter() {
+                    if v == cv {
+                        return Ok(i.clone());
+                    }
+                }
+                return Err(BeansError::RemoteVersionNotFound {
+                    version: self.current_version
+                });
+            },
+            None => {
+                Err(BeansError::RemoteVersionNotFound {
+                    version: self.current_version
+                })
+            }
+        }
+    }
+
     /// When self.current_version is some, iterate through patches and fetch the patch that is available
     /// to bring the current version in-line with the latest version.
     pub fn has_patch_available(&mut self) -> Option<RemotePatch>
