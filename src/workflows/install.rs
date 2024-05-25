@@ -12,14 +12,12 @@ impl InstallWorkflow {
         let (latest_remote_id, latest_remote) = ctx.latest_remote_version();
         if let Some(cv) = ctx.current_version {
             if latest_remote_id < cv {
-                println!("Installed version is newer than the latest remote version? (local: {}, remote: {})", cv, latest_remote_id);
                 return Err(BeansError::LatestVersionAlreadyInstalled {
                     current: cv,
                     latest: latest_remote_id
                 });
             }
             if latest_remote_id == cv {
-                println!("You've got the latest version installed already! (local: {}, remote: {})", cv, latest_remote_id);
                 return Err(BeansError::LatestVersionAlreadyInstalled {
                     current: cv,
                     latest: latest_remote_id

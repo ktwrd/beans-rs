@@ -62,8 +62,11 @@ impl WizardContext
     }
     fn menu_error_catch(v: Result<(), BeansError>) -> ! {
         if let Err(e) = v {
-            eprintln!("Failed to run action!");
-            panic!("{:#?}", e);
+            eprintln!("{:}", e);
+            if std::env::var("BEANS_DEBUG").is_ok_and(|x| x == "1") {
+                eprintln!("======== Full Error ========");
+                eprintln!("{:#?}", e);
+            }
         }
         std::process::exit(0)
     }

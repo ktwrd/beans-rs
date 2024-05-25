@@ -25,7 +25,7 @@ pub enum BeansError
     #[error("Failed to serialize or deserialize data")]
     SerdeJson(serde_json::Error),
 
-    #[error("Latest version is already installed. (current: {current}, latest: {latest}")]
+    #[error("Latest version is already installed. (current: {current}, latest: {latest})")]
     LatestVersionAlreadyInstalled {
         current: usize,
         latest: usize
@@ -36,7 +36,32 @@ pub enum BeansError
     },
 
     #[error("IO Error\n{0:#?}")]
-    IO(std::io::Error)
+    IO(std::io::Error),
+
+    #[error("Unable to perform action since the mod isn't installed since {missing_file} couldn't be found")]
+    TargetSourcemodNotInstalled {
+        missing_file: String
+    },
+
+    #[error("Failed to run the verify command with butler.")]
+    ButlerVerifyFailure {
+        signature_url: String,
+        gamedir: String,
+        remote: String,
+        error: std::io::Error
+    },
+
+    #[error("Failed to run the apply command with butler.")]
+    ButlerPatchFailure {
+        patchfile_location: String,
+        gamedir: String,
+        error: std::io::Error
+    },
+
+    #[error("Could not find file {location}")]
+    FileNotFound {
+        location: String
+    }
 }
 #[derive(Debug)]
 pub enum DownloadFailureReason
