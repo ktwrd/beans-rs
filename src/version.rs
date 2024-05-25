@@ -128,12 +128,11 @@ impl AdastralVersionFile {
     pub fn write(&self) -> Result<(), BeansError> {
         match get_version_location() {
             Some(vl) => {
-                let ex = helper::file_exists(vl.clone());
-                match std::fs::OpenOptions::new()
-                    .create_new(ex)
-                    .write(true)
-                    .append(false)
-                    .open(&vl) {
+                let f = match helper::file_exists(vl.clone()) {
+                    true => std::fs::File::create(vl.clone()),
+                    false => std::fs::File::create_new(vl.clone())
+                };
+                match f {
                     Ok(mut file) => {
                         match serde_json::to_string(self) {
                             Ok(ser) => {
