@@ -99,7 +99,7 @@ pub fn get_input(prompt: &str) -> String{
 
 /// all possible known directory where steam *might* be
 /// only is used on linux, since windows will use the registry.
-#[cfg(not(linux))]
+#[cfg(not(target_os = "windows"))]
 pub const STEAM_POSSIBLE_DIR:  &'static [&'static str] = &[
     "~/.steam/registry.vdf",
     "~/.var/app/com.valvesoftware.Steam/.steam/registry.vdf"
@@ -108,7 +108,7 @@ pub const STEAM_POSSIBLE_DIR:  &'static [&'static str] = &[
 /// find sourcemod path on linux.
 /// fetches the fake registry that steam uses from find_steam_reg_path
 /// and gets the value of Registry/HKCU/Software/Valve/Steam/SourceModInstallPath
-#[cfg(not(linux))]
+#[cfg(not(target_os = "windows"))]
 pub fn find_sourcemod_path() -> Option<String>
 {
     let reg_path = match find_steam_reg_path()
@@ -146,7 +146,7 @@ pub fn find_sourcemod_path() -> Option<String>
     return None;
 }
 /// returns the first item in STEAM_POSSIBLE_DIR that exists. otherwise None
-#[cfg(not(linux))]
+#[cfg(not(target_os = "windows"))]
 fn find_steam_reg_path() -> Option<String>
 {
     for x in STEAM_POSSIBLE_DIR.into_iter() {
@@ -165,7 +165,7 @@ fn find_steam_reg_path() -> Option<String>
 /// TODO use windows registry to get the SourceModInstallPath
 /// HKEY_CURRENT_COMPUTER\Software\Value\Steam
 /// Key: SourceModInstallPath
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 pub fn find_sourcemod_path()
 {
     todo!();
