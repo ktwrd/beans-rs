@@ -1,8 +1,9 @@
 use crate::{depends, helper};
 use crate::helper::{find_sourcemod_path, InstallType};
-use crate::version::{AdastralVersionFile, RemotePatch, RemoteVersion, RemoteVersionResponse};
+use crate::version::{AdastralVersionFile, RemotePatch, RemoteVersion};
 use async_recursion::async_recursion;
 
+#[derive(Debug, Clone)]
 pub struct WizardContext
 {
     pub sourcemod_path: String,
@@ -137,7 +138,7 @@ impl WizardContext
     async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
     {
         if let Some(size) = version.pre_sz {
-            if Self::has_free_space(size)? == false {
+            if helper::sml_has_free_space(size)? == false {
                 panic!("Not enough free space to install latest version!");
             }
         }
@@ -175,19 +176,6 @@ impl WizardContext
         }
     }
 
-    /// Check if the sourcemod mod folder has enough free space.
-    fn has_free_space(size: usize) -> Result<bool, BeansError>
-    {
-        match find_sourcemod_path() {
-            Some(v) => {
-                let space = helper::get_free_space(v)?;
-                return Ok((size as u64) < space);
-            },
-            None => {
-                Err(BeansError::SourceModLocationNotFound)
-            }
-        }
-    }
     /// Check for any updates, and if there are any, we install them.
     pub async fn task_update(&mut self) -> Result<(), BeansError>
     {

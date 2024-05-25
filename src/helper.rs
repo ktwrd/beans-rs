@@ -176,6 +176,7 @@ pub fn file_exists(location: String) -> bool
     std::path::Path::new(&location).exists()
 }
 use rand::{distributions::Alphanumeric, Rng};
+
 pub fn generate_rand_str(length: usize) -> String
 {
     let s: String = rand::thread_rng()
@@ -214,6 +215,24 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
     }
 
     Err(BeansError::FreeSpaceCheckFailure(location))
+}
+/// Check if the location provided has enough free space.
+pub fn has_free_space(location: String, size: usize) -> Result<bool, BeansError>
+{
+    let space = get_free_space(location)?;
+    return Ok((size as u64) < space);
+}
+/// Check if the sourcemod mod folder has enough free space.
+pub fn sml_has_free_space(size: usize) -> Result<bool, BeansError>
+{
+    match find_sourcemod_path() {
+        Some(v) => {
+            has_free_space(v, size)
+        },
+        None => {
+            Err(BeansError::SourceModLocationNotFound)
+        }
+    }
 }
 
 /// Download file at the URL provided to the output location provided
