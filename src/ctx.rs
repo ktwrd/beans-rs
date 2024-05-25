@@ -181,4 +181,30 @@ impl RunnerContext
             Ok(_) => Ok(())
         }
     }
+
+    #[cfg(target_os = "linux")]
+    pub fn prepare_symlink(&mut self) -> Result<(), BeansError>
+    {
+        for pair in SYMLINK_FILES.into_iter() {
+            let target: &str = pair[1];
+            let mod_location = self.get_mod_location();
+            let ln_location = format!("{}{}", mod_location, target);
+            if helper::file_exists(ln_location.clone())
+            && helper::is_symlink(ln_location.clone()) == false {
+                std::fs::remove_file(&ln_location)?;
+            }
+        }
+
+        Ok(())
+    }
+    #[cfg(not(target_os = "linux"))]
+    fn prepare_symlink() -> Result<(), BeansError>
+    {
+        // ignored since this symlink stuff is for linux only
+        Ok(())
+    }
 }
+
+pub const SYMLINK_FILES: &'static [&'static [&'static str; 2]] = &[
+    &["bin/server.so", "bin/server_srv.so"]
+];
