@@ -1,4 +1,4 @@
-use crate::{depends, helper};
+use crate::{depends, helper, RunnerContext};
 use crate::helper::{find_sourcemod_path, InstallType};
 use crate::version::{AdastralVersionFile, RemotePatch, RemoteVersion};
 use async_recursion::async_recursion;
@@ -6,9 +6,7 @@ use async_recursion::async_recursion;
 #[derive(Debug, Clone)]
 pub struct WizardContext
 {
-    pub sourcemod_path: String,
-    pub remote_version_list: RemoteVersionResponse,
-    pub current_version: Option<usize>
+    pub context: RunnerContext
 }
 impl WizardContext
 {
@@ -24,11 +22,15 @@ impl WizardContext
             crate::version::update_version_file();
         }
 
-        let mut i = Self
-        {
+        let ctx = RunnerContext {
             sourcemod_path,
             remote_version_list: version_list,
             current_version: crate::version::get_current_version()
+        };
+
+        let mut i = Self
+        {
+            context: ctx
         };
         i.menu().await;
     }
@@ -68,12 +70,12 @@ impl WizardContext
     fn latest_remote_version(&mut self) -> (usize, RemoteVersion)
     {
         let mut highest = usize::MIN;
-        for (key, _) in self.remote_version_list.clone().versions.into_iter() {
+        for (key, _) in self.context.remote_version_list.clone().versions.into_iter() {
             if key > highest {
                 highest = key;
             }
         }
-        let x = self.remote_version_list.versions.get(&highest).unwrap();
+        let x = self.context.remote_version_list.versions.get(&highest).unwrap();
         (highest, x.clone())
     }
 
@@ -81,7 +83,7 @@ impl WizardContext
     pub async fn task_install(&mut self) -> Result<(), BeansError>
     {
         let (latest_remote_id, latest_remote) = self.latest_remote_version();
-        if let Some(cv) = self.current_version {
+        if let Some(cv) = self.context.current_version {
             if latest_remote_id < cv {
                 println!("Installed version is newer than the latest remote version? (local: {}, remote: {})", cv, latest_remote_id);
                 return Ok(());
@@ -161,11 +163,11 @@ impl WizardContext
     /// to bring the current version in-line with the latest version.
     pub fn has_patch_available(&mut self) -> Option<RemotePatch>
     {
-        let current_version = self.current_version.clone();
+        let current_version = self.context.current_version.clone();
         let (remote_version, _) = self.latest_remote_version();
         match current_version {
             Some(cv) => {
-                for (_, patch) in self.remote_version_list.clone().patches.into_iter() {
+                for (_, patch) in self.context.remote_version_list.clone().patches.into_iter() {
                     if patch.file == format!("of-{}to{}.pwr", cv, remote_version) {
                         return Some(patch);
                     }
