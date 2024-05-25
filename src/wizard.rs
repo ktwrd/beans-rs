@@ -14,7 +14,12 @@ impl WizardContext
     pub async fn run()
     {
         depends::try_write_deps();
-        depends::try_install_vcredist();
+        if let Err(e) = depends::try_install_vcredist().await {
+            println!("Failed to install vcredist! {:}", e);
+            if helper::do_debug() {
+                eprintln!("[WizardContext::run] {:#?}", e);
+            }
+        }
         let sourcemod_path = get_path();
         let version_list = crate::version::get_version_list().await;
 
