@@ -15,7 +15,11 @@ impl InstallWorkflow {
         }
 
         let presz_loc = RunnerContext::download_package(latest_remote).await?;
-        Self::install_from(presz_loc, ctx.sourcemod_path.clone(), Some(latest_remote_id)).await
+        Self::install_from(presz_loc.clone(), ctx.sourcemod_path.clone(), Some(latest_remote_id)).await?;
+        if helper::file_exists(presz_loc.clone()) {
+            std::fs::remove_file(presz_loc)?;
+        }
+        Ok(())
     }
 
     /// Install the `.tar.zstd` file at `package_loc` to `out_dir`
