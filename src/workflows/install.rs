@@ -29,7 +29,7 @@ impl InstallWorkflow {
     pub async fn install_from(package_loc: String, out_dir: String, version_id: Option<usize>) -> Result<(), BeansError>
     {
         if helper::file_exists(package_loc.clone()) == false {
-            eprintln!("[InstallWorkflow::Wizard] Failed to find downloaded file! (location: {package_loc})");
+            eprintln!("[InstallWorkflow::Wizard] Failed to find package! (location: {package_loc})");
             return Err(BeansError::DownloadFailure(DownloadFailureReason::FileNotFound(package_loc.clone())));
         }
 
