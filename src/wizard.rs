@@ -147,25 +147,6 @@ impl WizardContext
         Ok(out_loc)
     }
 
-    /// When self.current_version is some, iterate through patches and fetch the patch that is available
-    /// to bring the current version in-line with the latest version.
-    pub fn has_patch_available(&mut self) -> Option<RemotePatch>
-    {
-        let current_version = self.context.current_version.clone();
-        let (remote_version, _) = self.context.latest_remote_version();
-        match current_version {
-            Some(cv) => {
-                for (_, patch) in self.context.remote_version_list.clone().patches.into_iter() {
-                    if patch.file == format!("of-{}to{}.pwr", cv, remote_version) {
-                        return Some(patch);
-                    }
-                }
-                return None;
-            },
-            _ => None
-        }
-    }
-
     /// Check for any updates, and if there are any, we install them.
     pub async fn task_update(&mut self) -> Result<(), BeansError>
     {
