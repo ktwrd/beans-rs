@@ -17,10 +17,18 @@ impl RunnerContext
     pub async fn create_auto() -> Result<Self, BeansError>
     {
         depends::try_write_deps();
-        depends::try_install_vcredist();
+        if let Err(e) = depends::try_install_vcredist().await {
+            println!("Failed to install vcredist! {:}", e);
+            if helper::do_debug() {
+                eprintln!("[RunnerContext::create_auto] {:#?}", e);
+            }
+        }
         let sourcemod_path = match find_sourcemod_path() {
-            Some(v) => v,
-            None => {
+            Ok(v) => v,
+            Err(e) => {
+                if helper::do_debug() {
+                    eprintln!("[RunnerContext::create_auto] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+                }
                 return Err(BeansError::SourceModLocationNotFound);
             }
         };

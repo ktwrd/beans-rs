@@ -62,7 +62,7 @@ impl WizardContext
     fn menu_error_catch(v: Result<(), BeansError>) -> ! {
         if let Err(e) = v {
             eprintln!("{:}", e);
-            if std::env::var("BEANS_DEBUG").is_ok_and(|x| x == "1") {
+            if helper::do_debug() {
                 eprintln!("======== Full Error ========");
                 eprintln!("{:#?}", e);
             }
@@ -93,9 +93,14 @@ impl WizardContext
 fn get_path() -> String
 {
     let current_path = find_sourcemod_path();
-    if let Some(x) = current_path {
+    if let Ok(x) = current_path {
         println!("Found sourcemods directory!\n{}", x);
         return x;
+    }
+    if let Err(e) = current_path {
+        if helper::do_debug() {
+            eprintln!("[wizard::get_path] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+        }
     }
     todo!();
 }

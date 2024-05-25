@@ -35,12 +35,15 @@ fn get_version_location() -> Option<String>
 /// get the full location of the sourcemod mod directory.
 fn get_mod_location() -> Option<String>
 {
-    let smp = find_sourcemod_path();
-    if smp.is_none() {
-        // sourcemod path couldn't be found, doesn't matter :3
-        return None;
-    }
-    let mut smp_x = smp.unwrap();
+    let mut smp_x = match find_sourcemod_path() {
+        Ok(v) => v,
+        Err(e) => {
+            if helper::do_debug() {
+                eprintln!("[version::get_mod_location] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+            }
+            return None;
+        }
+    };
     if smp_x.ends_with("/") || smp_x.ends_with("\\") {
         smp_x.pop();
     }
@@ -63,12 +66,15 @@ pub fn update_version_file()
         return;
     }
 
-    let smp = find_sourcemod_path();
-    if smp.is_none() {
-        // sourcemod path couldn't be found, doesn't matter :3
-        return;
-    }
-    let mut smp_x = smp.unwrap();
+    let mut smp_x = match find_sourcemod_path() {
+        Ok(v) => v,
+        Err(e) => {
+            if helper::do_debug() {
+                eprintln!("[version::update_version_file] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+            }
+            return;
+        }
+    };
     if smp_x.ends_with("/") || smp_x.ends_with("\\") {
         smp_x.pop();
     }

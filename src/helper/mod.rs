@@ -12,7 +12,7 @@ pub use windows::*;
 use std::io::Write;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
-use crate::{BeansError, DownloadFailureReason};
+use crate::{BeansError, DownloadFailureReason, helper};
 use rand::{distributions::Alphanumeric, Rng};
 
 #[derive(Clone, Debug)]
@@ -75,11 +75,15 @@ impl PartialEq for InstallType {
 /// get the current type of installation.
 pub fn install_state() -> InstallType
 {
-    let smp = find_sourcemod_path();
-    if smp.is_none() {
-        return InstallType::NotInstalled;
-    }
-    let mut smp_x = smp.unwrap();
+    let mut smp_x = match find_sourcemod_path() {
+        Ok(v) => v,
+        Err(e) => {
+            if helper::do_debug() {
+                eprintln!("[helper::install_state] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+            }
+            return InstallType::NotInstalled;
+        }
+    };
     if smp_x.ends_with("/") || smp_x.ends_with("\\") {
         smp_x.pop();
     }
@@ -155,10 +159,13 @@ pub fn has_free_space(location: String, size: usize) -> Result<bool, BeansError>
 pub fn sml_has_free_space(size: usize) -> Result<bool, BeansError>
 {
     match find_sourcemod_path() {
-        Some(v) => {
+        Ok(v) => {
             has_free_space(v, size)
         },
-        None => {
+        Err(e) => {
+            if helper::do_debug() {
+                eprintln!("[helper::sml_has_free_space] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+            }
             Err(BeansError::SourceModLocationNotFound)
         }
     }
@@ -264,4 +271,13 @@ pub fn format_size(i: usize) -> String {
         }
     }
     return format!("{}{}", whole, dec_x);
+}
+
+#[cfg(not(debug_assertions))]
+pub fn do_debug() -> bool {
+    std::env::var("BEANS_DEBUG").is_ok_and(|x| x == "1")
+}
+#[cfg(debug_assertions)]
+pub fn do_debug() -> bool {
+    true
 }

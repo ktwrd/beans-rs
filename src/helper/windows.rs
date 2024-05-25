@@ -1,11 +1,12 @@
 ﻿use winreg::enums::HKEY_CURRENT_USER;
 use winreg::RegKey;
+use crate::BeansError;
 use crate::helper::generate_rand_str;
 
 /// TODO use windows registry to get the SourceModInstallPath
 /// HKEY_CURRENT_USER\Software\Value\Steam
 /// Key: SourceModInstallPath
-pub fn find_sourcemod_path() -> Option<String>
+pub fn find_sourcemod_path() -> Result<String, BeansError>
 {
     match RegKey::predef(HKEY_CURRENT_USER).open_subkey(String::from("Software\\Valve\\Steam")) {
         Ok(rkey) => {
@@ -15,17 +16,21 @@ pub fn find_sourcemod_path() -> Option<String>
                     if val.ends_with("\\") == false {
                         val.push_str("\\");
                     }
-                    Some(val)
+                    Ok(val)
                 },
                 Err(e) => {
-                    eprintln!("Failed to get HKCU\\Software\\Valve (key: SourceModInstallPath)\n{:#?}", e);
-                    None
+                    return Err(BeansError::RegistryKeyFailure {
+                        msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed".to_string(),
+                        error: e
+                    });
                 }
             }
         },
         Err(e) => {
-            eprintln!("Failed to get HKCU\\Software\\Valve\n{:#?}", e);
-            None
+            return Err(BeansError::RegistryKeyFailure {
+                msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed".to_string(),
+                error: e
+            });
         }
     }
 }
