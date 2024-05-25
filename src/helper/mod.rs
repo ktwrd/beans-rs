@@ -1,4 +1,14 @@
-use std::fs::read_to_string;
+﻿#[cfg(not(target_os = "windows"))]
+mod linux;
+#[cfg(not(target_os = "windows"))]
+pub use linux::*;
+
+#[cfg(target_os = "windows")]
+mod windows;
+#[cfg(target_os = "windows")]
+pub use windows::*;
+
+
 use std::io::Write;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
@@ -97,79 +107,6 @@ pub fn get_input(prompt: &str) -> String{
     input.trim().to_string()
 }
 
-/// all possible known directory where steam *might* be
-/// only is used on linux, since windows will use the registry.
-#[cfg(not(target_os = "windows"))]
-pub const STEAM_POSSIBLE_DIR:  &'static [&'static str] = &[
-    "~/.steam/registry.vdf",
-    "~/.var/app/com.valvesoftware.Steam/.steam/registry.vdf"
-];
-
-/// find sourcemod path on linux.
-/// fetches the fake registry that steam uses from find_steam_reg_path
-/// and gets the value of Registry/HKCU/Software/Valve/Steam/SourceModInstallPath
-#[cfg(not(target_os = "windows"))]
-pub fn find_sourcemod_path() -> Option<String>
-{
-    let reg_path = match find_steam_reg_path()
-    {
-        Some(v) => v,
-        None => {return None;}
-    };
-
-    let reg_content = match read_to_string(reg_path.as_str())
-    {
-        Ok(v) => v,
-        Err(e) => {
-            panic!("Failed to open file {}\n\n{:#?}", reg_path, e);
-        }
-    };
-
-    for line in reg_content.lines() {
-        if line.contains("SourceModInstallPath")
-        {
-            let split = &line.split("\"SourceModInstallPath\"");
-            let mut last = split.clone()
-                .last()
-                .expect("Failed to find SourceModInstallPath")
-                .trim()
-                .replace("\\\\", "/")
-                .replace("\\", "/")
-                .replace("\"", "");
-            if last.ends_with("/") == false {
-                last.push_str("/");
-            }
-            return Some(last);
-        }
-    }
-
-    return None;
-}
-/// returns the first item in STEAM_POSSIBLE_DIR that exists. otherwise None
-#[cfg(not(target_os = "windows"))]
-fn find_steam_reg_path() -> Option<String>
-{
-    for x in STEAM_POSSIBLE_DIR.into_iter() {
-        let mut h = simple_home_dir::home_dir().expect("Failed to get home directory").to_str().expect("Failed to get home directory (as &str)").to_string();
-        if h.ends_with("/") {
-            h.pop();
-        }
-        let reg_loc = x.replace("~", h.as_str());
-        if file_exists(reg_loc.clone())
-        {
-            return Some(reg_loc);
-        }
-    }
-    return None;
-}
-/// TODO use windows registry to get the SourceModInstallPath
-/// HKEY_CURRENT_COMPUTER\Software\Value\Steam
-/// Key: SourceModInstallPath
-#[cfg(target_os = "windows")]
-pub fn find_sourcemod_path()
-{
-    todo!();
-}
 
 /// check if a file exists
 pub fn file_exists(location: String) -> bool
@@ -193,22 +130,6 @@ pub fn generate_rand_str(length: usize) -> String
         .map(char::from)
         .collect();
     s.to_uppercase()
-}
-#[cfg(not(windows))]
-pub fn get_tmp_file(filename: String) -> String
-{
-    let mut loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
-    if loc.ends_with("/") == false && loc.len() > 1{
-        loc.push_str("/");
-    }
-    loc.push_str(generate_rand_str(8).as_str());
-    loc.push_str(format!("_{}", filename).as_str());
-    loc
-}
-#[cfg(windows)]
-pub fn get_tmp_file(filename: String) -> String
-{
-    todo!("implement temp file location, with custom filename!")
 }
 
 /// Get the amount of free space on the drive in the location provided.

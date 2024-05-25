@@ -219,7 +219,7 @@ impl RunnerContext
         Ok(())
     }
     #[cfg(not(target_os = "linux"))]
-    fn prepare_symlink() -> Result<(), BeansError>
+    pub fn prepare_symlink(&mut self) -> Result<(), BeansError>
     {
         // ignored since this symlink stuff is for linux only
         Ok(())
