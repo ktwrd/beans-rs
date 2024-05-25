@@ -65,14 +65,17 @@ impl WizardContext
         };
     }
     fn menu_error_catch(v: Result<(), BeansError>) -> ! {
+        let mut code: i32 = 0;
         if let Err(e) = v {
             eprintln!("{:}", e);
             if helper::do_debug() {
                 eprintln!("======== Full Error ========");
                 eprintln!("{:#?}", e);
             }
+            code = 1;
         }
-        std::process::exit(0)
+        let _ = helper::get_input("Press enter/return to exit");
+        std::process::exit(code)
     }
 
     /// Install the target game.
