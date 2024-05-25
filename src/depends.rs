@@ -28,14 +28,14 @@ pub fn try_write_deps()
 }
 
 /// will not do anything since this only runs on windows
-#[cfg(not(windows))]
+#[cfg(not(target_os = "windows"))]
 pub fn try_install_vcredist()
 {
     // ignored since we aren't windows :3
 }
 /// try to download and install vcredist from microsoft via aria2c
 /// TODO use request instead of aria2c for downloading this.
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 pub fn try_install_vcredist()
 {
     let (a2c_path, _) = binary_locations();
@@ -59,7 +59,8 @@ pub fn try_install_vcredist()
     }
 
     std::process::Command::new(&out_loc)
-        .output()
+        .args(["/install","/passive","/norestart"])
+        .spawn()
         .expect("Failed to install vsredist!");
 }
 
@@ -71,13 +72,13 @@ pub fn binaries_exist() -> (bool, bool)
 }
 
 /// (aria2c, butler)
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 pub fn binary_locations() -> (String, String)
 {
     (String::from("Binaries/aria2c.exe"), String::from("Binaries/butler.exe"))
 }
 /// (aria2c, butler)
-#[cfg(not(windows))]
+#[cfg(not(target_os = "windows"))]
 pub fn binary_locations() -> (String, String)
 {
     (String::from("Binaries/aria2c"), String::from("Binaries/butler"))
