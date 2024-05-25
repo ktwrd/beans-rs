@@ -13,7 +13,7 @@ pub fn verify(
             &gamedir,
             format!("--heal=archive,{}", remote).as_str()
         ])
-        .output() {
+        .spawn() {
         Err(e) => {
             Err(BeansError::ButlerVerifyFailure {
                 signature_url,
@@ -22,7 +22,10 @@ pub fn verify(
                 error: e
             })
         },
-        Ok(_) => Ok(())
+        Ok(mut v) => {
+            v.wait()?;
+            Ok(())
+        }
     }
 }
 pub async fn patch_dl(
@@ -63,7 +66,7 @@ pub fn patch(
             &patchfile_location,
             &gamedir
         ])
-        .output() {
+        .spawn() {
         Err(e) => {
             Err(BeansError::ButlerPatchFailure {
                 patchfile_location,
@@ -71,6 +74,9 @@ pub fn patch(
                 error: e
             })
         },
-        Ok(_) => Ok(())
+        Ok(mut v) => {
+            v.wait()?;
+            Ok(())
+        }
     }
 }
