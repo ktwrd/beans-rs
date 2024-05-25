@@ -14,6 +14,7 @@ mod error;
 pub use error::*;
 pub mod butler;
 
+pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
 
 #[cfg(not(target_os = "windows"))]
