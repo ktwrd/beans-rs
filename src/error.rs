@@ -10,7 +10,9 @@ pub enum BeansError
     TarExtractFailure(String, String, std::io::Error),
     DownloadFailure(String, reqwest::Error),
     Reqwest(reqwest::Error),
-    SerdeJson(serde_json::Error)
+    SerdeJson(serde_json::Error),
+
+    LatestVersionAlreadyInstalled
 }
 
 impl<E> From<E> for BeansError
