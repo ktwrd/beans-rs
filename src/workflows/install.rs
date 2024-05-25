@@ -13,11 +13,17 @@ impl InstallWorkflow {
         if let Some(cv) = ctx.current_version {
             if latest_remote_id < cv {
                 println!("Installed version is newer than the latest remote version? (local: {}, remote: {})", cv, latest_remote_id);
-                return Err(BeansError::LatestVersionAlreadyInstalled);
+                return Err(BeansError::LatestVersionAlreadyInstalled {
+                    current: cv,
+                    latest: latest_remote_id
+                });
             }
             if latest_remote_id == cv {
                 println!("You've got the latest version installed already! (local: {}, remote: {})", cv, latest_remote_id);
-                return Err(BeansError::LatestVersionAlreadyInstalled);
+                return Err(BeansError::LatestVersionAlreadyInstalled {
+                    current: cv,
+                    latest: latest_remote_id
+                });
             }
         }
 
@@ -30,7 +36,11 @@ impl InstallWorkflow {
     {
         if helper::file_exists(package_loc.clone()) == false {
             eprintln!("[InstallWorkflow::Wizard] Failed to find package! (location: {package_loc})");
-            return Err(BeansError::DownloadFailure(DownloadFailureReason::FileNotFound(package_loc.clone())));
+            return Err(BeansError::DownloadFailure {
+                reason: DownloadFailureReason::FileNotFound {
+                    location: package_loc.clone()
+                }
+            });
         }
 
         println!("[InstallWorkflow::Wizard] Extracting game");

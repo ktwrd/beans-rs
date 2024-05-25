@@ -1,3 +1,5 @@
+#![feature(error_generic_member_access)]
+
 use const_format::concatcp;
 
 pub mod depends;

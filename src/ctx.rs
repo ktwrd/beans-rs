@@ -1,3 +1,4 @@
+use std::backtrace::Backtrace;
 use crate::{BeansError, depends, helper, version};
 use crate::helper::{find_sourcemod_path, InstallType};
 use crate::version::{RemotePatch, RemoteVersion, RemoteVersionResponse};
@@ -110,7 +111,12 @@ impl RunnerContext
         };
         let mut archive = tar::Archive::new(tar_tmp_file);
         match archive.unpack(&out_dir) {
-            Err(e) => Err(BeansError::TarExtractFailure(tar_tmp_location, out_dir, e)),
+            Err(e) => Err(BeansError::TarExtractFailure{
+                src_file: tar_tmp_location,
+                target_dir: out_dir,
+                error: e,
+                backtrace: Backtrace::capture()
+            }),
             Ok(_) => Ok(())
         }
     }

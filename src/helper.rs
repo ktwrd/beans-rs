@@ -3,6 +3,7 @@ use std::io::Write;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
 use crate::{BeansError, DownloadFailureReason};
+use rand::{distributions::Alphanumeric, Rng};
 
 #[derive(Clone, Debug)]
 pub enum InstallType
@@ -175,7 +176,6 @@ pub fn file_exists(location: String) -> bool
 {
     std::path::Path::new(&location).exists()
 }
-use rand::{distributions::Alphanumeric, Rng};
 
 pub fn generate_rand_str(length: usize) -> String
 {
@@ -245,7 +245,12 @@ pub async fn download_with_progress(url: String, out_location: String) -> Result
         .await {
         Ok(v) => v,
         Err(e) => {
-            return Err(BeansError::DownloadFailure(DownloadFailureReason::Reqwest(url, e)));
+            return Err(BeansError::DownloadFailure {
+                reason: DownloadFailureReason::Reqwest {
+                    url: url.clone(),
+                    error: e
+                }
+            });
         }
     };
 
