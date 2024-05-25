@@ -4,9 +4,9 @@ use crate::{BeansError, BUTLER_BINARY, BUTLER_LIB_1, BUTLER_LIB_2, helper};
 /// paths that are used will be fetched from binary_locations()
 pub fn try_write_deps()
 {
-    safe_write_file(BUTLER_LOCATION, BUTLER_BINARY);
-    safe_write_file(BUTLER_1, BUTLER_LIB_1);
-    safe_write_file(BUTLER_2, BUTLER_LIB_2);
+    safe_write_file(get_butler_location().as_str(), BUTLER_BINARY);
+    safe_write_file(get_butler_1_location().as_str(), BUTLER_LIB_1);
+    safe_write_file(get_butler_2_location().as_str(), BUTLER_LIB_2);
 }
 fn safe_write_file(location: &str, data: &[u8]) {
     if !helper::file_exists(location.to_string())
@@ -63,19 +63,48 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
 }
 
 pub fn butler_exists() -> bool {
-    std::path::Path::new(BUTLER_LOCATION).exists()
+    helper::file_exists(get_butler_location())
+    && helper::file_exists(get_butler_1_location())
+    && helper::file_exists(get_butler_2_location())
+}
+
+pub fn get_butler_location() -> String
+{
+    let mut path = get_tmp_dir();
+    path.push_str(BUTLER_LOCATION);
+    path
+}
+pub fn get_butler_1_location() -> String {
+    let mut path = get_tmp_dir();
+    path.push_str(BUTLER_1);
+    path
+}
+pub fn get_butler_2_location() -> String {
+    let mut path = get_tmp_dir();
+    path.push_str(BUTLER_2);
+    path
+}
+fn get_tmp_dir() -> String {
+    let mut path = std::env::temp_dir().to_str().unwrap_or("").to_string();
+    if path.ends_with("/") == false && path.ends_with("\\") == false {
+        #[cfg(target_os = "windows")]
+        path.push_str("\\");
+        #[cfg(not(target_os = "windows"))]
+        path.push_str("/");
+    }
+    path
 }
 
 #[cfg(target_os = "windows")]
-pub const BUTLER_LOCATION: &str = "butler.exe";
+const BUTLER_LOCATION: &str = "butler.exe";
 #[cfg(not(target_os = "windows"))]
-pub const BUTLER_LOCATION: &str = "butler";
+const BUTLER_LOCATION: &str = "butler";
 
 #[cfg(target_os = "windows")]
-pub const BUTLER_1: &str = "7z.dll";
+const BUTLER_1: &str = "7z.dll";
 #[cfg(not(target_os = "windows"))]
-pub const BUTLER_1: &str = "7z.so";
+const BUTLER_1: &str = "7z.so";
 #[cfg(target_os = "windows")]
-pub const BUTLER_2: &str = "c7zip.dll";
+const BUTLER_2: &str = "c7zip.dll";
 #[cfg(not(target_os = "windows"))]
-pub const BUTLER_2: &str = "libc7zip.so";
+const BUTLER_2: &str = "libc7zip.so";
