@@ -1,5 +1,4 @@
 use crate::{BeansError, butler, helper, RunnerContext};
-use crate::version::RemoteVersion;
 
 pub struct UpdateWorkflow
 {
