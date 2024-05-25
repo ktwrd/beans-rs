@@ -15,6 +15,7 @@ pub fn get_current_version() -> Option<usize>
     }
     match get_mod_location() {
         Some(smp_x) => {
+            // TODO generate BeansError instead of using .expect
             let location = format!("{}{}.adastral", smp_x, crate::DATA_DIR);
             let content = read_to_string(&location).expect(format!("Failed to open {}", location).as_str());
             let data: AdastralVersionFile = serde_json::from_str(&content).expect(format!("Failed to deserialize data at {}", location).as_str());
@@ -43,6 +44,7 @@ fn get_mod_location() -> Option<String>
     if smp_x.ends_with("/") || smp_x.ends_with("\\") {
         smp_x.pop();
     }
+    smp_x.push_str(crate::DATA_DIR);
     Some(smp_x)
 }
 /// migrate from old file (.revision) to new file (.adastral) in sourcemod mod directory.
