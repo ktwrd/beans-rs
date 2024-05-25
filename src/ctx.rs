@@ -169,6 +169,11 @@ impl RunnerContext
         }
 
         let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
+        #[cfg(target_os = "windows")]
+        if out_loc.ends_with("\\") == false {
+            out_loc.push_str("\\");
+        }
+        #[cfg(not(target_os = "windows"))]
         if out_loc.ends_with("/") == false {
             out_loc.push_str("/");
         }
