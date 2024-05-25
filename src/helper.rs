@@ -2,7 +2,7 @@ use std::fs::read_to_string;
 use std::io::Write;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
-use crate::BeansError;
+use crate::{BeansError, DownloadFailureReason};
 
 #[derive(Clone, Debug)]
 pub enum InstallType
@@ -245,7 +245,7 @@ pub async fn download_with_progress(url: String, out_location: String) -> Result
         .await {
         Ok(v) => v,
         Err(e) => {
-            return Err(BeansError::DownloadFailure(url, e));
+            return Err(BeansError::DownloadFailure(DownloadFailureReason::Reqwest(url, e)));
         }
     };
 
