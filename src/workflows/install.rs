@@ -11,18 +11,7 @@ impl InstallWorkflow {
     {
         let (latest_remote_id, latest_remote) = ctx.latest_remote_version();
         if let Some(cv) = ctx.current_version {
-            if latest_remote_id < cv {
-                return Err(BeansError::LatestVersionAlreadyInstalled {
-                    current: cv,
-                    latest: latest_remote_id
-                });
-            }
-            if latest_remote_id == cv {
-                return Err(BeansError::LatestVersionAlreadyInstalled {
-                    current: cv,
-                    latest: latest_remote_id
-                });
-            }
+            println!("[InstallWorkflow::wizard] re-installing! game files will not be touched until extraction");
         }
 
         let presz_loc = RunnerContext::download_package(latest_remote).await?;
