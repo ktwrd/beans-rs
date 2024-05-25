@@ -15,24 +15,24 @@ pub mod butler;
 
 
 
-#[cfg(not(windows))]
+#[cfg(not(target_os = "windows"))]
 pub const DATA_DIR: &str = "/open_fortress/";
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 pub const DATA_DIR: &str = "\\open_fortress\\";
-#[cfg(not(windows))]
+#[cfg(not(target_os = "windows"))]
 pub const STAGING_DIR: &str = "/butler-staging";
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 pub const STAGING_DIR: &str = "\\butler-staging";
 
 pub const SOURCE_URL: &str = "https://beans.adastral.net/";
 pub const UPDATE_HASH_URL_WINDOWS: &str = concatcp!(SOURCE_URL, "beans_sha512sum_windows");
 pub const UPDATE_HASH_URL_LINUX: &str = concatcp!(SOURCE_URL, "beans_sha512sum_linux");
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 pub const ARIA2C_BINARY: &[u8] = include_bytes!("../Binaries/aria2c.exe");
-#[cfg(not(windows))]
+#[cfg(not(target_os = "windows"))]
 pub const ARIA2C_BINARY: &[u8] = include_bytes!("../Binaries/aria2c");
 
-#[cfg(windows)]
+#[cfg(target_os = "windows")]
 pub const BUTLER_BINARY: &[u8] = include_bytes!("../Binaries/butler.exe");
-#[cfg(not(windows))]
+#[cfg(not(target_os = "windows"))]
 pub const BUTLER_BINARY: &[u8] = include_bytes!("../Binaries/butler");
