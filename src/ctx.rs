@@ -36,6 +36,20 @@ impl RunnerContext
         });
     }
 
+    /// Get the location of the sourcemod mod
+    /// {sourcemod_dir}{crate::DATA_DIR}
+    /// e.g; /home/kate/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/sourcemods/open_fortress/
+    ///      C:\Games\Steam\steamapps\sourcemods\open_fortress\
+    pub fn get_mod_location(&mut self) -> String
+    {
+        let mut smp_x = self.sourcemod_path.clone();
+        if smp_x.ends_with("/") || smp_x.ends_with("\\") {
+            smp_x.pop();
+        }
+        smp_x.push_str(crate::DATA_DIR);
+        smp_x
+    }
+
     /// Get the latest item in `remote_version_list`
     pub fn latest_remote_version(&mut self) -> (usize, RemoteVersion)
     {
