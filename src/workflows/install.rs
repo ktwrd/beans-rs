@@ -50,7 +50,7 @@ impl InstallWorkflow {
         } else {
             eprintln!("Not writing .adastral since the version wasn't provided");
         }
-        println!("Done! Make sure to restart steam before playing");
+        println!("Done! Make sure that the following is done;\n  1. Install Source SDK Base 2013 Multiplayer\n  2. Restart Steam\n  3.Play Open Fortress!");
         Ok(())
     }
 }
