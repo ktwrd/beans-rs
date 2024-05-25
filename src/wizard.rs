@@ -2,6 +2,7 @@ use crate::{BeansError, depends, helper, RunnerContext};
 use crate::helper::{find_sourcemod_path, InstallType};
 use crate::version::{AdastralVersionFile, RemoteVersion};
 use async_recursion::async_recursion;
+use crate::workflows::InstallWorkflow;
 
 #[derive(Debug, Clone)]
 pub struct WizardContext
@@ -70,37 +71,7 @@ impl WizardContext
     /// Install the target game.
     pub async fn task_install(&mut self) -> Result<(), BeansError>
     {
-        let (latest_remote_id, latest_remote) = self.context.latest_remote_version();
-        if let Some(cv) = self.context.current_version {
-            if latest_remote_id < cv {
-                println!("Installed version is newer than the latest remote version? (local: {}, remote: {})", cv, latest_remote_id);
-                return Ok(());
-            }
-            if latest_remote_id == cv {
-                println!("You've got the latest version installed already! (local: {}, remote: {})", cv, latest_remote_id);
-                return Ok(());
-            }
-        }
-        let presz_loc = RunnerContext::download_package(latest_remote).await?;
-        if helper::file_exists(presz_loc.clone()) == false {
-            eprintln!("Failed to find downloaded file!");
-            std::process::exit(1);
-        }
-
-        match find_sourcemod_path() {
-            Some(v) => {
-                println!("Extracting game");
-                RunnerContext::extract_package(presz_loc, v)?;
-                AdastralVersionFile {
-                    version: latest_remote_id.to_string()
-                }.write()?;
-                println!("Done! Make sure to restart steam before playing");
-                Ok(())
-            },
-            None => {
-                panic!("Failed to find sourcemod folder!");
-            }
-        }
+        InstallWorkflow::wizard(&mut self.context).await
     }
 
     /// Check for any updates, and if there are any, we install them.

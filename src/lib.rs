@@ -4,6 +4,7 @@ pub mod depends;
 pub mod helper;
 pub mod wizard;
 pub mod version;
+pub mod workflows;
 mod ctx;
 pub use ctx::*;
 mod error;
