@@ -1,6 +1,7 @@
 #![feature(error_generic_member_access)]
 
 use const_format::concatcp;
+use include_flate::flate;
 
 pub mod depends;
 pub mod helper;
@@ -29,14 +30,14 @@ pub const UPDATE_HASH_URL_WINDOWS: &str = concatcp!(SOURCE_URL, "beans_sha512sum
 pub const UPDATE_HASH_URL_LINUX: &str = concatcp!(SOURCE_URL, "beans_sha512sum_linux");
 
 #[cfg(target_os = "windows")]
-pub const BUTLER_BINARY: &[u8] = include_bytes!("../Binaries/butler.exe");
+flate!(pub static BUTLER_BINARY: [u8] from "Binaries/butler.exe");
 #[cfg(not(target_os = "windows"))]
-pub const BUTLER_BINARY: &[u8] = include_bytes!("../Binaries/butler");
+flate!(pub static BUTLER_BINARY: [u8] from "Binaries/butler");
 #[cfg(target_os = "windows")]
-pub const BUTLER_LIB_1: &[u8] = include_bytes!("../Binaries/7z.dll");
+flate!(pub static BUTLER_LIB_1: [u8] from "Binaries/7z.dll");
 #[cfg(not(target_os = "windows"))]
-pub const BUTLER_LIB_1: &[u8] = include_bytes!("../Binaries/7z.so");
+flate!(pub static BUTLER_LIB_1: [u8] from "Binaries/7z.so");
 #[cfg(target_os = "windows")]
-pub const BUTLER_LIB_2: &[u8] = include_bytes!("../Binaries/c7zip.dll");
+flate!(pub static BUTLER_LIB_2: [u8] from "Binaries/c7zip.dll");
 #[cfg(not(target_os = "windows"))]
-pub const BUTLER_LIB_2: &[u8] = include_bytes!("../Binaries/libc7zip.so");
+flate!(pub static BUTLER_LIB_2: [u8] from "Binaries/libc7zip.so");

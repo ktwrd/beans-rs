@@ -19,6 +19,7 @@ tar = "0.4.40"
 tokio-util = { version= "0.7.11", features = ["io"] }
 zstd = "0.13.1"
 thiserror = "1.0.61"
+include-flate = "0.3.0"
 winreg = "0.52.0"
 
 [dependencies.tokio]

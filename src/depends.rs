@@ -4,9 +4,9 @@ use crate::{BeansError, BUTLER_BINARY, BUTLER_LIB_1, BUTLER_LIB_2, helper};
 /// paths that are used will be fetched from binary_locations()
 pub fn try_write_deps()
 {
-    safe_write_file(get_butler_location().as_str(), BUTLER_BINARY);
-    safe_write_file(get_butler_1_location().as_str(), BUTLER_LIB_1);
-    safe_write_file(get_butler_2_location().as_str(), BUTLER_LIB_2);
+    safe_write_file(get_butler_location().as_str(), &**BUTLER_BINARY);
+    safe_write_file(get_butler_1_location().as_str(), &**BUTLER_LIB_1);
+    safe_write_file(get_butler_2_location().as_str(), &**BUTLER_LIB_2);
 }
 fn safe_write_file(location: &str, data: &[u8]) {
     if !helper::file_exists(location.to_string())
