@@ -81,7 +81,7 @@ impl WizardContext
                 return Ok(());
             }
         }
-        let presz_loc = Self::download_package(latest_remote).await?;
+        let presz_loc = RunnerContext::download_package(latest_remote).await?;
         if helper::file_exists(presz_loc.clone()) == false {
             eprintln!("Failed to find downloaded file!");
             std::process::exit(1);
@@ -123,28 +123,6 @@ impl WizardContext
             Err(e) => Err(BeansError::TarExtractFailure(tar_tmp_location, out_dir, e)),
             Ok(_) => Ok(())
         }
-    }
-
-    async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
-    {
-        if let Some(size) = version.pre_sz {
-            if helper::sml_has_free_space(size)? == false {
-                panic!("Not enough free space to install latest version!");
-            }
-        }
-
-        let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
-        if out_loc.ends_with("/") == false {
-            out_loc.push_str("/");
-        }
-        out_loc.push_str(format!("presz_{}", helper::generate_rand_str(12)).as_str());
-        println!("[debug] writing output file to {}", out_loc);
-
-        helper::download_with_progress(
-            format!("{}{}", crate::SOURCE_URL, version.file.expect("No URL for latest package!")),
-            out_loc.clone()).await?;
-
-        Ok(out_loc)
     }
 
     /// Check for any updates, and if there are any, we install them.

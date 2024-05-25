@@ -66,4 +66,28 @@ impl RunnerContext
             _ => None
         }
     }
+
+    /// Download package with Progress Bar.
+    /// Ok is the location to where it was downloaded to.
+    pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
+    {
+        if let Some(size) = version.pre_sz {
+            if helper::sml_has_free_space(size)? == false {
+                panic!("Not enough free space to install latest version!");
+            }
+        }
+
+        let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
+        if out_loc.ends_with("/") == false {
+            out_loc.push_str("/");
+        }
+        out_loc.push_str(format!("presz_{}", helper::generate_rand_str(12)).as_str());
+
+        println!("[debug] writing output file to {}", out_loc);
+        helper::download_with_progress(
+            format!("{}{}", crate::SOURCE_URL, version.file.expect("No URL for latest package!")),
+            out_loc.clone()).await?;
+
+        Ok(out_loc)
+    }
 }
