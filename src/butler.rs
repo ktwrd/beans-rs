@@ -5,8 +5,9 @@ pub fn verify(
     gamedir: String,
     remote: String
 ) -> Result<(), BeansError> {
-    let (_, butler_path) = depends::binary_locations();
-    match std::process::Command::new(&butler_path)
+    let mut x = std::env::current_dir()?;
+    x.push(depends::BUTLER_LOCATION);
+    match std::process::Command::new(x)
         .args([
             "verify",
             &signature_url,
@@ -57,9 +58,10 @@ pub fn patch(
     staging_dir: String,
     gamedir: String
 ) -> Result<(), BeansError> {
+    let mut x = std::env::current_dir()?;
+    x.push(depends::BUTLER_LOCATION);
     println!("[butler::patch] patching directory {} with {}", gamedir, patchfile_location);
-    let (_, butler_path) = depends::binary_locations();
-    match std::process::Command::new(&butler_path)
+    match std::process::Command::new(x)
         .args([
             "apply",
             &format!("--staging-dir={}", staging_dir),
