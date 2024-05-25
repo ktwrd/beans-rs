@@ -90,7 +90,7 @@ impl WizardContext
         match find_sourcemod_path() {
             Some(v) => {
                 println!("Extracting game");
-                Self::extract_package(presz_loc, v)?;
+                RunnerContext::extract_package(presz_loc, v)?;
                 AdastralVersionFile {
                     version: latest_remote_id.to_string()
                 }.write()?;
@@ -100,28 +100,6 @@ impl WizardContext
             None => {
                 panic!("Failed to find sourcemod folder!");
             }
-        }
-    }
-
-    fn extract_package(zstd_location: String, out_dir: String) -> Result<(), BeansError>
-    {
-        let zstd_content = std::fs::read(&zstd_location).unwrap();
-        let zstd_decoded: Vec<u8> = zstd::decode_all(zstd_content.as_slice()).unwrap();
-        let tar_tmp_location = helper::get_tmp_file("data.tar".to_string());
-        if let Err(e) = std::fs::write(&tar_tmp_location, zstd_decoded) {
-            return Err(BeansError::FileWriteFailure(tar_tmp_location.clone(), e));
-        }
-
-        let tar_tmp_file = match std::fs::File::open(tar_tmp_location.clone()) {
-            Ok(v) => v,
-            Err(e) => {
-                return Err(BeansError::FileOpenFailure(tar_tmp_location.clone(), e));
-            }
-        };
-        let mut archive = tar::Archive::new(tar_tmp_file);
-        match archive.unpack(&out_dir) {
-            Err(e) => Err(BeansError::TarExtractFailure(tar_tmp_location, out_dir, e)),
-            Ok(_) => Ok(())
         }
     }
 
