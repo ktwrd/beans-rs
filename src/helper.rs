@@ -177,6 +177,14 @@ pub fn file_exists(location: String) -> bool
     std::path::Path::new(&location).exists()
 }
 
+/// Check if the file at the location provided is a symlink.
+pub fn is_symlink(location: String) -> bool {
+    match std::fs::symlink_metadata(&location) {
+        Ok(meta) => meta.file_type().is_symlink(),
+        Err(_) => false
+    }
+}
+
 pub fn generate_rand_str(length: usize) -> String
 {
     let s: String = rand::thread_rng()
