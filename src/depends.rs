@@ -1,85 +1,81 @@
-use crate::{ARIA2C_BINARY, BUTLER_BINARY};
+use crate::{BeansError, BUTLER_BINARY, BUTLER_LIB_1, BUTLER_LIB_2, helper};
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
 pub fn try_write_deps()
 {
-    let (a2c_path, b_path) = binary_locations();
-    let (a2c_exists, b_exists) = binaries_exist();
-
-    if !a2c_exists
+    safe_write_file(BUTLER_LOCATION, BUTLER_BINARY);
+    safe_write_file(BUTLER_1, BUTLER_LIB_1);
+    safe_write_file(BUTLER_2, BUTLER_LIB_2);
+}
+fn safe_write_file(location: &str, data: &[u8]) {
+    if !helper::file_exists(location.to_string())
     {
-        if let Err(e) = std::fs::write(&a2c_path, ARIA2C_BINARY) {
-            eprintln!("[try_write_deps] Failed to extract aria2c to {}\n{:#?}", a2c_path, e);
+        if let Err(e) = std::fs::write(&location, data) {
+            eprintln!("[try_write_deps] failed to extract {}", location);
+            if helper::do_debug() {
+                eprintln!("[depends::try_write_deps] {:#?}", e);
+            }
         }
-        else {
-            println!("[try_write_deps] extracted aria2c");
-        }
-    }
-    if !b_exists
-    {
-        if let Err(e) = std::fs::write(&b_path, BUTLER_BINARY) {
-            eprintln!("[try_write_deps] Failed to extract butler to {}\n{:#?}", b_path, e);
-        }
-        else {
-            println!("[try_write_deps] extracted butler");
+        else
+        {
+            println!("[try_write_deps] extracted {}", location);
         }
     }
 }
 
 /// will not do anything since this only runs on windows
 #[cfg(not(target_os = "windows"))]
-pub fn try_install_vcredist()
+pub async fn try_install_vcredist() -> Result<(), BeansError>
 {
     // ignored since we aren't windows :3
+    Ok(())
 }
 /// try to download and install vcredist from microsoft via aria2c
 /// TODO use request instead of aria2c for downloading this.
 #[cfg(target_os = "windows")]
-pub fn try_install_vcredist()
+pub async fn try_install_vcredist() -> Result<(), BeansError>
 {
-    let (a2c_path, _) = binary_locations();
-    let tempdir = std::env::temp_dir().to_str().unwrap_or("").to_string();
-    std::process::Command::new(&a2c_path)
-        .args(["https://aka.ms/vs/17/release/vc_redist.x86.exe",
-            "--check-certificate=false",
-            "-d",
-            &tempdir])
-        .output()
-        .expect("Failed to install vcredist");
-
-    let mut out_loc = tempdir.clone();
+    let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
     if out_loc.ends_with("\\") == false {
         out_loc.push_str("\\");
     }
-    out_loc.push_str("vc_redist.x86.exe");
+    out_loc.push_str("vc_redist.exe");
+    helper::download_with_progress(
+        String::from("https://aka.ms/vs/17/release/vc_redist.x86.exe"),
+        out_loc.clone()).await?;
 
     if std::path::Path::new(&out_loc).exists() == false {
-        panic!("Couldn't find {}", &out_loc);
+        return  Err(BeansError::FileNotFound {
+            location: out_loc.clone()
+        });
     }
 
     std::process::Command::new(&out_loc)
         .args(["/install","/passive","/norestart"])
         .spawn()
-        .expect("Failed to install vsredist!");
+        .expect("Failed to install vsredist!")
+        .wait()?;
+    
+    std::fs::remove_file(&out_loc)?;
+    
+    Ok(())
 }
 
-/// (aria2c_exists, butler_exists)
-pub fn binaries_exist() -> (bool, bool)
-{
-    let (aria2c, butler) = binary_locations();
-    (std::path::Path::new(&aria2c).exists(), std::path::Path::new(&butler).exists())
+pub fn butler_exists() -> bool {
+    std::path::Path::new(BUTLER_LOCATION).exists()
 }
 
-/// (aria2c, butler)
 #[cfg(target_os = "windows")]
-pub fn binary_locations() -> (String, String)
-{
-    (String::from("Binaries/aria2c.exe"), String::from("Binaries/butler.exe"))
-}
-/// (aria2c, butler)
+pub const BUTLER_LOCATION: &str = "butler.exe";
 #[cfg(not(target_os = "windows"))]
-pub fn binary_locations() -> (String, String)
-{
-    (String::from("Binaries/aria2c"), String::from("Binaries/butler"))
-}
+pub const BUTLER_LOCATION: &str = "butler";
+
+#[cfg(target_os = "windows")]
+pub const BUTLER_1: &str = "7z.dll";
+#[cfg(not(target_os = "windows"))]
+pub const BUTLER_1: &str = "7z.so";
+#[cfg(target_os = "windows")]
+pub const BUTLER_2: &str = "c7zip.dll";
+#[cfg(not(target_os = "windows"))]
+pub const BUTLER_2: &str = "libc7zip.so";
