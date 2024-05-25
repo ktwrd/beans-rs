@@ -2,6 +2,8 @@ use std::backtrace::Backtrace;
 use crate::{BeansError, depends, helper, version};
 use crate::helper::{find_sourcemod_path, InstallType};
 use crate::version::{RemotePatch, RemoteVersion, RemoteVersionResponse};
+#[cfg(target_os = "linux")]
+use std::os::unix::fs::PermissionsExt;
 
 #[derive(Debug, Clone)]
 pub struct RunnerContext
@@ -93,6 +95,38 @@ impl RunnerContext
             },
             _ => None
         }
+    }
+
+    /// Read the contents of `gameinfo.txt` in directory from `self.get_mod_location()`
+    pub fn read_gameinfo_file(&mut self) -> Result<Option<Vec<u8>>, BeansError> {
+        let location = self.gameinfo_location();
+        if helper::file_exists(location.clone()) == false {
+            return Ok(None);
+        }
+        let file = std::fs::read(&location)?;
+        Ok(Some(file))
+    }
+
+    /// Get the location of `gameinfo.txt` inside of the folder returned by `self.get_mod_location()`
+    pub fn gameinfo_location(&mut self) -> String {
+        let mut location =  self.get_mod_location();
+        location.push_str("gameinfo.txt");
+        location
+    }
+
+    /// Make sure that the permissions for gameinfo.txt on linux are 0644
+    #[cfg(target_os = "linux")]
+    pub fn gameinfo_perms(&mut self) -> Result<(), BeansError> {
+        let location = self.gameinfo_location();
+        if helper::file_exists(location.clone()) {
+            let perm = std::fs::Permissions::from_mode(0644 as u32);
+            std::fs::set_permissions(&location, perm)?;
+        }
+        Ok(())
+    }
+    #[cfg(not(target_os = "linux"))]
+    pub fn gameinfo_perms(&mut self) -> Result<(), BeansError> {
+        Ok(())
     }
 
     /// Download package with Progress Bar.
