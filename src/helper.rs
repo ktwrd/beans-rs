@@ -2,7 +2,7 @@ use std::fs::read_to_string;
 use std::io::Write;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
-use crate::wizard::BeansError;
+use crate::BeansError;
 
 #[derive(Clone, Debug)]
 pub enum InstallType

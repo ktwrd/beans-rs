@@ -3,7 +3,7 @@ use std::fs::read_to_string;
 use std::io::Write;
 use crate::helper;
 use crate::helper::{find_sourcemod_path, InstallType};
-use crate::wizard::BeansError;
+use crate::BeansError;
 
 /// get the current version installed via the .adastral file in the sourcemod mod folder.
 /// will parse the value of `version` as usize.

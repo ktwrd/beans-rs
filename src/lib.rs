@@ -6,6 +6,8 @@ pub mod wizard;
 pub mod version;
 mod ctx;
 pub use ctx::*;
+mod error;
+pub use error::*;
 
 
 

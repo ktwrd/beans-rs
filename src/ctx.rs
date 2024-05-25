@@ -1,7 +1,6 @@
-use crate::{depends, helper, version};
+use crate::{BeansError, depends, helper, version};
 use crate::helper::{find_sourcemod_path, InstallType};
 use crate::version::{RemotePatch, RemoteVersion, RemoteVersionResponse};
-use crate::wizard::BeansError;
 
 #[derive(Debug, Clone)]
 pub struct RunnerContext
