@@ -1,8 +1,7 @@
 use crate::{BeansError, depends, helper, RunnerContext};
 use crate::helper::{find_sourcemod_path, InstallType};
-use crate::version::{AdastralVersionFile, RemoteVersion};
 use async_recursion::async_recursion;
-use crate::workflows::InstallWorkflow;
+use crate::workflows::{InstallWorkflow, UpdateWorkflow};
 
 #[derive(Debug, Clone)]
 pub struct WizardContext
@@ -80,7 +79,7 @@ impl WizardContext
     /// Check for any updates, and if there are any, we install them.
     pub async fn task_update(&mut self) -> Result<(), BeansError>
     {
-        todo!()
+        UpdateWorkflow::wizard(&mut self.context).await
     }
     /// Verify the current data for the target sourcemod.
     pub async fn task_verify(&mut self) -> Result<(), BeansError>
