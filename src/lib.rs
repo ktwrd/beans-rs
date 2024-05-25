@@ -1,6 +1,6 @@
 use const_format::concatcp;
 use crate::helper::{find_sourcemod_path, InstallType};
-use crate::version::RemoteVersionResponse;
+use crate::version::{RemoteVersion, RemoteVersionResponse};
 use crate::wizard::BeansError;
 
 pub mod depends;
@@ -60,5 +60,18 @@ impl RunnerContext
             remote_version_list: version_list,
             current_version: crate::version::get_current_version()
         });
+    }
+
+    /// Get the latest item in `remote_version_list`
+    pub fn latest_remote_version(&mut self) -> (usize, RemoteVersion)
+    {
+        let mut highest = usize::MIN;
+        for (key, _) in self.remote_version_list.clone().versions.into_iter() {
+            if key > highest {
+                highest = key;
+            }
+        }
+        let x = self.remote_version_list.versions.get(&highest).unwrap();
+        (highest, x.clone())
     }
 }

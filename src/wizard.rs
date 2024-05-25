@@ -67,22 +67,10 @@ impl WizardContext
         std::process::exit(0)
     }
 
-    fn latest_remote_version(&mut self) -> (usize, RemoteVersion)
-    {
-        let mut highest = usize::MIN;
-        for (key, _) in self.context.remote_version_list.clone().versions.into_iter() {
-            if key > highest {
-                highest = key;
-            }
-        }
-        let x = self.context.remote_version_list.versions.get(&highest).unwrap();
-        (highest, x.clone())
-    }
-
     /// Install the target game.
     pub async fn task_install(&mut self) -> Result<(), BeansError>
     {
-        let (latest_remote_id, latest_remote) = self.latest_remote_version();
+        let (latest_remote_id, latest_remote) = self.context.latest_remote_version();
         if let Some(cv) = self.context.current_version {
             if latest_remote_id < cv {
                 println!("Installed version is newer than the latest remote version? (local: {}, remote: {})", cv, latest_remote_id);
@@ -164,7 +152,7 @@ impl WizardContext
     pub fn has_patch_available(&mut self) -> Option<RemotePatch>
     {
         let current_version = self.context.current_version.clone();
-        let (remote_version, _) = self.latest_remote_version();
+        let (remote_version, _) = self.context.latest_remote_version();
         match current_version {
             Some(cv) => {
                 for (_, patch) in self.context.remote_version_list.clone().patches.into_iter() {
