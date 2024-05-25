@@ -18,6 +18,10 @@ pub use error::*;
 pub const DATA_DIR: &str = "/open_fortress/";
 #[cfg(windows)]
 pub const DATA_DIR: &str = "\\open_fortress\\";
+#[cfg(not(windows))]
+pub const STAGING_DIR: &str = "/butler-staging";
+#[cfg(windows)]
+pub const STAGING_DIR: &str = "\\butler-staging";
 
 pub const SOURCE_URL: &str = "https://beans.adastral.net/";
 pub const UPDATE_HASH_URL_WINDOWS: &str = concatcp!(SOURCE_URL, "beans_sha512sum_windows");

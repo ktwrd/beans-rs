@@ -50,6 +50,19 @@ impl RunnerContext
         smp_x
     }
 
+    /// Get staging location for butler.
+    /// {sourcemod_dir}{crate::STAGING_DIR}
+    /// e.g; /home/kate/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/sourcemods/butler-staging
+    ///      C:\Games\Steam\steamapps\sourcemods\butler-staging
+    pub fn get_staging_location(&mut self) -> String {
+        let mut smp_x = self.sourcemod_path.clone();
+        if smp_x.ends_with("/") || smp_x.ends_with("\\") {
+            smp_x.pop();
+        }
+        smp_x.push_str(crate::STAGING_DIR);
+        smp_x
+    }
+
     /// Get the latest item in `remote_version_list`
     pub fn latest_remote_version(&mut self) -> (usize, RemoteVersion)
     {
