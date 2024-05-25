@@ -66,6 +66,15 @@ pub enum BeansError
     #[error("Version {version:#?} could not be found on the server.")]
     RemoteVersionNotFound {
         version: Option<usize>
+    },
+
+    #[error("Could not find steam installation")]
+    SteamNotFound,
+
+    #[error("{msg}")]
+    RegistryKeyFailure {
+        msg: String,
+        error: std::io::Error
     }
 }
 #[derive(Debug)]
