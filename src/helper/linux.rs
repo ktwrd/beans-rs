@@ -48,14 +48,28 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
 fn find_steam_reg_path() -> Result<String, BeansError>
 {
     for x in STEAM_POSSIBLE_DIR.into_iter() {
-        let mut h = simple_home_dir::home_dir().expect("Failed to get home directory").to_str()?.to_string();
-        if h.ends_with("/") {
-            h.pop();
-        }
-        let reg_loc = x.replace("~", h.as_str());
-        if file_exists(reg_loc.clone())
-        {
-            return Ok(reg_loc);
+        match simple_home_dir::home_dir() {
+            Some(v) => {
+                match v.to_str() {
+                    Some(k) => {
+                        let mut h = k.to_string();
+                        if h.ends_with("/") {
+                            h.pop();
+                        }
+                        let reg_loc = x.replace("~", h.as_str());
+                        if crate::helper::file_exists(reg_loc.clone())
+                        {
+                            return Ok(reg_loc);
+                        }
+                    },
+                    None => {
+                        return Err(BeansError::SteamNotFound);
+                    }
+                }
+            },
+            None => {
+                return Err(BeansError::SteamNotFound);
+            }
         }
     }
     return Err(BeansError::SteamNotFound);

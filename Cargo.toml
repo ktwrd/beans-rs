@@ -26,13 +26,11 @@ tokio-util = { version= "0.7.11", features = ["io"] }
 zstd = "0.13.1"
 thiserror = "1.0.61"
 include-flate = "0.3.0"
+simple-home-dir = "0.3.4"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winconsole = "0.11.1"
 winreg = "0.52.0"
-
-[target.'cfg(not(target_os = "windows"))'.dependencies]
-simple-home-dir = "0.3.4"
 
 [dependencies.tokio]
 version = "1.37.0"
