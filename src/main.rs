@@ -12,6 +12,7 @@ pub const DATA_DIR: &str = "\\open_fortress\\";
 pub const SOURCE_URL: &str = "https://beans.adastral.net/";
 pub const UPDATE_HASH_URL_WINDOWS: &str = concatcp!(SOURCE_URL, "beans_sha512sum_windows");
 pub const UPDATE_HASH_URL_LINUX: &str = concatcp!(SOURCE_URL, "beans_sha512sum_linux");
+pub mod depends;
 
 #[tokio::main]
 async fn main() {

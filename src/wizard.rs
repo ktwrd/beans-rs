@@ -1,4 +1,4 @@
-use crate::helper;
+use crate::{depends, helper};
 use crate::helper::{find_sourcemod_path, InstallType};
 use crate::version::{AdastralVersionFile, RemotePatch, RemoteVersion, RemoteVersionResponse};
 use async_recursion::async_recursion;
@@ -14,8 +14,8 @@ impl WizardContext
     /// run the wizard!
     pub async fn run()
     {
-        helper::try_write_deps();
-        helper::try_install_vcredist();
+        depends::try_write_deps();
+        depends::try_install_vcredist();
         let sourcemod_path = get_path();
         let version_list = crate::version::get_version_list().await;
 
