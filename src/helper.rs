@@ -295,3 +295,52 @@ pub async fn download_with_progress(url: String, out_location: String) -> Result
     pb.finish();
     Ok(())
 }
+
+/// Format parameter `i` to a human-readable size.
+pub fn format_size(i: usize) -> String {
+    let value = i.to_string();
+
+    let decimal_points: usize = 3;
+    let mut dec_l = decimal_points * 6;
+    if i < 1_000 {
+        dec_l = decimal_points * 0;
+    } else if i < 1_000_000 {
+        dec_l = decimal_points * 1;
+    } else if i < 1_000_000_000 {
+        dec_l = decimal_points * 2;
+    } else if i < 1_000_000_000_000 {
+        dec_l = decimal_points * 3;
+    } else if i < 1_000_000_000_000_000 {
+        dec_l = decimal_points * 4;
+    } else if i < 1_000_000_000_000_000_000 {
+        dec_l = decimal_points * 5;
+    }
+
+    let dec: String = value.chars()
+        .into_iter()
+        .rev()
+        .take(dec_l as usize)
+        .collect();
+
+    let mut dec_x: String = dec.chars().into_iter().rev().take(decimal_points).collect();
+    dec_x = dec_x.trim_end_matches('0').to_string();
+
+    let whole_l = value.len() - dec_l;
+
+    let mut whole: String = value.chars().into_iter().take(whole_l).collect();
+    if dec_x.len() > 0 {
+        whole.push('.');
+    }
+    let pfx_data: Vec<(usize, &str)> = vec![
+        (1_000, "b"),
+        (1_000_000, "kb"),
+        (1_000_000_000, "mb"),
+        (1_000_000_000_000, "gb"),
+        (1_000_000_000_000_000, "tb")];
+    for (s, c) in pfx_data.into_iter() {
+        if i < s {
+            return format!("{}{}{}", whole, dec_x, c);
+        }
+    }
+    return format!("{}{}", whole, dec_x);
+}
