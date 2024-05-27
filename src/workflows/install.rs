@@ -10,7 +10,7 @@ impl InstallWorkflow {
     pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError>
     {
         let (latest_remote_id, latest_remote) = ctx.latest_remote_version();
-        if let Some(cv) = ctx.current_version {
+        if let Some(_cv) = ctx.current_version {
             println!("[InstallWorkflow::wizard] re-installing! game files will not be touched until extraction");
         }
 

@@ -1,7 +1,6 @@
 #[cfg(not(target_os = "windows"))]
 use std::os::unix::fs::PermissionsExt;
 use crate::{BeansError, BUTLER_BINARY, BUTLER_LIB_1, BUTLER_LIB_2, helper};
-use std::backtrace::Backtrace;
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
