@@ -34,7 +34,7 @@ impl InstallWorkflow {
             });
         }
 
-        println!("[InstallWorkflow::Wizard] Extracting game");
+        println!("[InstallWorkflow::Wizard] Extracting to {out_dir}");
         RunnerContext::extract_package(package_loc, out_dir.clone())?;
         if let Some(lri) = version_id {
             let x = AdastralVersionFile {
