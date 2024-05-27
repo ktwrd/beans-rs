@@ -16,6 +16,7 @@ pub mod butler;
 
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 
+pub static mut FORCE_DEBUG: bool = false;
 
 #[cfg(not(target_os = "windows"))]
 pub const DATA_DIR: &str = "/open_fortress/";

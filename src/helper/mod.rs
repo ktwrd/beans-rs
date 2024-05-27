@@ -273,11 +273,9 @@ pub fn format_size(i: usize) -> String {
     return format!("{}{}", whole, dec_x);
 }
 
-#[cfg(not(debug_assertions))]
 pub fn do_debug() -> bool {
-    std::env::var("BEANS_DEBUG").is_ok_and(|x| x == "1")
-}
-#[cfg(debug_assertions)]
-pub fn do_debug() -> bool {
-    true
+    unsafe {
+        std::env::var("BEANS_DEBUG").is_ok_and(|x| x == "1")
+            || crate::FORCE_DEBUG
+    }
 }
