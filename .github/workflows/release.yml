@@ -1,8 +1,11 @@
 # .github/workflows/release.yml
 
 on:
-  release:
-    types: [created]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Github Release Tag'
+        required: true
 
 jobs:
   release:
@@ -11,20 +14,23 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        target: [x86_64-pc-windows-gnu, x86_64-unknown-linux-musl]
+        include:
+          - os: ubuntu-latest
+            filename: 'beans-rs'
+          - os: windows-latest
+            filename: 'beans-rs.exe'
     steps:
       - uses: actions/checkout@master
-      - name: Compile and release
+      - name: Compile
         uses: rust-build/rust-build.action@v1.4.5
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          RUSTTARGET: ${{ matrix.target }}
-          EXTRA_FILES: "README.md LICENSE"
-      - name: Upload artifact
-        uses: actions/upload-artifact@v3
+          EXTRA_FILES: "README.md LICENSE.txt"
+      - name: Upload binaries to release
+        uses: softprops/action-gh-release@v1
         with:
-          name: Binary
-          path: |
-            ${{ steps.compile.outputs.BUILT_ARCHIVE }}
-            ${{ steps.compile.outputs.BUILT_CHECKSUM }}
+          files: target/release/${{ matrix.filename }}
+          tag_name: ${{ github.event.inputs.tag }}
+          draft: false
+          prerelease: true
