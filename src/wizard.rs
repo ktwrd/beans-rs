@@ -47,7 +47,7 @@ impl WizardContext
     {
         println!();
         println!("1 - Install or reinstall the game");
-        println!("2 - Check for and apply and available updates");
+        println!("2 - Check for and apply any available updates");
         println!("3 - Verify and repair game files");
         println!();
         println!("q - Quit");
