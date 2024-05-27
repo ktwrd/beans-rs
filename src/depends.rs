@@ -51,6 +51,20 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
 #[cfg(target_os = "windows")]
 pub async fn try_install_vcredist() -> Result<(), BeansError>
 {
+    if !match winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE).open_subkey(String::from("Software\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\x64")) {
+        Ok(v) => {
+            let x: std::io::Result<u32> = v.get_value("Installed");
+            match x {
+                Ok(_) => false,
+                Err(_) => true
+            }
+        },
+        Err(_) => true
+    } {
+        println!("[depends::try_install_vcredist] Seems like vcredist is already installed");
+        return Ok(());
+    }
+
     let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
     if out_loc.ends_with("\\") == false {
         out_loc.push_str("\\");
@@ -73,7 +87,9 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
         .expect("Failed to install vsredist!")
         .wait()?;
     
-    std::fs::remove_file(&out_loc)?;
+    if helper::file_exists(out_loc.clone()) {
+        std::fs::remove_file(&out_loc)?;
+    }
     
     Ok(())
 }
