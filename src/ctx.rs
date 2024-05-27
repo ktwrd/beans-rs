@@ -194,8 +194,9 @@ impl RunnerContext
         let tar_tmp_location = helper::get_tmp_file("data.tar".to_string());
 
         let zstd_file = std::fs::File::open(&zstd_location)?;
-        let tar_tmp_file = std::fs::File::create_new(&tar_tmp_location)?;
+        let mut tar_tmp_file = std::fs::File::create_new(&tar_tmp_location)?;
         zstd::stream::copy_decode(zstd_file, &tar_tmp_file)?;
+        tar_tmp_file = std::fs::File::open(&tar_tmp_location)?; // we do this again to make sure that the tar is properly opened.
 
         let mut archive = tar::Archive::new(&tar_tmp_file);
         match archive.unpack(&out_dir) {
