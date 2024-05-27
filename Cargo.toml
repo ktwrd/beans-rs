@@ -27,6 +27,7 @@ zstd = "0.13.1"
 thiserror = "1.0.61"
 include-flate = "0.3.0"
 simple-home-dir = "0.3.4"
+clap = { version = "4.5.4", features = ["cargo"] }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winconsole = "0.11.1"
