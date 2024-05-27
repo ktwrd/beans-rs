@@ -1,6 +1,10 @@
-﻿use std::{env, io};
+﻿#[allow(dead_code, unused_macros, unused_imports)]
+
+
+use std::{env, io};
 #[cfg(target_os = "windows")]
 use winres::WindowsResource;
+#[allow(unused_macros)]
 macro_rules! print {
     ($($tokens: tt)*) => {
         println!("cargo:warning={}", format!($($tokens)*))
@@ -33,6 +37,7 @@ fn main() -> io::Result<()> {
 fn main() -> io::Result<()> {
     Ok(())
 }
+#[allow(dead_code)]
 fn path_exists(path: String) -> bool
 {
     let p = std::path::Path::new(path.as_str());
