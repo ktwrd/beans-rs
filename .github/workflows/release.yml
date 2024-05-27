@@ -21,12 +21,13 @@ jobs:
             filename: 'beans-rs.exe'
     steps:
       - uses: actions/checkout@master
-      - name: Compile
-        uses: rust-build/rust-build.action@v1.4.5
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions-rs/toolchain@v1
         with:
-          EXTRA_FILES: "README.md LICENSE.txt"
+          toolchain: stable
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release --all-features
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
         with:
