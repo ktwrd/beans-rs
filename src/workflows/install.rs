@@ -37,9 +37,15 @@ impl InstallWorkflow {
         println!("[InstallWorkflow::Wizard] Extracting game");
         RunnerContext::extract_package(package_loc, out_dir.clone())?;
         if let Some(lri) = version_id {
-            AdastralVersionFile {
+            let x = AdastralVersionFile {
                 version: lri.to_string()
-            }.write()?;
+            }.write();
+            if let Err(e) = x {
+                println!("[InstallWorkflow::install_from] Failed to set version to {} in .adastral", lri);
+                if helper::do_debug() {
+                    eprintln!("{:#?}", e);
+                }
+            }
         } else {
             eprintln!("Not writing .adastral since the version wasn't provided");
         }
