@@ -1,14 +1,21 @@
 # beans-rs
-A rewrite of the minimal [beans](https://github.com/int-72h/ofinstaller-beans) launcher, but in rust!
+A rewrite of the original [beans](https://github.com/int-72h/ofinstaller-beans) installer, but in rust!
 
-Currently, everything is a 1:1 port from the python version, and it's very incomplete!
+Currently, everything is a 1:1 port from the python version, and things may be buggy or incomplete.
 
-Just like the python version, this is licensed under `GPLv3` (see LICENSE.txt).
+`beans-rs` is licensed under `GPLv3-only`, so please respect it!
 
 ## Developing
-At the moment the only dependency is the rust toolchain. Use [rustup](https://rustup.rs/) to easily install it.
+Requirements
+- Rust Toolchain (nightly, only for building)
+  - Recommended to use [rustup](https://rustup.rs/) to install.
+- x86-64/AMD64 Processor ([see notes](#notes-binaries))
+- **Following requirements are only required for testing**
+- Steam Installed
+  - Source SDK Base 2013 Multiplayer ([install](steam://instal/243750))
 
 ## Notes
-pls talk to `@kate.pet` if you wanna help out! (remove when this repo goes public)
+### Binaries
+All the bundled/embedded binaries are for x86-64/AMD64 systems. We only support that architecture because that's what Open Fortress supports.
 
-All the `exe` files in `Binaries` only support x86 platforms! and the other binaries only support (i think) linux w/ glibc. I haven't tested that, but someone probably should. (kate, 2024/05/24)
+Linux Systems not using glibc have not been tested.
