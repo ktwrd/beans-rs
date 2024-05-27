@@ -199,7 +199,16 @@ impl RunnerContext
         tar_tmp_file = std::fs::File::open(&tar_tmp_location)?; // we do this again to make sure that the tar is properly opened.
 
         let mut archive = tar::Archive::new(&tar_tmp_file);
-        match archive.unpack(&out_dir) {
+        let x = archive.unpack(&out_dir);
+        if helper::file_exists(tar_tmp_location.clone()) {
+            if let Err(e) = std::fs::remove_file(tar_tmp_location.clone()) {
+                eprintln!("[RunnerContext::extract_package] Failed to delete temporary file: {:}", e);
+                if helper::do_debug() {
+                    eprintln!("Failed to delete {}\n{:#?}", tar_tmp_location, e);
+                }
+            }
+        }
+        match x {
             Err(e) => Err(BeansError::TarExtractFailure{
                 src_file: tar_tmp_location,
                 target_dir: out_dir,
