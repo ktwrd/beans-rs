@@ -23,6 +23,10 @@ impl InstallWorkflow {
     }
 
     /// Install the `.tar.zstd` file at `package_loc` to `out_dir`
+    /// package_loc: Location to a file that is a `.tar.zstd` file.
+    /// out_dir: should be `RunnerContext.sourcemod_path`
+    /// version_id: Version that is from `package_loc`. When not specified, `.adastral` will not be written to.
+    /// Note: This function doesn't check the extension when extracting.
     pub async fn install_from(package_loc: String, out_dir: String, version_id: Option<usize>) -> Result<(), BeansError>
     {
         if helper::file_exists(package_loc.clone()) == false {
