@@ -11,7 +11,7 @@ pub struct WizardContext
 impl WizardContext
 {
     /// run the wizard!
-    pub async fn run()
+    pub async fn run(sml_via: SourceModDirectoryParam)
     {
         depends::try_write_deps();
         if let Err(e) = depends::try_install_vcredist().await {
@@ -20,7 +20,21 @@ impl WizardContext
                 eprintln!("[WizardContext::run] {:#?}", e);
             }
         }
-        let sourcemod_path = get_path();
+        let sourcemod_path = match sml_via
+        {
+            SourceModDirectoryParam::AutoDetect => {
+                if helper::do_debug() {
+                    println!("[WizardContext::run] Auto-detecting sourcemods directory");
+                }
+                get_path()
+            },
+            SourceModDirectoryParam::WithLocation(l) => {
+                if helper::do_debug() {
+                    println!("[WizardContext::run] Using specified location {}", l);
+                }
+                l
+            }
+        };
         let version_list = crate::version::get_version_list().await;
 
         if helper::install_state() == InstallType::OtherSource {
@@ -111,4 +125,19 @@ fn get_path() -> String
         }
     }
     todo!();
+}
+
+#[derive(Clone, Debug)]
+pub enum SourceModDirectoryParam
+{
+    /// Default value. Will autodetect location.
+    AutoDetect,
+    /// Use from the specified sourcemod location.
+    WithLocation(String)
+}
+impl Default for SourceModDirectoryParam
+{
+    fn default() -> Self {
+        SourceModDirectoryParam::AutoDetect
+    }
 }
