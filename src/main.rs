@@ -81,7 +81,7 @@ impl Launcher
     {
         let mut sml_dir_manual: Option<String> = None;
         if let Some(x) = matches.get_one::<String>("to") {
-            sml_dir_manual = Some(x.to_string());
+            sml_dir_manual = Some(parse_location(x.to_string()));
             if helper::do_debug() {
                 println!("[Launcher::set_to_location] Found in arguments! {}", x);
             }

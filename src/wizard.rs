@@ -20,7 +20,7 @@ impl WizardContext
                 eprintln!("[WizardContext::run] {:#?}", e);
             }
         }
-        let sourcemod_path = match sml_via
+        let sourcemod_path = parse_location(match sml_via
         {
             SourceModDirectoryParam::AutoDetect => {
                 if helper::do_debug() {
@@ -34,7 +34,7 @@ impl WizardContext
                 }
                 l
             }
-        };
+        });
         let version_list = crate::version::get_version_list().await;
 
         if helper::install_state(Some(sourcemod_path.clone())) == InstallType::OtherSource {

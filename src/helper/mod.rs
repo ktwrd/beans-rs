@@ -176,15 +176,16 @@ pub fn parse_location(location: String) -> String
 /// Get the amount of free space on the drive in the location provided.
 pub fn get_free_space(location: String) -> Result<u64, BeansError>
 {
+    let real_location = parse_location(location);
     for disk in sysinfo::Disks::new_with_refreshed_list().list() {
         if let Some(mp) = disk.mount_point().to_str() {
-            if location.starts_with(&mp) {
+            if real_location.clone().starts_with(&mp) {
                 return Ok(disk.available_space())
             }
         }
     }
 
-    Err(BeansError::FreeSpaceCheckFailure(location))
+    Err(BeansError::FreeSpaceCheckFailure(real_location))
 }
 /// Check if the location provided has enough free space.
 pub fn has_free_space(location: String, size: usize) -> Result<bool, BeansError>

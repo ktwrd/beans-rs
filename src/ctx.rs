@@ -1,6 +1,6 @@
 use std::backtrace::Backtrace;
 use crate::{BeansError, depends, helper, version};
-use crate::helper::{find_sourcemod_path, InstallType};
+use crate::helper::{find_sourcemod_path, InstallType, parse_location};
 use crate::version::{RemotePatch, RemoteVersion, RemoteVersionResponse};
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
@@ -14,7 +14,7 @@ pub struct RunnerContext
 }
 impl RunnerContext
 {
-    pub async fn create_auto() -> Result<Self, BeansError>
+    pub async fn create_auto(sml_via: SourceModDirectoryParam) -> Result<Self, BeansError>
     {
         depends::try_write_deps();
         if let Err(e) = depends::try_install_vcredist().await {
@@ -23,15 +23,24 @@ impl RunnerContext
                 eprintln!("[RunnerContext::create_auto] {:#?}", e);
             }
         }
-        let sourcemod_path = match find_sourcemod_path() {
-            Ok(v) => v,
-            Err(e) => {
-                if helper::do_debug() {
-                    eprintln!("[RunnerContext::create_auto] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+        let sourcemod_path = parse_location(match sml_via
+        {
+            SourceModDirectoryParam::AutoDetect => match find_sourcemod_path() {
+                Ok(v) => v,
+                Err(e) => {
+                    if helper::do_debug() {
+                        eprintln!("[RunnerContext::create_auto] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+                    }
+                    return Err(BeansError::SourceModLocationNotFound);
                 }
-                return Err(BeansError::SourceModLocationNotFound);
+            },
+            SourceModDirectoryParam::WithLocation(l) => {
+                if helper::do_debug() {
+                    println!("[RunnerContext::create_auto] Using specified location {}", l);
+                }
+                l
             }
-        };
+        });
         let version_list = crate::version::get_version_list().await;
 
         if helper::install_state(Some(sourcemod_path.clone())) == InstallType::OtherSource {
@@ -40,10 +49,15 @@ impl RunnerContext
 
         return Ok(Self
         {
-            sourcemod_path: sourcemod_path.clone(),
+            sourcemod_path: parse_location(sourcemod_path.clone()),
             remote_version_list: version_list,
             current_version: crate::version::get_current_version(Some(sourcemod_path.clone()))
         });
+    }
+    /// Sets `remote_version_list` from `version::get_version_list()`
+    pub async fn set_remote_version_list(&mut self)
+    {
+        self.remote_version_list = version::get_version_list().await;
     }
 
     /// Get the location of the sourcemod mod
