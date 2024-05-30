@@ -1,7 +1,7 @@
 use std::str::FromStr;
 use clap::{Arg, ArgMatches, Command};
 use beans_rs::{helper, RunnerContext, wizard};
-use beans_rs::wizard::SourceModDirectoryParam;
+use beans_rs::SourceModDirectoryParam;
 use beans_rs::workflows::InstallWorkflow;
 
 #[tokio::main]

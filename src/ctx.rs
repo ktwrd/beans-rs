@@ -246,3 +246,19 @@ impl RunnerContext
 pub const SYMLINK_FILES: &'static [&'static [&'static str; 2]] = &[
     &["bin/server.so", "bin/server_srv.so"]
 ];
+
+
+#[derive(Clone, Debug)]
+pub enum SourceModDirectoryParam
+{
+    /// Default value. Will autodetect location.
+    AutoDetect,
+    /// Use from the specified sourcemod location.
+    WithLocation(String)
+}
+impl Default for SourceModDirectoryParam
+{
+    fn default() -> Self {
+        SourceModDirectoryParam::AutoDetect
+    }
+}

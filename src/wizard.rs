@@ -1,5 +1,5 @@
-use crate::{BeansError, depends, helper, RunnerContext};
-use crate::helper::{find_sourcemod_path, InstallType};
+use crate::{BeansError, depends, helper, RunnerContext, SourceModDirectoryParam};
+use crate::helper::{find_sourcemod_path, InstallType, parse_location};
 use async_recursion::async_recursion;
 use crate::workflows::{InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
 
@@ -125,19 +125,4 @@ fn get_path() -> String
         }
     }
     todo!();
-}
-
-#[derive(Clone, Debug)]
-pub enum SourceModDirectoryParam
-{
-    /// Default value. Will autodetect location.
-    AutoDetect,
-    /// Use from the specified sourcemod location.
-    WithLocation(String)
-}
-impl Default for SourceModDirectoryParam
-{
-    fn default() -> Self {
-        SourceModDirectoryParam::AutoDetect
-    }
 }
