@@ -1,6 +1,7 @@
 use std::str::FromStr;
 use clap::{Arg, ArgMatches, Command};
 use beans_rs::{helper, RunnerContext, wizard};
+use beans_rs::helper::parse_location;
 use beans_rs::SourceModDirectoryParam;
 use beans_rs::workflows::InstallWorkflow;
 
@@ -28,7 +29,8 @@ impl Launcher
     {
         let arg_to = Arg::new("to")
             .long("to")
-            .help("Manually specify sourcemods directory.");
+            .help("Manually specify sourcemods directory. When not provided, beans-rs will automatically detect the sourcemods directory.")
+            .required(false);
         let cmd = Command::new("beans-rs")
             .version(clap::crate_version!())
             .bin_name(clap::crate_name!())
@@ -55,6 +57,9 @@ impl Launcher
                 ))
             .subcommand(Command::new("wizard")
                 .about("Use the wizard to install. (Default subcommand)")
+                .arg(arg_to.clone()))
+            .subcommand(Command::new("install")
+                .about("Install to a custom location.")
                 .arg(arg_to.clone()));
 
         let mut i = Self {
@@ -106,6 +111,7 @@ impl Launcher
 
     pub async fn task_manual_install(&mut self, matches: &ArgMatches)
     {
+        self.to_location = Launcher::find_arg_to(&matches);
         let loc = matches.get_one::<String>("location").unwrap();
         let v = matches.get_one::<String>("version").unwrap();
         let version = match usize::from_str(v) {
@@ -118,17 +124,7 @@ impl Launcher
                 return;
             }
         };
-        let ctx = match RunnerContext::create_auto().await {
-            Ok(v) => v,
-            Err(e) => {
-                eprintln!("{:}", e);
-                if helper::do_debug() {
-                    eprintln!("======== Full Error ========");
-                    eprintln!("{:#?}", e);
-                }
-                std::process::exit(0);
-            }
-        };
+        let ctx = self.try_create_context().await;
         let smp_x = ctx.sourcemod_path.clone();
         if let Err(e) = InstallWorkflow::install_from(loc.clone(), smp_x, Some(version)).await {
             println!("Failed to run InstallWorkflow::install_from! {:}", e);
@@ -139,15 +135,43 @@ impl Launcher
         let _ = helper::get_input("Press enter/return to exit");
         std::process::exit(0);
     }
-    pub async fn task_wizard(&mut self)
+    fn try_get_smdp(&mut self) -> SourceModDirectoryParam
     {
-        let x = match &self.to_location {
+        match &self.to_location {
             Some(v) => {
                 SourceModDirectoryParam::WithLocation(v.to_string())
             },
             None => SourceModDirectoryParam::default()
-        };
+        }
+    }
+    pub async fn task_wizard(&mut self)
+    {
+        let x = self.try_get_smdp();
         wizard::WizardContext::run(x).await;
+    }
+    pub async fn task_install(&mut self, matches: &ArgMatches)
+    {
+        self.to_location = Launcher::find_arg_to(&matches);
+        let mut ctx = self.try_create_context().await;
+        if let Err(e) = InstallWorkflow::wizard(&mut ctx).await {
+            eprintln!("Failed to install {:}", e);
+            if helper::do_debug() {
+                eprintln!("{:#?}", e);
+            }
+        }
+    }
+    async fn try_create_context(&mut self) -> RunnerContext {
+        match RunnerContext::create_auto(self.try_get_smdp()).await {
+            Ok(v) => v,
+            Err(e) => {
+                eprintln!("{:}", e);
+                if helper::do_debug() {
+                    eprintln!("======== Full Error ========");
+                    eprintln!("{:#?}", e);
+                }
+                std::process::exit(0);
+            }
+        }
     }
 }
 
