@@ -139,6 +139,40 @@ pub fn generate_rand_str(length: usize) -> String
     s.to_uppercase()
 }
 
+pub fn parse_location(location: String) -> String
+{
+    let path = std::path::Path::new(&location);
+    let real_location = match path.to_str() {
+        Some(v) => {
+            let p = std::fs::canonicalize(v);
+            match p {
+                Ok(x) => {
+                    match x.clone().to_str() {
+                        Some(m) => m.to_string(),
+                        None => {
+                            eprintln!("[helper::parse_location] Failed to parse location {}", location);
+                            return location;
+                        }
+                    }
+                },
+                Err(e) => {
+                    eprintln!("[helper::parse_location] Failed to parse location {}", location);
+                    eprintln!("[helper::parse_location] {:}", e);
+                    if helper::do_debug() {
+                        eprintln!("{:#?}", e);
+                    }
+                    return location;
+                }
+            }
+        },
+        None => {
+            eprintln!("[helper::parse_location] Failed to parse location {}", location);
+            return location;
+        }
+    };
+    real_location
+}
+
 /// Get the amount of free space on the drive in the location provided.
 pub fn get_free_space(location: String) -> Result<u64, BeansError>
 {
