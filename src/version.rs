@@ -7,13 +7,13 @@ use crate::BeansError;
 
 /// get the current version installed via the .adastral file in the sourcemod mod folder.
 /// will parse the value of `version` as usize.
-pub fn get_current_version() -> Option<usize>
+pub fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
 {
-    let install_state = helper::install_state();
+    let install_state = helper::install_state(sourcemods_location.clone());
     if install_state != InstallType::Adastral {
         return None;
     }
-    match get_mod_location() {
+    match get_mod_location(sourcemods_location) {
         Some(smp_x) => {
             // TODO generate BeansError instead of using .expect
             let location = format!("{}.adastral", smp_x);
@@ -25,23 +25,26 @@ pub fn get_current_version() -> Option<usize>
         None => None
     }
 }
-fn get_version_location() -> Option<String>
+fn get_version_location(sourcemods_location: Option<String>) -> Option<String>
 {
-    match get_mod_location() {
+    match get_mod_location(sourcemods_location) {
         Some(v) => Some(format!("{}.adastral", v)),
         None => None
     }
 }
 /// get the full location of the sourcemod mod directory.
-fn get_mod_location() -> Option<String>
+fn get_mod_location(sourcemods_location: Option<String>) -> Option<String>
 {
-    let mut smp_x = match find_sourcemod_path() {
-        Ok(v) => v,
-        Err(e) => {
-            if helper::do_debug() {
-                eprintln!("[version::get_mod_location] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+    let mut smp_x = match sourcemods_location {
+        Some(v) => v,
+        None => match find_sourcemod_path() {
+            Ok(v) => v,
+            Err(e) => {
+                if helper::do_debug() {
+                    eprintln!("[version::get_mod_location] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+                }
+                return None;
             }
-            return None;
         }
     };
     if smp_x.ends_with("/") || smp_x.ends_with("\\") {
@@ -51,9 +54,9 @@ fn get_mod_location() -> Option<String>
     Some(smp_x)
 }
 /// migrate from old file (.revision) to new file (.adastral) in sourcemod mod directory.
-pub fn update_version_file()
+pub fn update_version_file(sourcemods_location: Option<String>)
 {
-    let install_state = helper::install_state();
+    let install_state = helper::install_state(sourcemods_location.clone());
     if install_state == InstallType::Adastral {
         return;
     }
@@ -66,14 +69,18 @@ pub fn update_version_file()
         return;
     }
 
-    let mut smp_x = match find_sourcemod_path() {
-        Ok(v) => v,
-        Err(e) => {
-            if helper::do_debug() {
-                eprintln!("[version::update_version_file] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+    let mut smp_x = match sourcemods_location {
+        Some(v) => v,
+        None => match find_sourcemod_path() {
+            Ok(v) => v,
+            Err(e) => {
+                if helper::do_debug() {
+                    eprintln!("[version::update_version_file] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+                }
+                return;
             }
-            return;
         }
+
     };
     if smp_x.ends_with("/") || smp_x.ends_with("\\") {
         smp_x.pop();
@@ -125,8 +132,8 @@ pub struct AdastralVersionFile {
     pub version: String
 }
 impl AdastralVersionFile {
-    pub fn write(&self) -> Result<(), BeansError> {
-        match get_version_location() {
+    pub fn write(&self, sourcemods_location: Option<String>) -> Result<(), BeansError> {
+        match get_version_location(sourcemods_location) {
             Some(vl) => {
                 let f = match helper::file_exists(vl.clone()) {
                     true => std::fs::File::create(vl.clone()),

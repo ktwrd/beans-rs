@@ -43,7 +43,7 @@ impl InstallWorkflow {
         if let Some(lri) = version_id {
             let x = AdastralVersionFile {
                 version: lri.to_string()
-            }.write();
+            }.write(Some(out_dir.clone()));
             if let Err(e) = x {
                 println!("[InstallWorkflow::install_from] Failed to set version to {} in .adastral", lri);
                 if helper::do_debug() {

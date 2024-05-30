@@ -37,14 +37,14 @@ impl WizardContext
         };
         let version_list = crate::version::get_version_list().await;
 
-        if helper::install_state() == InstallType::OtherSource {
-            crate::version::update_version_file();
+        if helper::install_state(Some(sourcemod_path.clone())) == InstallType::OtherSource {
+            crate::version::update_version_file(Some(sourcemod_path.clone()));
         }
 
         let ctx = RunnerContext {
-            sourcemod_path,
+            sourcemod_path: sourcemod_path.clone(),
             remote_version_list: version_list,
-            current_version: crate::version::get_current_version()
+            current_version: crate::version::get_current_version(Some(sourcemod_path))
         };
 
         let mut i = Self

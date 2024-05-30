@@ -73,15 +73,18 @@ impl PartialEq for InstallType {
 }
 
 /// get the current type of installation.
-pub fn install_state() -> InstallType
+pub fn install_state(sourcemods_location: Option<String>) -> InstallType
 {
-    let mut smp_x = match find_sourcemod_path() {
-        Ok(v) => v,
-        Err(e) => {
-            if helper::do_debug() {
-                eprintln!("[helper::install_state] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+    let mut smp_x = match sourcemods_location {
+        Some(v) => v,
+        None => match find_sourcemod_path() {
+            Ok(v) => v,
+            Err(e) => {
+                if helper::do_debug() {
+                    eprintln!("[helper::install_state] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+                }
+                return InstallType::NotInstalled;
             }
-            return InstallType::NotInstalled;
         }
     };
     if smp_x.ends_with("/") || smp_x.ends_with("\\") {
@@ -154,21 +157,6 @@ pub fn has_free_space(location: String, size: usize) -> Result<bool, BeansError>
 {
     let space = get_free_space(location)?;
     return Ok((size as u64) < space);
-}
-/// Check if the sourcemod mod folder has enough free space.
-pub fn sml_has_free_space(size: usize) -> Result<bool, BeansError>
-{
-    match find_sourcemod_path() {
-        Ok(v) => {
-            has_free_space(v, size)
-        },
-        Err(e) => {
-            if helper::do_debug() {
-                eprintln!("[helper::sml_has_free_space] {} {:#?}", BeansError::SourceModLocationNotFound, e);
-            }
-            Err(BeansError::SourceModLocationNotFound)
-        }
-    }
 }
 
 /// Download file at the URL provided to the output location provided

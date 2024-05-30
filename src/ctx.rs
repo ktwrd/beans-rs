@@ -34,15 +34,15 @@ impl RunnerContext
         };
         let version_list = crate::version::get_version_list().await;
 
-        if helper::install_state() == InstallType::OtherSource {
-            version::update_version_file();
+        if helper::install_state(Some(sourcemod_path.clone())) == InstallType::OtherSource {
+            version::update_version_file(Some(sourcemod_path.clone()));
         }
 
         return Ok(Self
         {
-            sourcemod_path,
+            sourcemod_path: sourcemod_path.clone(),
             remote_version_list: version_list,
-            current_version: crate::version::get_current_version()
+            current_version: crate::version::get_current_version(Some(sourcemod_path.clone()))
         });
     }
 
@@ -162,13 +162,14 @@ impl RunnerContext
     /// Ok is the location to where it was downloaded to.
     pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
     {
+        let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
+
         if let Some(size) = version.pre_sz {
-            if helper::sml_has_free_space(size)? == false {
+            if helper::has_free_space(out_loc.clone(), size)? == false {
                 panic!("Not enough free space to install latest version!");
             }
         }
 
-        let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
         #[cfg(target_os = "windows")]
         if out_loc.ends_with("\\") == false {
             out_loc.push_str("\\");

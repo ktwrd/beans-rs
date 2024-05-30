@@ -29,10 +29,12 @@ impl UpdateWorkflow
 
         let gameinfo_backup = ctx.read_gameinfo_file()?;
 
-        if helper::sml_has_free_space(patch.tempreq)? == false {
+        if helper::has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq)? == false {
             println!("[UpdateWorkflow::wizard] Not enough free space! Requires {}", helper::format_size(patch.tempreq));
         }
-
+        if helper::do_debug() {
+            println!("{:#?}", remote_version);
+        }
         if remote_version.signature_url.is_none() {
             eprintln!("[UpdateWorkflow::wizard] Couldn't get signature URL for version {}", current_version_id);
         }
