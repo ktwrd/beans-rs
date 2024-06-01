@@ -64,7 +64,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
         return Ok(());
     }
 
-    info!("Installing Visual C++ Redistributable");
+    log::info!("Installing Visual C++ Redistributable");
     let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
     if out_loc.ends_with("\\") == false {
         out_loc.push_str("\\");
