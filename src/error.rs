@@ -1,5 +1,8 @@
 use std::backtrace::Backtrace;
+use std::num::ParseIntError;
 use thiserror::Error;
+use crate::version::AdastralVersionFile;
+
 #[derive(Debug, Error)]
 pub enum BeansError
 {
@@ -89,6 +92,33 @@ pub enum BeansError
         msg: String,
         error: std::io::Error,
         backtrace: Backtrace
+    },
+
+    #[error("Failed to migrate old version file to the new format at {location}")]
+    VersionFileMigrationFailure {
+        error: std::io::Error,
+        location: String
+    },
+    #[error("Failed to delete old version file {location}")]
+    VersionFileMigrationDeleteFailure {
+        error: std::io::Error,
+        location: String
+    },
+    #[error("Failed to convert version file to JSON format.")]
+    VersionFileSerialize {
+        error: serde_json::Error,
+        instance: AdastralVersionFile
+    },
+    #[error("Failed to parse the version in {old_location}. It's content was {old_content}")]
+    VersionFileParseFailure {
+        error: ParseIntError,
+        old_location: String,
+        old_content: String
+    },
+    #[error("Failed to read version file at {location}. {error:}")]
+    VersionFileReadFailure {
+        error: std::io::Error,
+        location: String
     }
 }
 #[derive(Debug)]

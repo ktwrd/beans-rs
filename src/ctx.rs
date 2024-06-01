@@ -4,6 +4,7 @@ use crate::helper::{find_sourcemod_path, InstallType, parse_location};
 use crate::version::{RemotePatch, RemoteVersion, RemoteVersionResponse};
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
+use log::{debug, error};
 
 #[derive(Debug, Clone)]
 pub struct RunnerContext
@@ -19,32 +20,26 @@ impl RunnerContext
         depends::try_write_deps();
         if let Err(e) = depends::try_install_vcredist().await {
             println!("Failed to install vcredist! {:}", e);
-            if helper::do_debug() {
-                eprintln!("[RunnerContext::create_auto] {:#?}", e);
-            }
+            debug!("[RunnerContext::create_auto] Failed to install vcredist! {:#?}", e);
         }
         let sourcemod_path = parse_location(match sml_via
         {
             SourceModDirectoryParam::AutoDetect => match find_sourcemod_path() {
                 Ok(v) => v,
                 Err(e) => {
-                    if helper::do_debug() {
-                        eprintln!("[RunnerContext::create_auto] {} {:#?}", BeansError::SourceModLocationNotFound, e);
-                    }
+                    debug!("[RunnerContext::create_auto] Failed to find sourcemods folder. {:#?}", e);
                     return Err(BeansError::SourceModLocationNotFound);
                 }
             },
             SourceModDirectoryParam::WithLocation(l) => {
-                if helper::do_debug() {
-                    println!("[RunnerContext::create_auto] Using specified location {}", l);
-                }
+                debug!("[RunnerContext::create_auto] Using specified location {}", l);
                 l
             }
         });
-        let version_list = crate::version::get_version_list().await;
+        let version_list = version::get_version_list().await?;
 
         if helper::install_state(Some(sourcemod_path.clone())) == InstallType::OtherSource {
-            version::update_version_file(Some(sourcemod_path.clone()));
+            version::update_version_file(Some(sourcemod_path.clone()))?;
         }
 
         return Ok(Self
@@ -55,9 +50,10 @@ impl RunnerContext
         });
     }
     /// Sets `remote_version_list` from `version::get_version_list()`
-    pub async fn set_remote_version_list(&mut self)
+    pub async fn set_remote_version_list(&mut self) -> Result<(), BeansError>
     {
-        self.remote_version_list = version::get_version_list().await;
+        self.remote_version_list = version::get_version_list().await?;
+        Ok(())
     }
 
     /// Get the location of the sourcemod mod
@@ -217,10 +213,8 @@ impl RunnerContext
         let x = archive.unpack(&out_dir);
         if helper::file_exists(tar_tmp_location.clone()) {
             if let Err(e) = std::fs::remove_file(tar_tmp_location.clone()) {
-                eprintln!("[RunnerContext::extract_package] Failed to delete temporary file: {:}", e);
-                if helper::do_debug() {
-                    eprintln!("Failed to delete {}\n{:#?}", tar_tmp_location, e);
-                }
+                error!("[RunnerContext::extract_package] Failed to delete temporary file: {:}", e);
+                debug!("[RunnerContext::extract_package] Failed to delete {}\n{:#?}", tar_tmp_location, e);
             }
         }
         match x {

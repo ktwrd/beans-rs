@@ -1,6 +1,6 @@
 #![feature(error_generic_member_access)]
 
-use const_format::concatcp;
+use const_format::formatcp;
 use include_flate::flate;
 
 pub mod depends;
@@ -13,7 +13,9 @@ pub use ctx::*;
 mod error;
 pub use error::*;
 pub mod butler;
+pub mod flags;
 
+/// NOTE do not change, fetches from the version of beans-rs on build
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// content to display when showing a message box on panic.
 pub const PANIC_MSG_CONTENT: &str = include_str!("text/msgbox_panic_text.txt");
@@ -35,7 +37,6 @@ pub const VERSION_URL: &str = include_str!("../.config/beans/version_url.txt");
 //
 // ------------------------------------------------------------------------
 
-pub static mut FORCE_DEBUG: bool = false;
 
 #[cfg(not(target_os = "windows"))]
 pub const DATA_DIR: &str = formatcp!("/{}/", MOD_NAME);

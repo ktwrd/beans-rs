@@ -10,9 +10,11 @@ pub use windows::*;
 
 
 use std::io::Write;
+use std::path::PathBuf;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
-use crate::{BeansError, DownloadFailureReason, helper};
+use log::debug;
+use crate::{BeansError, DownloadFailureReason};
 use rand::{distributions::Alphanumeric, Rng};
 
 #[derive(Clone, Debug)]
@@ -80,9 +82,7 @@ pub fn install_state(sourcemods_location: Option<String>) -> InstallType
         None => match find_sourcemod_path() {
             Ok(v) => v,
             Err(e) => {
-                if helper::do_debug() {
-                    eprintln!("[helper::install_state] {} {:#?}", BeansError::SourceModLocationNotFound, e);
-                }
+                debug!("[helper::install_state] {} {:#?}", BeansError::SourceModLocationNotFound, e);
                 return InstallType::NotInstalled;
             }
         }
@@ -158,9 +158,7 @@ pub fn parse_location(location: String) -> String
                 Err(e) => {
                     eprintln!("[helper::parse_location] Failed to parse location {}", location);
                     eprintln!("[helper::parse_location] {:}", e);
-                    if helper::do_debug() {
-                        eprintln!("{:#?}", e);
-                    }
+                    debug!("{:#?}", e);
                     return location;
                 }
             }
@@ -294,11 +292,4 @@ pub fn format_size(i: usize) -> String {
         }
     }
     return format!("{}{}", whole, dec_x);
-}
-
-pub fn do_debug() -> bool {
-    unsafe {
-        std::env::var("BEANS_DEBUG").is_ok_and(|x| x == "1")
-            || crate::FORCE_DEBUG
-    }
 }

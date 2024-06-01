@@ -1,6 +1,8 @@
+use std::backtrace::Backtrace;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::io::Write;
+use log::{debug, error};
 use crate::helper;
 use crate::helper::{find_sourcemod_path, InstallType};
 use crate::BeansError;
@@ -40,9 +42,7 @@ fn get_mod_location(sourcemods_location: Option<String>) -> Option<String>
         None => match find_sourcemod_path() {
             Ok(v) => v,
             Err(e) => {
-                if helper::do_debug() {
-                    eprintln!("[version::get_mod_location] {} {:#?}", BeansError::SourceModLocationNotFound, e);
-                }
+                debug!("[version::get_mod_location] {} {:#?}", BeansError::SourceModLocationNotFound, e);
                 return None;
             }
         }
@@ -54,19 +54,22 @@ fn get_mod_location(sourcemods_location: Option<String>) -> Option<String>
     Some(smp_x)
 }
 /// migrate from old file (.revision) to new file (.adastral) in sourcemod mod directory.
-pub fn update_version_file(sourcemods_location: Option<String>)
+pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), BeansError>
 {
     let install_state = helper::install_state(sourcemods_location.clone());
     if install_state == InstallType::Adastral {
-        return;
+        debug!("[version::update_version_file] install_state is {:#?}, ignoring.", install_state);
+        return Ok(());
     }
     // ignore :)
     else if install_state == InstallType::OtherSourceManual {
-        return;
+        debug!("[version::update_version_file] install_state is {:#?}, ignoring.", install_state);
+        return Ok(());
     }
     // ignore :)
     else if install_state == InstallType::NotInstalled {
-        return;
+        debug!("[version::update_version_file] install_state is {:#?}, ignoring.", install_state);
+        return Ok(());
     }
 
     let mut smp_x = match sourcemods_location {
@@ -74,10 +77,9 @@ pub fn update_version_file(sourcemods_location: Option<String>)
         None => match find_sourcemod_path() {
             Ok(v) => v,
             Err(e) => {
-                if helper::do_debug() {
-                    eprintln!("[version::update_version_file] {} {:#?}", BeansError::SourceModLocationNotFound, e);
-                }
-                return;
+                error!("[version::update_version_file] Could not find sourcemods folder! {:}", e);
+                debug!("{:#?}", e);
+                return Err(e);
             }
         }
 
@@ -87,11 +89,25 @@ pub fn update_version_file(sourcemods_location: Option<String>)
     }
 
     let old_version_file_location = format!("{}{}.revision", smp_x, crate::DATA_DIR);
-    let old_version_file_content = read_to_string(&old_version_file_location).expect(format!("Failed to open {}", old_version_file_location).as_str());
+    let old_version_file_content = match read_to_string(&old_version_file_location) {
+        Ok(v) => v,
+        Err(e) => {
+            debug!("[update_version_file] failed to read {}. {:#?}", old_version_file_location, e);
+            return Err(BeansError::VersionFileReadFailure {
+                error: e,
+                location: old_version_file_location
+            });
+        }
+    };
     let old_version_idx = match old_version_file_content.parse::<usize>() {
         Ok(v) => v,
         Err(e) => {
-            panic!("Failed to parse old version number from {}\nIt was; {}\n\n{:#?}", old_version_file_location, old_version_file_content, e);
+            debug!("[update_version_file] Failed to parse content {} caused error {:}", old_version_file_content, e);
+            return Err(BeansError::VersionFileParseFailure {
+                error: e,
+                old_location: old_version_file_location,
+                old_content: old_version_file_content
+            });
         }
     };
 
@@ -104,26 +120,45 @@ pub fn update_version_file(sourcemods_location: Option<String>)
     let new_version_file_content = match serde_json::to_string(&new_file_content) {
         Ok(v) => v,
         Err(e) => {
-            panic!("Failed to serialize! {:#?}", e);
+            return Err(BeansError::VersionFileSerialize {
+                error: e,
+                instance: new_file_content
+            });
         }
     };
-    std::fs::write(new_version_file_location, new_version_file_content).expect("Failed to migrate old file to new file!");
-    std::fs::remove_file(old_version_file_location).expect("Failed to delete old version file");
+
+    if let Err(e) = std::fs::write(new_version_file_location.clone(), new_version_file_content) {
+        return Err(BeansError::VersionFileMigrationFailure {
+            error: e,
+            location: new_version_file_location
+        });
+    }
+    if let Err(e) = std::fs::remove_file(old_version_file_location.clone()) {
+        return Err(BeansError::VersionFileMigrationDeleteFailure {
+            error: e,
+            location: old_version_file_location
+        })
+    }
+
 }
 
 /// fetch the version list from `{crate::SOURCE_URL}versions.json`
-pub async fn get_version_list() -> RemoteVersionResponse
+pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
 {
     let response = match reqwest::get(crate::VERSION_URL).await {
         Ok(v) => v,
         Err(e) => {
-            panic!("Failed to get versions from server!\n{:#?}", e);
+            error!("[version::get_version_list] Failed to get available versions! {:}", e);
+            return Err(BeansError::Reqwest {
+                error: e,
+                backtrace: Backtrace::capture()
+            });
         }
     };
-    let response_text = response.text().await.expect("Failed to get version details content");
-    let data = serde_json::from_str(&response_text).expect("Failed to deserialize version details from server");
+    let response_text = response.text().await?;
+    let data: RemoteVersionResponse = serde_json::from_str(&response_text)?;
 
-    return data;
+    return Ok(data);
 }
 
 /// Version file that is used as `.adastral` in the sourcemod mod folder.

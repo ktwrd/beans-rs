@@ -1,6 +1,9 @@
-use crate::{BeansError, depends, helper, RunnerContext, SourceModDirectoryParam};
+use crate::{BeansError, depends, flags, helper, RunnerContext, SourceModDirectoryParam};
 use crate::helper::{find_sourcemod_path, InstallType, parse_location};
 use async_recursion::async_recursion;
+use log::{debug, error, info, trace};
+use std::backtrace::Backtrace;
+use crate::flags::LaunchFlag;
 use crate::workflows::{InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
 
 #[derive(Debug, Clone)]
@@ -11,34 +14,35 @@ pub struct WizardContext
 impl WizardContext
 {
     /// run the wizard!
-    pub async fn run(sml_via: SourceModDirectoryParam)
+    pub async fn run(sml_via: SourceModDirectoryParam) -> Result<(), BeansError>
     {
         depends::try_write_deps();
         if let Err(e) = depends::try_install_vcredist().await {
             println!("Failed to install vcredist! {:}", e);
-            if helper::do_debug() {
-                eprintln!("[WizardContext::run] {:#?}", e);
-            }
+            debug!("[WizardContext::run] {:#?}", e);
         }
         let sourcemod_path = parse_location(match sml_via
         {
             SourceModDirectoryParam::AutoDetect => {
-                if helper::do_debug() {
-                    println!("[WizardContext::run] Auto-detecting sourcemods directory");
-                }
+                debug!("[WizardContext::run] Auto-detecting sourcemods directory");
                 get_path()
             },
-            SourceModDirectoryParam::WithLocation(l) => {
-                if helper::do_debug() {
-                    println!("[WizardContext::run] Using specified location {}", l);
-                }
-                l
+            SourceModDirectoryParam::WithLocation(loc) => {
+                debug!("[WizardContext::run] Using specified location {}", loc);
+                loc
             }
         });
-        let version_list = crate::version::get_version_list().await;
+        let version_list = match crate::version::get_version_list().await {
+            Ok(v) => v,
+            Err(e) => {
+                trace!("[WizardContext::run] Failed to run version::get_version_list()");
+                trace!("{:#?}", e);
+                return Err(e);
+            }
+        };
 
         if helper::install_state(Some(sourcemod_path.clone())) == InstallType::OtherSource {
-            crate::version::update_version_file(Some(sourcemod_path.clone()));
+            crate::version::update_version_file(Some(sourcemod_path.clone()))?;
         }
 
         let ctx = RunnerContext {
@@ -52,6 +56,7 @@ impl WizardContext
             context: ctx
         };
         i.menu().await;
+        return Ok(());
     }
 
     /// Show the menu
@@ -79,17 +84,12 @@ impl WizardContext
         };
     }
     fn menu_error_catch(v: Result<(), BeansError>) -> ! {
-        let mut code: i32 = 0;
-        if let Err(e) = v {
-            eprintln!("{:}", e);
-            if helper::do_debug() {
-                eprintln!("======== Full Error ========");
-                eprintln!("{:#?}", e);
-            }
-            code = 1;
-        }
         let _ = helper::get_input("Press enter/return to exit");
-        std::process::exit(code)
+        if let Err(e) = v {
+            let b = Backtrace::capture();
+            panic!("backtrace: {:#?}\n\nerror: {:#?}", b, e);
+        }
+        std::process::exit(0)
     }
 
     /// Install the target game.

@@ -1,3 +1,4 @@
+use log::{debug, info};
 use crate::{BeansError, butler, helper, RunnerContext};
 
 pub struct UpdateWorkflow
@@ -32,9 +33,7 @@ impl UpdateWorkflow
         if helper::has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq)? == false {
             println!("[UpdateWorkflow::wizard] Not enough free space! Requires {}", helper::format_size(patch.tempreq));
         }
-        if helper::do_debug() {
-            println!("{:#?}", remote_version);
-        }
+        debug!("remote_version: {:#?}", remote_version);
         if remote_version.signature_url.is_none() {
             eprintln!("[UpdateWorkflow::wizard] Couldn't get signature URL for version {}", current_version_id);
         }
@@ -50,21 +49,29 @@ impl UpdateWorkflow
         let staging_dir_location = ctx.get_staging_location();
 
         ctx.gameinfo_perms()?;
-        butler::verify(
+        info!("[UpdateWorkflow] Verifying game");
+        if let Err(e) = butler::verify(
             format!("{}{}", crate::SOURCE_URL, remote_version.signature_url.unwrap()),
             mod_dir_location.clone(),
-            format!("{}{}", crate::SOURCE_URL, remote_version.heal_url.unwrap()))?;
+            format!("{}{}", crate::SOURCE_URL, remote_version.heal_url.unwrap())) {
+            return Err(e);
+        }
         ctx.gameinfo_perms()?;
-        butler::patch_dl(
+        info!("[UpdateWorkflow] Patching game");
+        if let Err(e) = butler::patch_dl(
             format!("{}{}", crate::SOURCE_URL, patch.url),
             staging_dir_location,
             patch.file,
-            mod_dir_location).await?;
+            mod_dir_location).await {
+            return Err(e);
+        }
 
         if let Some(gi) = gameinfo_backup {
             let loc = ctx.gameinfo_location();
             std::fs::write(&loc, gi)?;
-            ctx.gameinfo_perms()?;
+            if let Err(e) = ctx.gameinfo_perms() {
+                return Err(e);
+            }
         }
 
         println!("Game has been updated!");

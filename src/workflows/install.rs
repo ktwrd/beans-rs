@@ -1,3 +1,4 @@
+use log::debug;
 use crate::{DownloadFailureReason, helper, RunnerContext};
 use crate::BeansError;
 use crate::version::AdastralVersionFile;
@@ -46,9 +47,7 @@ impl InstallWorkflow {
             }.write(Some(out_dir.clone()));
             if let Err(e) = x {
                 println!("[InstallWorkflow::install_from] Failed to set version to {} in .adastral", lri);
-                if helper::do_debug() {
-                    eprintln!("{:#?}", e);
-                }
+                debug!("{:#?}", e);
             }
         } else {
             eprintln!("Not writing .adastral since the version wasn't provided");

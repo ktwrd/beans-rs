@@ -3,6 +3,7 @@ use std::os::unix::fs::PermissionsExt;
 #[cfg(target_os = "windows")]
 use std::backtrace::Backtrace;
 use crate::{BeansError, BUTLER_BINARY, BUTLER_LIB_1, BUTLER_LIB_2, helper};
+use log::{debug, error};
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
@@ -15,26 +16,22 @@ pub fn try_write_deps()
     if helper::file_exists(get_butler_location()) {
         let p = std::fs::Permissions::from_mode(0744 as u32);
         if let Err(e) = std::fs::set_permissions(&get_butler_location(), p) {
-            eprintln!("Failed to set permissions for {}", get_butler_location());
-            eprintln!("{:#?}", e);
+            error!("[depends::try_write_deps] Failed to set permissions for {}", get_butler_location());
+            error!("[depends::try_write_deps] {:#?}", e);
         }
-        if helper::do_debug() {
-            println!("[depends::try_write_deps] set perms on {}", get_butler_location());
-        }
+        debug!("[depends::try_write_deps] set perms on {}", get_butler_location());
     }
 }
 fn safe_write_file(location: &str, data: &[u8]) {
     if !helper::file_exists(location.to_string())
     {
         if let Err(e) = std::fs::write(&location, data) {
-            eprintln!("[try_write_deps] failed to extract {}", location);
-            if helper::do_debug() {
-                eprintln!("[depends::try_write_deps] {:#?}", e);
-            }
+            error!("[depends::try_write_deps] failed to extract {}", location);
+            error!("[depends::try_write_deps] {:#?}", e);
         }
         else
         {
-            println!("[try_write_deps] extracted {}", location);
+            debug!("[depends::try_write_deps] extracted {}", location);
         }
     }
 }
@@ -61,10 +58,11 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
         },
         Err(_) => true
     } {
-        println!("[depends::try_install_vcredist] Seems like vcredist is already installed");
+        debug!("[depends::try_install_vcredist] Seems like vcredist is already installed");
         return Ok(());
     }
 
+    info!("Installing Visual C++ Redistributable");
     let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
     if out_loc.ends_with("\\") == false {
         out_loc.push_str("\\");
@@ -88,7 +86,9 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
         .wait()?;
     
     if helper::file_exists(out_loc.clone()) {
-        std::fs::remove_file(&out_loc)?;
+        if let Err(e) = std::fs::remove_file(&out_loc) {
+            debug!("[depends::try_install_vcredist] Failed to remove installer {:#?}", e);
+        }
     }
     
     Ok(())
