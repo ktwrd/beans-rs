@@ -77,6 +77,11 @@ impl WizardContext
             "1" => WizardContext::menu_error_catch(self.task_install().await),
             "2" => WizardContext::menu_error_catch(self.task_update().await),
             "3" => WizardContext::menu_error_catch(self.task_verify().await),
+            "d" => {
+                flags::add_flag(LaunchFlag::DEBUG_MODE);
+                info!("Debug mode enabled!");
+                self.menu().await;
+            },
             "q" => std::process::exit(0),
             _ => {
                 println!("Unknown option \"{}\"", user_input);
