@@ -117,15 +117,22 @@ impl WizardContext
 
 fn get_path() -> String
 {
-    let current_path = find_sourcemod_path();
-    if let Ok(x) = current_path {
-        println!("Found sourcemods directory!\n{}", x);
-        return x;
+    find_sourcemod_path().unwrap_or_else(|e| {
+        error!("[get_path] Failed to automatically detect sourcemods folder!");
+        debug!("{:#?}", e);
+        prompt_sourcemod_location()
+    })
+}
+fn prompt_sourcemod_location() -> String
+{
+    let res = helper::get_input("Please provide your sourcemods folder, then press enter.");
+    return if !helper::file_exists(res.clone()) {
+        eprintln!("The location you provided doesn't exist. Try again.");
+        prompt_sourcemod_location()
+    } else if !helper::is_directory(res.clone()) {
+        eprintln!("The location you provided isn't a folder. Try again.");
+        prompt_sourcemod_location()
+    } else {
+        res
     }
-    if let Err(e) = current_path {
-        if helper::do_debug() {
-            eprintln!("[wizard::get_path] {} {:#?}", BeansError::SourceModLocationNotFound, e);
-        }
-    }
-    todo!();
 }
