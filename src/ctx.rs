@@ -130,7 +130,7 @@ impl RunnerContext
         match current_version {
             Some(cv) => {
                 for (_, patch) in self.remote_version_list.clone().patches.into_iter() {
-                    if patch.file == format!("of-{}to{}.pwr", cv, remote_version) {
+                    if patch.file == format!("{}-{}to{}.pwr", crate::MOD_NAME_SHORT, cv, remote_version) {
                         return Some(patch);
                     }
                 }

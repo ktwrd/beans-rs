@@ -53,12 +53,12 @@ impl InstallWorkflow {
         } else {
             eprintln!("Not writing .adastral since the version wasn't provided");
         }
-        println!("Done! Make sure that the following is done;");
-        println!("  1. Install Source SDK Base 2013 Multiplayer on Steam");
-        println!("  2. Restart Steam");
-        println!("  3. Play Open Fortress!");
-        #[cfg(not(target_os = "windows"))]
-        println!("-- Important --\nMake sure that Proton is enabled for Source SDK Base 2013 Multiplayer!");
+        println!("{}", INSTALL_FINISH_MSG);
         Ok(())
     }
 }
+
+#[cfg(not(target_os = "windows"))]
+pub const INSTALL_FINISH_MSG: &str = include_str!("../text/install_complete_linux.txt");
+#[cfg(target_os = "windows")]
+pub const INSTALL_FINISH_MSG: &str = include_str!("../text/install_complete_windows.txt");

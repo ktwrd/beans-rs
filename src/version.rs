@@ -114,7 +114,7 @@ pub fn update_version_file(sourcemods_location: Option<String>)
 /// fetch the version list from `{crate::SOURCE_URL}versions.json`
 pub async fn get_version_list() -> RemoteVersionResponse
 {
-    let response = match reqwest::get(format!("{}versions.json", crate::SOURCE_URL)).await {
+    let response = match reqwest::get(crate::VERSION_URL).await {
         Ok(v) => v,
         Err(e) => {
             panic!("Failed to get versions from server!\n{:#?}", e);
