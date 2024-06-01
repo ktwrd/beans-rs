@@ -121,6 +121,11 @@ pub fn file_exists(location: String) -> bool
 {
     std::path::Path::new(&location).exists()
 }
+pub fn is_directory(location: String) -> bool
+{
+    let x = PathBuf::from(&location);
+    x.is_dir()
+}
 
 /// Check if the file at the location provided is a symlink.
 pub fn is_symlink(location: String) -> bool {
