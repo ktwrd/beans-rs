@@ -35,3 +35,12 @@ jobs:
           tag_name: ${{ github.event.inputs.tag }}
           draft: false
           prerelease: true
+      - name: Create Sentry release
+        uses: getsentry/action-release@v1
+        env:
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
+          SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
+          SENTRY_URL: https://sentry.kate.pet/
+        with:
+          environment: production

@@ -82,6 +82,7 @@ pub fn install_state(sourcemods_location: Option<String>) -> InstallType
         None => match find_sourcemod_path() {
             Ok(v) => v,
             Err(e) => {
+                sentry::capture_error(&e);
                 debug!("[helper::install_state] {} {:#?}", BeansError::SourceModLocationNotFound, e);
                 return InstallType::NotInstalled;
             }
@@ -156,6 +157,7 @@ pub fn parse_location(location: String) -> String
                     }
                 },
                 Err(e) => {
+                    sentry::capture_error(&e);
                     eprintln!("[helper::parse_location] Failed to parse location {}", location);
                     eprintln!("[helper::parse_location] {:}", e);
                     debug!("{:#?}", e);
@@ -202,6 +204,7 @@ pub async fn download_with_progress(url: String, out_location: String) -> Result
         .await {
         Ok(v) => v,
         Err(e) => {
+            sentry::capture_error(&e);
             return Err(BeansError::DownloadFailure {
                 reason: DownloadFailureReason::Reqwest {
                     url: url.clone(),
@@ -226,6 +229,7 @@ pub async fn download_with_progress(url: String, out_location: String) -> Result
     let mut file = match std::fs::File::create(out_location.clone()) {
         Ok(v) => v,
         Err(e) => {
+            sentry::capture_error(&e);
             return Err(BeansError::FileOpenFailure(out_location, e));
         }
     };

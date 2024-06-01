@@ -18,6 +18,7 @@ impl WizardContext
     {
         depends::try_write_deps();
         if let Err(e) = depends::try_install_vcredist().await {
+            sentry::capture_error(&e);
             println!("Failed to install vcredist! {:}", e);
             debug!("[WizardContext::run] {:#?}", e);
         }
@@ -37,6 +38,7 @@ impl WizardContext
             Err(e) => {
                 trace!("[WizardContext::run] Failed to run version::get_version_list()");
                 trace!("{:#?}", e);
+                sentry::capture_error(&e);
                 return Err(e);
             }
         };
@@ -87,6 +89,7 @@ impl WizardContext
         let _ = helper::get_input("Press enter/return to exit");
         if let Err(e) = v {
             let b = Backtrace::capture();
+            sentry::capture_error(&e);
             panic!("backtrace: {:#?}\n\nerror: {:#?}", b, e);
         }
         std::process::exit(0)

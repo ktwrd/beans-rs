@@ -17,6 +17,8 @@ pub mod flags;
 
 /// NOTE do not change, fetches from the version of beans-rs on build
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
+/// sentry url, change on fork please.
+pub const SENTRY_URL: &str = "https://e6e260fa3408f2cf934b4b3c4be71c74@sentry.kate.pet/2";
 /// content to display when showing a message box on panic.
 pub const PANIC_MSG_CONTENT: &str = include_str!("text/msgbox_panic_text.txt");
 /// name of the mod to use.

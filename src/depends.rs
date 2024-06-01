@@ -16,6 +16,7 @@ pub fn try_write_deps()
     if helper::file_exists(get_butler_location()) {
         let p = std::fs::Permissions::from_mode(0744 as u32);
         if let Err(e) = std::fs::set_permissions(&get_butler_location(), p) {
+            sentry::capture_error(&e);
             error!("[depends::try_write_deps] Failed to set permissions for {}", get_butler_location());
             error!("[depends::try_write_deps] {:#?}", e);
         }
@@ -26,6 +27,7 @@ fn safe_write_file(location: &str, data: &[u8]) {
     if !helper::file_exists(location.to_string())
     {
         if let Err(e) = std::fs::write(&location, data) {
+            sentry::capture_error(&e);
             error!("[depends::try_write_deps] failed to extract {}", location);
             error!("[depends::try_write_deps] {:#?}", e);
         }
@@ -87,6 +89,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
     
     if helper::file_exists(out_loc.clone()) {
         if let Err(e) = std::fs::remove_file(&out_loc) {
+            sentry::capture_error(&e);
             debug!("[depends::try_install_vcredist] Failed to remove installer {:#?}", e);
         }
     }

@@ -68,12 +68,14 @@ pub fn patch(
         ])
         .spawn() {
         Err(e) => {
-            Err(BeansError::ButlerPatchFailure {
+            let xe = BeansError::ButlerPatchFailure {
                 patchfile_location,
                 gamedir,
                 error: e,
                 backtrace: Backtrace::capture()
-            })
+            };
+            sentry::capture_error(&xe);
+            Err(xe)
         },
         Ok(mut v) => {
             v.wait()?;

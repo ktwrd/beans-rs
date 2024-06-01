@@ -54,6 +54,7 @@ impl UpdateWorkflow
             format!("{}{}", crate::SOURCE_URL, remote_version.signature_url.unwrap()),
             mod_dir_location.clone(),
             format!("{}{}", crate::SOURCE_URL, remote_version.heal_url.unwrap())) {
+            sentry::capture_error(&e);
             return Err(e);
         }
         ctx.gameinfo_perms()?;
@@ -63,6 +64,7 @@ impl UpdateWorkflow
             staging_dir_location,
             patch.file,
             mod_dir_location).await {
+            sentry::capture_error(&e);
             return Err(e);
         }
 
@@ -70,6 +72,7 @@ impl UpdateWorkflow
             let loc = ctx.gameinfo_location();
             std::fs::write(&loc, gi)?;
             if let Err(e) = ctx.gameinfo_perms() {
+                sentry::capture_error(&e);
                 return Err(e);
             }
         }

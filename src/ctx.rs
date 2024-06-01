@@ -19,6 +19,7 @@ impl RunnerContext
     {
         depends::try_write_deps();
         if let Err(e) = depends::try_install_vcredist().await {
+            sentry::capture_error(&e);
             println!("Failed to install vcredist! {:}", e);
             debug!("[RunnerContext::create_auto] Failed to install vcredist! {:#?}", e);
         }
@@ -27,6 +28,7 @@ impl RunnerContext
             SourceModDirectoryParam::AutoDetect => match find_sourcemod_path() {
                 Ok(v) => v,
                 Err(e) => {
+                    sentry::capture_error(&e);
                     debug!("[RunnerContext::create_auto] Failed to find sourcemods folder. {:#?}", e);
                     return Err(BeansError::SourceModLocationNotFound);
                 }
@@ -213,6 +215,7 @@ impl RunnerContext
         let x = archive.unpack(&out_dir);
         if helper::file_exists(tar_tmp_location.clone()) {
             if let Err(e) = std::fs::remove_file(tar_tmp_location.clone()) {
+                sentry::capture_error(&e);
                 error!("[RunnerContext::extract_package] Failed to delete temporary file: {:}", e);
                 debug!("[RunnerContext::extract_package] Failed to delete {}\n{:#?}", tar_tmp_location, e);
             }

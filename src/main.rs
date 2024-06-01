@@ -2,6 +2,7 @@ use std::str::FromStr;
 use clap::{Arg, ArgMatches, Command};
 use log::{debug, info, LevelFilter, trace};
 use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
+use beans_rs::flags::LaunchFlag;
 use beans_rs::helper::parse_location;
 use beans_rs::SourceModDirectoryParam;
 use beans_rs::workflows::InstallWorkflow;
@@ -16,6 +17,7 @@ fn main() {
     let _ = winconsole::console::set_title(format!("beans v{}", beans_rs::VERSION).as_str());
 
     init_flags();
+    init_sentry();
     init_panic_handle();
 
     tokio::runtime::Builder::new_multi_thread()
@@ -36,11 +38,24 @@ fn init_flags()
     flags::add_flag(LaunchFlag::STANDALONE_APP);
     simple_logging::log_to_stderr(DEFAULT_LOG_LEVEL);
 }
+/// Initialize Sentry integration
+fn init_sentry()
+{
+    // initialize sentry and custom panic handler for msgbox
+    let _guard = sentry::init((beans_rs::SENTRY_URL, sentry::ClientOptions {
+        release: sentry::release_name!(),
+        debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
+        max_breadcrumbs: 100,
+        ..Default::default()
+    }));
+}
 fn init_panic_handle()
 {
     std::panic::set_hook(Box::new(move |info| {
         debug!("[panic::set_hook] showing msgbox to notify user");
         custom_panic_handle();
+        debug!("[panic::set_hook] calling sentry_panic::panic_handler");
+        sentry::integrations::panic::panic_handler(&info);
     }));
 }
 fn custom_panic_handle()
@@ -155,6 +170,7 @@ impl Launcher
         let version = match usize::from_str(v) {
             Ok(v) => v,
             Err(e) => {
+                sentry::capture_error(&e);
                 eprintln!("Failed to parse version argument: {:#?}", e);
                 return;
             }
@@ -162,6 +178,7 @@ impl Launcher
         let ctx = self.try_create_context().await;
         let smp_x = ctx.sourcemod_path.clone();
         if let Err(e) = InstallWorkflow::install_from(loc.clone(), smp_x, Some(version)).await {
+            sentry::capture_error(&e);
             panic!("Failed to run InstallWorkflow::install_from {:#?}", e);
         }
         let _ = helper::get_input("Press enter/return to exit");
