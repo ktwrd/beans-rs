@@ -41,6 +41,6 @@ jobs:
           SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
           SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
           SENTRY_PROJECT: ${{ secrets.SENTRY_PROJECT }}
-          SENTRY_URL: https://sentry.kate.pet/
+          SENTRY_URL: https://sentry.kate.pet
         with:
           environment: production
