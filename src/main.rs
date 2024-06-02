@@ -137,6 +137,10 @@ impl Launcher
                     .long("debug")
                     .help("Enable debug logging")
                     .action(ArgAction::SetTrue),
+                Arg::new("no-debug")
+                    .long("no-debug")
+                    .help("Disable mode. Mainly used for debug builds to not spew into the console.")
+                    .action(ArgAction::SetTrue),
                 Arg::new("no-pause")
                     .long("no-pause")
                     .help("When provided, beans-rs will not wait for user input before exiting.")
@@ -162,7 +166,11 @@ impl Launcher
     /// add `LaunchFlag::DEBUG_MODE` to `flags` when the `--debug` parameter flag is used.
     pub fn set_debug(&mut self)
     {
-        if self.root_matches.get_flag("debug") {
+        if self.root_matches.get_flag("no-debug") {
+            flags::remove_flag(LaunchFlag::DEBUG_MODE);
+            info!("Disabled Debug Mode");
+        }
+        else if self.root_matches.get_flag("debug") {
             flags::add_flag(LaunchFlag::DEBUG_MODE);
             beans_rs::logger::log_to_stdout(LevelFilter::Off);
             trace!("Debug mode enabled");
