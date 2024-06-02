@@ -23,6 +23,7 @@ fn main() {
         release: sentry::release_name!(),
         debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
         max_breadcrumbs: 100,
+        auto_session_tracking: true,
         ..Default::default()
     }));
     init_panic_handle();
