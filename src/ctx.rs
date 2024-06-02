@@ -4,7 +4,7 @@ use crate::helper::{find_sourcemod_path, InstallType, parse_location};
 use crate::version::{RemotePatch, RemoteVersion, RemoteVersionResponse};
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
-use log::{debug, error};
+use log::{debug, error, info};
 
 #[derive(Debug, Clone)]
 pub struct RunnerContext
@@ -195,7 +195,7 @@ impl RunnerContext
         }
         out_loc.push_str(format!("presz_{}", helper::generate_rand_str(12)).as_str());
 
-        println!("[debug] writing output file to {}", out_loc);
+        info!("[RunnerContext::download_package] writing output file to {}", out_loc);
         helper::download_with_progress(
             format!("{}{}", &av.remote_info.base_url, version.file.expect("No URL for latest package!")),
             out_loc.clone()).await?;
