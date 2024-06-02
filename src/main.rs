@@ -95,51 +95,68 @@ pub struct Launcher {
 }
 impl Launcher
 {
+    /// Create argument for specifying the location where the sourcemods directory is.
+    fn create_location_arg() -> Arg
+    {
+        Arg::new("location")
+            .long("location")
+            .help("Manually specify sourcemods directory. When not provided, beans-rs will automatically detect the sourcemods directory.")
+            .required(false)
+    }
     pub async fn run()
     {
-        let arg_to = Arg::new("to")
-            .long("to")
-            .help("Manually specify sourcemods directory. When not provided, beans-rs will automatically detect the sourcemods directory.")
-            .required(false);
         let cmd = Command::new("beans-rs")
             .version(clap::crate_version!())
             .bin_name(clap::crate_name!())
-            .arg(Arg::new("debug")
-                .long("debug")
-                .help("Enable debug logging")
-                .action(clap::ArgAction::SetTrue))
-            .arg(arg_to.clone())
-            .subcommand(Command::new("manual_install")
-                .about("Manually install by specifying archive location and version.")
-                .arg(
-                    Arg::new("location")
-                        .help(".tar.zstd file location")
-                        .long("location")
-                        .action(clap::ArgAction::Set)
-                        .required(true),
-                )
-                .arg(
-                    Arg::new("version")
-                        .help("Version number")
-                        .long("version")
-                        .action(clap::ArgAction::Set)
-                        .required(true)
-                ))
             .subcommand(Command::new("wizard")
                 .about("Use the wizard to install. (Default subcommand)")
-                .arg(arg_to.clone()))
+                .arg(Launcher::create_location_arg()))
             .subcommand(Command::new("install")
                 .about("Install to a custom location.")
-                .arg(arg_to.clone()));
+                .args([
+                    Launcher::create_location_arg(),
+                    Arg::new("from")
+                        .long("from")
+                        .help("Location to where the .tar.zstd file is that you want to install from.")
+                        .required(false),
+                    Arg::new("target-version")
+                        .long("target-version")
+                        .help("Specify the version to install. Ignored when [--from] is used.")
+                        .required(false)]))
+            .subcommand(Command::new("verify")
+                .about("Verify your current installation")
+                .arg(Launcher::create_location_arg()))
+            .subcommand(Command::new("update")
+                .about("Update your installation")
+                .arg(Launcher::create_location_arg()))
+            .args([
+                Arg::new("debug")
+                    .long("debug")
+                    .help("Enable debug logging")
+                    .action(ArgAction::SetTrue),
+                Arg::new("no-pause")
+                    .long("no-pause")
+                    .help("When provided, beans-rs will not wait for user input before exiting.")
+                    .action(ArgAction::SetTrue),
+                Launcher::create_location_arg()
+            ]);
 
-        let mut i = Self {
-            to_location: None,
-            root_matches: cmd.get_matches()
-        };
-        i.set_debug();
-        i.to_location = Launcher::find_arg_to(&i.root_matches);
+        let mut i = Self::new(&cmd.get_matches());
         i.subcommand_processor().await;
     }
+    pub fn new(matches: &ArgMatches) -> Self {
+        let mut i = Self {
+            to_location: None,
+            root_matches: matches.clone()
+        };
+        i.set_debug();
+        i.set_no_pause();
+        i.to_location = Launcher::find_arg_sourcemods_location(&i.root_matches);
+
+        return i;
+    }
+
+    /// add `LaunchFlag::DEBUG_MODE` to `flags` when the `--debug` parameter flag is used.
     pub fn set_debug(&mut self)
     {
         if self.root_matches.get_flag("debug") {
@@ -148,6 +165,14 @@ impl Launcher
             trace!("Debug mode enabled");
         }
     }
+    /// Set `PAUSE_ONCE_DONE` to `false` when `--no-pause` is provided. Otherwise, set it to `true`.
+    pub fn set_no_pause(&mut self)
+    {
+        unsafe {
+            PAUSE_ONCE_DONE = self.root_matches.get_flag("no-pause") == false;
+        }
+    }
+
     /// Set `self.to_location` when provided in the arguments.
     pub fn find_arg_to(matches: &ArgMatches) -> Option<String>
     {
