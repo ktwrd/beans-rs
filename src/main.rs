@@ -51,6 +51,9 @@ fn init_panic_handle()
         custom_panic_handle();
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
         sentry::integrations::panic::panic_handler(&info);
+        if flags::has_flag(LaunchFlag::DEBUG_MODE) {
+            eprintln!("{:#?}", info);
+        }
     }));
 }
 fn custom_panic_handle()
