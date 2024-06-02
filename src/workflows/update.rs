@@ -9,6 +9,8 @@ impl UpdateWorkflow
 {
     pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError>
     {
+        let av = crate::appvar::parse();
+
         let current_version_id = match ctx.current_version {
             Some(v) => v,
             None => {
@@ -51,16 +53,16 @@ impl UpdateWorkflow
         ctx.gameinfo_perms()?;
         info!("[UpdateWorkflow] Verifying game");
         if let Err(e) = butler::verify(
-            format!("{}{}", crate::SOURCE_URL, remote_version.signature_url.unwrap()),
+            format!("{}{}", &av.remote_info.base_url, remote_version.signature_url.unwrap()),
             mod_dir_location.clone(),
-            format!("{}{}", crate::SOURCE_URL, remote_version.heal_url.unwrap())) {
+            format!("{}{}", &av.remote_info.base_url, remote_version.heal_url.unwrap())) {
             sentry::capture_error(&e);
             return Err(e);
         }
         ctx.gameinfo_perms()?;
         info!("[UpdateWorkflow] Patching game");
         if let Err(e) = butler::patch_dl(
-            format!("{}{}", crate::SOURCE_URL, patch.url),
+            format!("{}{}", &av.remote_info.base_url, patch.url),
             staging_dir_location,
             patch.file,
             mod_dir_location).await {
