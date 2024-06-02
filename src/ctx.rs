@@ -4,14 +4,15 @@ use crate::helper::{find_sourcemod_path, InstallType, parse_location};
 use crate::version::{RemotePatch, RemoteVersion, RemoteVersionResponse};
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
-use log::{debug, error};
+use log::{debug, error, info};
 
 #[derive(Debug, Clone)]
 pub struct RunnerContext
 {
     pub sourcemod_path: String,
     pub remote_version_list: RemoteVersionResponse,
-    pub current_version: Option<usize>
+    pub current_version: Option<usize>,
+    pub appvar: crate::appvar::AppVarData
 }
 impl RunnerContext
 {
@@ -48,7 +49,8 @@ impl RunnerContext
         {
             sourcemod_path: parse_location(sourcemod_path.clone()),
             remote_version_list: version_list,
-            current_version: crate::version::get_current_version(Some(sourcemod_path.clone()))
+            current_version: crate::version::get_current_version(Some(sourcemod_path.clone())),
+            appvar: crate::appvar::parse()
         });
     }
     /// Sets `remote_version_list` from `version::get_version_list()`
@@ -68,7 +70,7 @@ impl RunnerContext
         if smp_x.ends_with("/") || smp_x.ends_with("\\") {
             smp_x.pop();
         }
-        smp_x.push_str(crate::DATA_DIR);
+        smp_x.push_str(&crate::data_dir());
         smp_x
     }
 
@@ -128,7 +130,7 @@ impl RunnerContext
         match current_version {
             Some(cv) => {
                 for (_, patch) in self.remote_version_list.clone().patches.into_iter() {
-                    if patch.file == format!("{}-{}to{}.pwr", crate::MOD_NAME_SHORT, cv, remote_version) {
+                    if patch.file == format!("{}-{}to{}.pwr", &self.appvar.mod_info.short_name, cv, remote_version) {
                         return Some(patch);
                     }
                 }
@@ -174,6 +176,7 @@ impl RunnerContext
     /// Ok is the location to where it was downloaded to.
     pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
     {
+        let av = crate::appvar::parse();
         let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
 
         if let Some(size) = version.pre_sz {
@@ -192,9 +195,9 @@ impl RunnerContext
         }
         out_loc.push_str(format!("presz_{}", helper::generate_rand_str(12)).as_str());
 
-        println!("[debug] writing output file to {}", out_loc);
+        info!("[RunnerContext::download_package] writing output file to {}", out_loc);
         helper::download_with_progress(
-            format!("{}{}", crate::SOURCE_URL, version.file.expect("No URL for latest package!")),
+            format!("{}{}", &av.remote_info.base_url, version.file.expect("No URL for latest package!")),
             out_loc.clone()).await?;
 
         Ok(out_loc)

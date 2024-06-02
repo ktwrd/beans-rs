@@ -92,13 +92,13 @@ pub fn install_state(sourcemods_location: Option<String>) -> InstallType
         smp_x.pop();
     }
 
-    if file_exists(format!("{}{}.adastral", &smp_x, crate::DATA_DIR)) {
+    if file_exists(format!("{}{}.adastral", &smp_x, crate::data_dir())) {
         return InstallType::Adastral;
     }
-    else if file_exists(format!("{}{}.revision", &smp_x, crate::DATA_DIR)) {
+    else if file_exists(format!("{}{}.revision", &smp_x, crate::data_dir())) {
         return InstallType::OtherSource;
     }
-    else if file_exists(format!("{}{}gameinfo.txt", &smp_x, crate::DATA_DIR)) {
+    else if file_exists(format!("{}{}gameinfo.txt", &smp_x, crate::data_dir())) {
         return InstallType::OtherSourceManual;
     }
     return InstallType::NotInstalled;
@@ -156,14 +156,17 @@ pub fn parse_location(location: String) -> String
                     match x.clone().to_str() {
                         Some(m) => m.to_string(),
                         None => {
-                            eprintln!("[helper::parse_location] Failed to parse location {}", location);
+                            debug!("[helper::parse_location] Failed to parse location to string {}", location);
                             return location;
                         }
                     }
                 },
                 Err(e) => {
+                    if format!("{:}", e).starts_with("No such file or directory") {
+                        return location;
+                    }
                     sentry::capture_error(&e);
-                    eprintln!("[helper::parse_location] Failed to parse location {}", location);
+                    eprintln!("[helper::parse_location] Failed to canonicalize location {}", location);
                     eprintln!("[helper::parse_location] {:}", e);
                     debug!("{:#?}", e);
                     return location;
@@ -171,7 +174,7 @@ pub fn parse_location(location: String) -> String
             }
         },
         None => {
-            eprintln!("[helper::parse_location] Failed to parse location {}", location);
+            debug!("[helper::parse_location] Failed to parse location {}", location);
             return location;
         }
     };
@@ -301,4 +304,15 @@ pub fn format_size(i: usize) -> String {
         }
     }
     return format!("{}{}", whole, dec_x);
+}
+
+pub fn get_tmp_file(filename: String) -> String
+{
+    let mut loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
+    if loc.ends_with(crate::PATH_SEP) == false && loc.len() > 1 {
+        loc.push_str(crate::PATH_SEP);
+    }
+    loc.push_str(generate_rand_str(8).as_str());
+    loc.push_str(format!("_{}", filename).as_str());
+    loc
 }
