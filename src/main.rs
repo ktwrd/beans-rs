@@ -174,10 +174,10 @@ impl Launcher
     }
 
     /// Set `self.to_location` when provided in the arguments.
-    pub fn find_arg_to(matches: &ArgMatches) -> Option<String>
+    pub fn find_arg_sourcemods_location(matches: &ArgMatches) -> Option<String>
     {
         let mut sml_dir_manual: Option<String> = None;
-        if let Some(x) = matches.get_one::<String>("to") {
+        if let Some(x) = matches.get_one::<String>("location") {
             sml_dir_manual = Some(parse_location(x.to_string()));
             info!("[Launcher::set_to_location] Found in arguments! {}", x);
         }
@@ -190,7 +190,7 @@ impl Launcher
                 self.task_manual_install(mi_matches).await;
             },
             Some(("wizard", wz_matches)) => {
-                self.to_location = Launcher::find_arg_to(wz_matches);
+                self.to_location = Launcher::find_arg_sourcemods_location(wz_matches);
                 self.task_wizard().await;
             },
             _ => {
@@ -239,7 +239,7 @@ impl Launcher
     }
     pub async fn task_install(&mut self, matches: &ArgMatches)
     {
-        self.to_location = Launcher::find_arg_to(&matches);
+        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
         let mut ctx = self.try_create_context().await;
         if let Err(e) = InstallWorkflow::wizard(&mut ctx).await {
             panic!("Failed to run InstallWorkflow {:#?}", e);
