@@ -156,14 +156,14 @@ pub fn parse_location(location: String) -> String
                     match x.clone().to_str() {
                         Some(m) => m.to_string(),
                         None => {
-                            eprintln!("[helper::parse_location] Failed to parse location {}", location);
+                            debug!("[helper::parse_location] Failed to parse location to string {}", location);
                             return location;
                         }
                     }
                 },
                 Err(e) => {
                     sentry::capture_error(&e);
-                    eprintln!("[helper::parse_location] Failed to parse location {}", location);
+                    eprintln!("[helper::parse_location] Failed to canonicalize location {}", location);
                     eprintln!("[helper::parse_location] {:}", e);
                     debug!("{:#?}", e);
                     return location;
@@ -171,7 +171,7 @@ pub fn parse_location(location: String) -> String
             }
         },
         None => {
-            eprintln!("[helper::parse_location] Failed to parse location {}", location);
+            debug!("[helper::parse_location] Failed to parse location {}", location);
             return location;
         }
     };
