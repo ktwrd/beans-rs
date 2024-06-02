@@ -183,11 +183,13 @@ impl Launcher
         }
         sml_dir_manual
     }
+
+    /// main handler for subcommand processing.
     pub async fn subcommand_processor(&mut self)
     {
         match self.root_matches.clone().subcommand() {
-            Some(("manual_install", mi_matches)) => {
-                self.task_manual_install(mi_matches).await;
+            Some(("install", i_matches)) => {
+                self.task_install(i_matches).await;
             },
             Some(("wizard", wz_matches)) => {
                 self.to_location = Launcher::find_arg_sourcemods_location(wz_matches);
@@ -199,28 +201,8 @@ impl Launcher
         }
     }
 
-    pub async fn task_manual_install(&mut self, matches: &ArgMatches)
-    {
-        self.to_location = Launcher::find_arg_to(&matches);
-        let loc = matches.get_one::<String>("location").unwrap();
-        let v = matches.get_one::<String>("version").unwrap();
-        let version = match usize::from_str(v) {
-            Ok(v) => v,
-            Err(e) => {
-                sentry::capture_error(&e);
-                eprintln!("Failed to parse version argument: {:#?}", e);
-                return;
-            }
-        };
-        let ctx = self.try_create_context().await;
-        let smp_x = ctx.sourcemod_path.clone();
-        if let Err(e) = InstallWorkflow::install_from(loc.clone(), smp_x, Some(version)).await {
-            sentry::capture_error(&e);
-            panic!("Failed to run InstallWorkflow::install_from {:#?}", e);
-        }
-        let _ = helper::get_input("Press enter/return to exit");
-        std::process::exit(0);
-    }
+    /// Try and get `SourceModDirectoryParam`.
+    /// Returns SourceModDirectoryParam::default() when `to_location` is `None`.
     fn try_get_smdp(&mut self) -> SourceModDirectoryParam
     {
         match &self.to_location {
@@ -230,21 +212,90 @@ impl Launcher
             None => SourceModDirectoryParam::default()
         }
     }
+
+    /// handler for the `wizard` subcommand. it's also the default subcommand.
     pub async fn task_wizard(&mut self)
     {
         let x = self.try_get_smdp();
         if let Err(e) = wizard::WizardContext::run(x).await {
             panic!("Failed to run WizardContext {:#?}", e);
+        } else {
+            logic_done();
         }
     }
+
+    /// handler for the `install` subcommand
+    ///
+    /// NOTE this function uses `panic!` when `InstallWorkflow::wizard` fails. panics are handled
+    /// and are reported via sentry.
     pub async fn task_install(&mut self, matches: &ArgMatches)
     {
         self.to_location = Launcher::find_arg_sourcemods_location(&matches);
         let mut ctx = self.try_create_context().await;
-        if let Err(e) = InstallWorkflow::wizard(&mut ctx).await {
-            panic!("Failed to run InstallWorkflow {:#?}", e);
+
+        // call install_version when target-version is found.
+        // we do this since target-version overrides the `from` parameter.
+        //
+        // `else if let` is used for checking the `--from` parameter,
+        // so a return isn't required.
+        if let Some(x) = matches.get_one::<String>("target-version") {
+            self.task_install_version_specific(ctx, x.clone()).await;
+        }
+
+        // manually install from specific `.tar.zstd` file when the
+        // --from parameter is provided. otherwise we install/reinstall
+        // the latest version to whatever sourcemods directory is used
+        else if let Some(x) = matches.get_one::<String>("from") {
+            info!("Manually installing from {} to {}", x.clone(), ctx.sourcemod_path.clone());
+            if let Err(e) = InstallWorkflow::install_from(x.clone(), ctx.sourcemod_path.clone(), None).await {
+                error!("Failed to run InstallWorkflow::install_from");
+                sentry::capture_error(&e);
+                panic!("{:#?}", e);
+            } else {
+                logic_done();
+            }
+        } else {
+            if let Err(e) = InstallWorkflow::wizard(&mut ctx).await {
+                panic!("Failed to run InstallWorkflow {:#?}", e);
+            } else {
+                logic_done();
+            }
         }
     }
+    /// handler for the `install` subcommand where the `--target-version`
+    /// parameter is provided.
+    ///
+    /// NOTE this function uses `expect` on `InstallWorkflow::install_version`. panics are handled
+    /// and are reported via sentry.
+    pub async fn task_install_version_specific(&mut self, ctx: RunnerContext, version_str: String)
+    {
+        let version = match usize::from_str(&version_str) {
+            Ok(v) => v,
+            Err(e) => {
+                sentry::capture_error(&e);
+                error!("Failed to parse version argument \"{version_str}\": {:#?}", e);
+                logic_done();
+                return;
+            }
+        };
+        let mut wf = InstallWorkflow
+        {
+            context: ctx
+        };
+        if let Err(e) = wf.install_version(version).await {
+            error!("Failed to run InstallWorkflow::install_version");
+            sentry::capture_error(&e);
+            panic!("{:#?}", e);
+        } else {
+            logic_done();
+        }
+    }
+
+    /// try and create an instance of `RunnerContext` via the `create_auto` method while setting
+    /// the `sml_via` parameter to the output of `self.try_get_smdp()`
+    ///
+    /// on failure, `panic!` is called. but that's okay because a dialog is shown (in
+    /// `init_panic_handle`) and the error is reported via sentry.
     async fn try_create_context(&mut self) -> RunnerContext {
         match RunnerContext::create_auto(self.try_get_smdp()).await {
             Ok(v) => v,
