@@ -10,7 +10,7 @@ use beans_rs::workflows::InstallWorkflow;
 #[cfg(debug_assertions)]
 pub const DEFAULT_LOG_LEVEL: LevelFilter = LevelFilter::Trace;
 #[cfg(not(debug_assertions))]
-pub const DEFAULT_LOG_LEVEL: LevelFilter = LevelFilter::Error;
+pub const DEFAULT_LOG_LEVEL: LevelFilter = LevelFilter::Info;
 
 fn main() {
     #[cfg(target_os = "windows")]
