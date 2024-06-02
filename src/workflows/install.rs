@@ -1,7 +1,7 @@
-use log::debug;
+use log::{debug, error, warn};
 use crate::{DownloadFailureReason, helper, RunnerContext};
 use crate::BeansError;
-use crate::version::AdastralVersionFile;
+use crate::version::{AdastralVersionFile, RemoteVersion};
 
 #[derive(Debug, Clone)]
 pub struct InstallWorkflow {
@@ -15,8 +15,13 @@ impl InstallWorkflow {
             println!("[InstallWorkflow::wizard] re-installing! game files will not be touched until extraction");
         }
 
-        let presz_loc = RunnerContext::download_package(latest_remote).await?;
-        Self::install_from(presz_loc.clone(), ctx.sourcemod_path.clone(), Some(latest_remote_id)).await?;
+        Self::install_with_remote_version(ctx, latest_remote_id, latest_remote).await
+    }
+    pub async fn install_with_remote_version(ctx: &mut RunnerContext, version_id: usize, version: RemoteVersion)
+        -> Result<(), BeansError>
+    {
+        let presz_loc = RunnerContext::download_package(version).await?;
+        Self::install_from(presz_loc.clone(), ctx.sourcemod_path.clone(), Some(version_id)).await?;
         if helper::file_exists(presz_loc.clone()) {
             std::fs::remove_file(presz_loc)?;
         }
