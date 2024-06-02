@@ -36,13 +36,14 @@ fn main() {
 }
 fn init_flags()
 {
+    flags::remove_flag(LaunchFlag::DEBUG_MODE);
     #[cfg(debug_assertions)]
     flags::add_flag(LaunchFlag::DEBUG_MODE);
     if std::env::var("BEANS_DEBUG").is_ok_and(|x| x == "1") {
         flags::add_flag(LaunchFlag::DEBUG_MODE);
     }
     flags::add_flag(LaunchFlag::STANDALONE_APP);
-    simple_logging::log_to_stderr(DEFAULT_LOG_LEVEL);
+    beans_rs::logger::log_to_stdout(DEFAULT_LOG_LEVEL);
 }
 fn init_panic_handle()
 {
@@ -161,7 +162,7 @@ impl Launcher
     {
         if self.root_matches.get_flag("debug") {
             flags::add_flag(LaunchFlag::DEBUG_MODE);
-            simple_logging::log_to_stderr(LevelFilter::Trace);
+            beans_rs::logger::log_to_stdout(LevelFilter::Off);
             trace!("Debug mode enabled");
         }
     }
