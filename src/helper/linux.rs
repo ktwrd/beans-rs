@@ -1,6 +1,5 @@
 ﻿use std::fs::read_to_string;
 use crate::BeansError;
-use crate::helper::generate_rand_str;
 
 /// all possible known directory where steam *might* be
 /// only is used on linux, since windows will use the registry.
@@ -74,14 +73,4 @@ fn find_steam_reg_path() -> Result<String, BeansError>
         }
     }
     return Err(BeansError::SteamNotFound);
-}
-pub fn get_tmp_file(filename: String) -> String
-{
-    let mut loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
-    if loc.ends_with("/") == false && loc.len() > 1{
-        loc.push_str("/");
-    }
-    loc.push_str(generate_rand_str(8).as_str());
-    loc.push_str(format!("_{}", filename).as_str());
-    loc
 }

@@ -302,3 +302,14 @@ pub fn format_size(i: usize) -> String {
     }
     return format!("{}{}", whole, dec_x);
 }
+
+pub fn get_tmp_file(filename: String) -> String
+{
+    let mut loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
+    if loc.ends_with(crate::PATH_SEP) == false && loc.len() > 1 {
+        loc.push_str(crate::PATH_SEP);
+    }
+    loc.push_str(generate_rand_str(8).as_str());
+    loc.push_str(format!("_{}", filename).as_str());
+    loc
+}

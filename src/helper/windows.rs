@@ -37,14 +37,3 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
         }
     }
 }
-
-pub fn get_tmp_file(filename: String) -> String
-{
-    let mut loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
-    if loc.ends_with("\\") == false && loc.len() > 1 {
-        loc.push_str("\\");
-    }
-    loc.push_str(generate_rand_str(8).as_str());
-    loc.push_str(&filename);
-    loc
-}
