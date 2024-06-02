@@ -82,22 +82,22 @@ impl WizardContext
                 info!("Debug mode enabled!");
                 self.menu().await;
             },
+            "panic" => {
+                panic!()
+            },
             "q" => std::process::exit(0),
             _ => {
                 println!("Unknown option \"{}\"", user_input);
                 self.menu().await;
-                std::process::exit(0)
             }
         };
     }
-    fn menu_error_catch(v: Result<(), BeansError>) -> ! {
-        let _ = helper::get_input("Press enter/return to exit");
+    fn menu_error_catch(v: Result<(), BeansError>) {
         if let Err(e) = v {
             let b = Backtrace::capture();
             sentry::capture_error(&e);
             panic!("backtrace: {:#?}\n\nerror: {:#?}", b, e);
         }
-        std::process::exit(0)
     }
 
     /// Install the target game.
