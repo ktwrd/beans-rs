@@ -21,6 +21,12 @@ impl CustomLogger {
         *self.inner.lock().unwrap() = Some(CustomLoggerInner {
             start: Instant::now(),
             sink: Box::new(sink),
+            sentry: sentry_log::SentryLogger::new().filter(|md| match md.level() {
+                log::Level::Error => LogFilter::Exception,
+                log::Level::Warn => LogFilter::Event,
+                log::Level::Info | log::Level::Debug => LogFilter::Breadcrumb,
+                log::Level::Trace => LogFilter::Ignore,
+            })
         });
     }
 }
@@ -40,14 +46,21 @@ impl Log for CustomLogger {
         }
     }
 
-    fn flush(&self) {}
+    fn flush(&self) {
+        if let Some(ref mut inner) = *self.inner.lock().unwrap() {
+            inner.sentry.flush();
+        }
+    }
 }
 
 struct CustomLoggerInner {
     start: Instant,
     sink: Box<dyn Write + Send>,
+    sentry: sentry_log::SentryLogger<NoopLogger>
 }
 use colored::Colorize;
+use sentry_log::{LogFilter, NoopLogger};
+
 impl CustomLoggerInner {
     fn log(&mut self, record: &Record) {
         let mut do_print = true;
@@ -96,6 +109,7 @@ impl CustomLoggerInner {
                 data
             );
         }
+        self.sentry.log(&record);
     }
 }
 pub fn set_filter(filter: LevelFilter)
