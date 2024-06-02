@@ -1,6 +1,6 @@
 use std::str::FromStr;
-use clap::{Arg, ArgMatches, Command};
-use log::{debug, info, LevelFilter, trace};
+use clap::{Arg, ArgAction, ArgMatches, Command};
+use log::{debug, error, info, LevelFilter, trace};
 use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
 use beans_rs::flags::LaunchFlag;
 use beans_rs::helper::parse_location;
@@ -54,6 +54,7 @@ fn init_panic_handle()
         if flags::has_flag(LaunchFlag::DEBUG_MODE) {
             eprintln!("{:#?}", info);
         }
+        logic_done();
     }));
 }
 fn custom_panic_handle()
@@ -72,7 +73,20 @@ fn custom_panic_handle()
         }
     });
 }
-
+/// should called once the logic flow is done!
+/// will call `helper::get_input` when `PAUSE_ONCE_DONE` is `true`.
+fn logic_done()
+{
+    unsafe {
+        if PAUSE_ONCE_DONE {
+            let _ = helper::get_input("Press enter/return to exit");
+        }
+    }
+}
+/// once everything is done, do we wait for the user to press enter before exiting?
+///
+/// just like the `pause` thing in batch.
+pub static mut PAUSE_ONCE_DONE: bool = false;
 pub struct Launcher {
     /// Output location. When none, `SourceModDirectoryParam::default()` will be used.
     pub to_location: Option<String>,
