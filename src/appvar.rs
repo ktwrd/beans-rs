@@ -22,11 +22,11 @@ impl AppVarData {
     pub fn sub(&self, source: String) -> String
     {
         source.clone()
-            .replace("#MOD_NAME", &self.mod_info.sourcemod_name)
-            .replace("#MOD_NAME_SHORT", &self.mod_info.short_name)
-            .replace("#MOD_NAME_STYLIZED", &self.mod_info.name_stylized)
-            .replace("#URL_BASE", &self.remote_info.base_url)
-            .replace("#URL_VERSIONS", &self.remote_info.versions_url)
+            .replace("$MOD_NAME_STYLIZED", &self.mod_info.name_stylized)
+            .replace("$MOD_NAME_SHORT", &self.mod_info.short_name)
+            .replace("$MOD_NAME", &self.mod_info.sourcemod_name)
+            .replace("$URL_BASE", &self.remote_info.base_url)
+            .replace("$URL_VERSIONS", &self.remote_info.versions_url)
     }
 }
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
