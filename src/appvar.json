@@ -5,7 +5,7 @@
     "name_stylized": "Open Fortress"
   },
   "remote": {
-    "base_url": "https://beans.adastral.net/",
-    "versions_url": "https://beans.adastral.net/versions.json"
+    "base_url": "https://d1nqxnq455zv5q.cloudfront.net/",
+    "versions_url": "https://d1nqxnq455zv5q.cloudfront.net/versions.json"
   }
 }
