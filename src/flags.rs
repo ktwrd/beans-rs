@@ -29,6 +29,13 @@ pub fn has_flag(flag: LaunchFlag) -> bool
 pub fn add_flag(flag: LaunchFlag)
 {
     unsafe {
+        match flag {
+            LaunchFlag::DEBUG_MODE => {
+                crate::logger::LOG_FORMAT = crate::logger::LOG_FORMAT_DEFAULT;
+            }
+            _ => {}
+        };
+
         let mut data = LaunchFlag::from_bits(LAUNCH_FLAGS).unwrap_or(LaunchFlag::empty());
         data.insert(flag);
         LAUNCH_FLAGS = data.bits();
@@ -38,18 +45,18 @@ pub fn add_flag(flag: LaunchFlag)
 pub fn remove_flag(flag: LaunchFlag)
 {
     unsafe {
+        match flag {
+            LaunchFlag::DEBUG_MODE => {
+                crate::logger::LOG_FORMAT = crate::logger::LOG_FORMAT_MINIMAL;
+            }
+            _ => {}
+        };
         let mut data = LaunchFlag::from_bits(LAUNCH_FLAGS).unwrap_or(LaunchFlag::empty());
         data.remove(flag);
         LAUNCH_FLAGS = data.bits();
     }
 }
 
-#[cfg(debug_assertions)]
-pub fn debug_mode() -> bool
-{
-    true
-}
-#[cfg(not(debug_assertions))]
 pub fn debug_mode() -> bool
 {
     has_flag(LaunchFlag::DEBUG_MODE)
