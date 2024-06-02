@@ -162,6 +162,9 @@ pub fn parse_location(location: String) -> String
                     }
                 },
                 Err(e) => {
+                    if format!("{:}", e).starts_with("No such file or directory") {
+                        return location;
+                    }
                     sentry::capture_error(&e);
                     eprintln!("[helper::parse_location] Failed to canonicalize location {}", location);
                     eprintln!("[helper::parse_location] {:}", e);
