@@ -1,11 +1,13 @@
 use std::backtrace::Backtrace;
+use std::process::ExitStatus;
+use log::debug;
 use crate::{BeansError, depends, DownloadFailureReason, helper};
 
 pub fn verify(
     signature_url: String,
     gamedir: String,
     remote: String
-) -> Result<(), BeansError> {
+) -> Result<ExitStatus, BeansError> {
     match std::process::Command::new(&depends::get_butler_location())
         .args([
             "verify",
@@ -24,8 +26,9 @@ pub fn verify(
             })
         },
         Ok(mut v) => {
-            v.wait()?;
-            Ok(())
+            let w = v.wait()?;
+            debug!("Exited with {:#?}", w);
+            Ok(w)
         }
     }
 }
@@ -34,7 +37,7 @@ pub async fn patch_dl(
     staging_dir: String,
     patch_filename: String,
     gamedir: String
-) -> Result<(), BeansError> {
+) -> Result<ExitStatus, BeansError> {
     if helper::file_exists(staging_dir.clone()) {
         std::fs::remove_dir_all(&staging_dir)?;
     }
@@ -57,7 +60,7 @@ pub fn patch(
     patchfile_location: String,
     staging_dir: String,
     gamedir: String
-) -> Result<(), BeansError> {
+) -> Result<ExitStatus, BeansError> {
     println!("[butler::patch] patching directory {} with {}", gamedir, patchfile_location);
     match std::process::Command::new(&depends::get_butler_location())
         .args([
@@ -78,8 +81,9 @@ pub fn patch(
             Err(xe)
         },
         Ok(mut v) => {
-            v.wait()?;
-            Ok(())
+            let w = v.wait()?;
+            debug!("Exited with {:#?}", w);
+            Ok(w)
         }
     }
 }
