@@ -17,6 +17,23 @@ impl InstallWorkflow {
 
         Self::install_with_remote_version(ctx, latest_remote_id, latest_remote).await
     }
+
+    /// Install the specified version by its ID to the output directory.
+    pub async fn install_version(&mut self, version_id: usize) -> Result<(), BeansError>
+    {
+        let target_version = match self.context.remote_version_list.versions.get(&version_id) {
+            Some(v) => v,
+            None => {
+                error!("Could not find remote version {version_id}");
+                return Err(BeansError::RemoteVersionNotFound {
+                    version: Some(version_id)
+                });
+            }
+        };
+        let mut ctx = self.context.clone();
+        InstallWorkflow::install_with_remote_version(&mut ctx, version_id, target_version.clone()).await
+    }
+
     pub async fn install_with_remote_version(ctx: &mut RunnerContext, version_id: usize, version: RemoteVersion)
         -> Result<(), BeansError>
     {
