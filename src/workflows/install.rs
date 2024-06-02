@@ -28,10 +28,11 @@ impl InstallWorkflow {
     /// out_dir: should be `RunnerContext.sourcemod_path`
     /// version_id: Version that is from `package_loc`. When not specified, `.adastral` will not be written to.
     /// Note: This function doesn't check the extension when extracting.
-    pub async fn install_from(package_loc: String, out_dir: String, version_id: Option<usize>) -> Result<(), BeansError>
+    pub async fn install_from(package_loc: String, out_dir: String, version_id: Option<usize>)
+        -> Result<(), BeansError>
     {
         if helper::file_exists(package_loc.clone()) == false {
-            eprintln!("[InstallWorkflow::Wizard] Failed to find package! (location: {package_loc})");
+            error!("[InstallWorkflow::Wizard] Failed to find package! (location: {package_loc})");
             return Err(BeansError::DownloadFailure {
                 reason: DownloadFailureReason::FileNotFound {
                     location: package_loc.clone()
@@ -50,7 +51,7 @@ impl InstallWorkflow {
                 debug!("{:#?}", e);
             }
         } else {
-            eprintln!("Not writing .adastral since the version wasn't provided");
+            warn!("Not writing .adastral since the version wasn't provided");
         }
         println!("{}", INSTALL_FINISH_MSG);
         Ok(())
