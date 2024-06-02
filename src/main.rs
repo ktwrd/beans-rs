@@ -17,7 +17,13 @@ fn main() {
     let _ = winconsole::console::set_title(format!("beans v{}", beans_rs::VERSION).as_str());
 
     init_flags();
-    init_sentry();
+    // initialize sentry and custom panic handler for msgbox
+    let _guard = sentry::init((beans_rs::SENTRY_URL, sentry::ClientOptions {
+        release: sentry::release_name!(),
+        debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
+        max_breadcrumbs: 100,
+        ..Default::default()
+    }));
     init_panic_handle();
 
     tokio::runtime::Builder::new_multi_thread()
@@ -37,17 +43,6 @@ fn init_flags()
     }
     flags::add_flag(LaunchFlag::STANDALONE_APP);
     simple_logging::log_to_stderr(DEFAULT_LOG_LEVEL);
-}
-/// Initialize Sentry integration
-fn init_sentry()
-{
-    // initialize sentry and custom panic handler for msgbox
-    let _guard = sentry::init((beans_rs::SENTRY_URL, sentry::ClientOptions {
-        release: sentry::release_name!(),
-        debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
-        max_breadcrumbs: 100,
-        ..Default::default()
-    }));
 }
 fn init_panic_handle()
 {
