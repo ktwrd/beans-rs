@@ -144,7 +144,20 @@ pub fn generate_rand_str(length: usize) -> String
         .collect();
     s.to_uppercase()
 }
+/// Join the path, using `tail` as the base, and `head` as the thing to add on top of it.
+///
+/// This will also convert backslashes/forwardslashes to the compiled separator in `crate::PATH_SEP`
+pub fn join_path(tail: String, head: String) -> String
+{
+    let mut h = head.to_string()
+        .replace("/", crate::PATH_SEP)
+        .replace("\\", crate::PATH_SEP);
+    while h.starts_with(crate::PATH_SEP) {
+        h.remove(0);
+    }
 
+    format!("{}{}", format_directory_path(tail), h)
+}
 /// Make sure that the location provided is formatted as a directory (ends with `crate::PATH_SEP`).
 pub fn format_directory_path(location: String) -> String
 {
