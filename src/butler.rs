@@ -1,6 +1,6 @@
 use std::backtrace::Backtrace;
 use std::process::ExitStatus;
-use log::debug;
+use log::{debug, error, info};
 use crate::{BeansError, depends, DownloadFailureReason, helper};
 
 pub fn verify(
@@ -8,13 +8,15 @@ pub fn verify(
     gamedir: String,
     remote: String
 ) -> Result<ExitStatus, BeansError> {
-    match std::process::Command::new(&depends::get_butler_location())
-        .args([
-            "verify",
-            &signature_url,
-            &gamedir,
-            format!("--heal=archive,{}", remote).as_str()
-        ])
+    let mut cmd = std::process::Command::new(&depends::get_butler_location());
+    cmd.args([
+        "verify",
+        &signature_url,
+        &gamedir,
+        format!("--heal=archive,{}", remote).as_str()
+    ]);
+    debug!("[butler::verify] {:#?}", cmd);
+    match cmd
         .spawn() {
         Err(e) => {
             Err(BeansError::ButlerVerifyFailure {
@@ -27,7 +29,7 @@ pub fn verify(
         },
         Ok(mut v) => {
             let w = v.wait()?;
-            debug!("Exited with {:#?}", w);
+            debug!("[butler::verify] Exited with {:#?}", w);
             Ok(w)
         }
     }
@@ -42,7 +44,7 @@ pub async fn patch_dl(
         std::fs::remove_dir_all(&staging_dir)?;
     }
     let tmp_file = helper::get_tmp_file(patch_filename);
-    println!("[butler::patch_dl] downloading {} to {}", dl_url, tmp_file);
+    info!("[butler::patch_dl] downloading {} to {}", dl_url, tmp_file);
     helper::download_with_progress(dl_url, tmp_file.clone()).await?;
 
     if helper::file_exists(tmp_file.clone()) == false {
@@ -61,14 +63,15 @@ pub fn patch(
     staging_dir: String,
     gamedir: String
 ) -> Result<ExitStatus, BeansError> {
-    println!("[butler::patch] patching directory {} with {}", gamedir, patchfile_location);
-    match std::process::Command::new(&depends::get_butler_location())
-        .args([
-            "apply",
-            &format!("--staging-dir={}", staging_dir),
-            &patchfile_location,
-            &gamedir
-        ])
+    let mut cmd = std::process::Command::new(&depends::get_butler_location());
+    cmd.args([
+        "apply",
+        &format!("--staging-dir={}", staging_dir),
+        &patchfile_location,
+        &gamedir
+    ]);
+    debug!("[butler::patch] {:#?}", &cmd);
+    match cmd
         .spawn() {
         Err(e) => {
             let xe = BeansError::ButlerPatchFailure {
@@ -77,6 +80,7 @@ pub fn patch(
                 error: e,
                 backtrace: Backtrace::capture()
             };
+            error!("[butler::patch] {:#?}", xe);
             sentry::capture_error(&xe);
             Err(xe)
         },
