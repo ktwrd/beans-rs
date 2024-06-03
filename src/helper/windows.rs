@@ -2,7 +2,7 @@
 use std::backtrace::Backtrace;
 use winreg::RegKey;
 use crate::BeansError;
-use crate::helper::generate_rand_str;
+use crate::helper::format_directory_path;
 
 /// TODO use windows registry to get the SourceModInstallPath
 /// HKEY_CURRENT_USER\Software\Value\Steam
