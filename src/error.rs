@@ -1,6 +1,7 @@
 use std::backtrace::Backtrace;
 use std::num::ParseIntError;
 use thiserror::Error;
+use crate::appvar::AppVarData;
 use crate::version::AdastralVersionFile;
 
 #[derive(Debug, Error)]
@@ -119,6 +120,12 @@ pub enum BeansError
     VersionFileReadFailure {
         error: std::io::Error,
         location: String
+    },
+
+    #[error("Failed to serialize provided AppVarData to JSON. {error:}")]
+    AppVarDataSerializeFailure {
+        error: serde_json::Error,
+        data: AppVarData
     }
 }
 #[derive(Debug)]
