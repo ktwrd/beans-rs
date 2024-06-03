@@ -145,6 +145,21 @@ pub fn generate_rand_str(length: usize) -> String
     s.to_uppercase()
 }
 
+/// Make sure that the location provided is formatted as a directory (ends with `crate::PATH_SEP`).
+pub fn format_directory_path(location: String) -> String
+{
+    let mut x = location.to_string()
+        .replace("/", crate::PATH_SEP)
+        .replace("\\", crate::PATH_SEP);
+    while x.ends_with(crate::PATH_SEP) {
+        x.pop();
+    }
+    if x.ends_with(crate::PATH_SEP) == false {
+        x.push_str(crate::PATH_SEP);
+    }
+
+    x
+}
 pub fn parse_location(location: String) -> String
 {
     let path = std::path::Path::new(&location);
