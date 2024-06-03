@@ -37,7 +37,7 @@ fn get_version_location(sourcemods_location: Option<String>) -> Option<String>
 /// get the full location of the sourcemod mod directory.
 fn get_mod_location(sourcemods_location: Option<String>) -> Option<String>
 {
-    let mut smp_x = match sourcemods_location {
+    let smp_x = match sourcemods_location {
         Some(v) => v,
         None => match find_sourcemod_path() {
             Ok(v) => v,
@@ -69,7 +69,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
         return Ok(());
     }
 
-    let mut smp_x = match sourcemods_location {
+    let smp_x = match sourcemods_location {
         Some(v) => v,
         None => match find_sourcemod_path() {
             Ok(v) => v,

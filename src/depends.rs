@@ -118,7 +118,7 @@ pub fn get_butler_2_location() -> String {
     path
 }
 fn get_tmp_dir() -> String {
-    let mut path = std::env::temp_dir().to_str().unwrap_or("").to_string();
+    let path = std::env::temp_dir().to_str().unwrap_or("").to_string();
     helper::format_directory_path(path)
 }
 
