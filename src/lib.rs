@@ -36,7 +36,7 @@ pub const PATH_SEP: &str = "\\";
 
 pub fn data_dir() -> String
 {
-    let av = appvar::AppVarData::parse();
+    let av = appvar::parse();
     format!("{}{}{}", PATH_SEP, av.mod_info.sourcemod_name, PATH_SEP)
 }
 
