@@ -47,9 +47,9 @@ pub struct AppVarMod
 pub struct AppVarRemote
 {
     /// base URL for the versioning.
-    /// e.g; https://beans.adastral.net/
+    /// e.g; `https://beans.adastral.net/`
     pub base_url: String,
     /// url where the version details are stored.
-    /// e.g; https://beans.adastral.net/versions.json
+    /// e.g; `https://beans.adastral.net/versions.json`
     pub versions_url: String
 }
