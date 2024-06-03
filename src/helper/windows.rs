@@ -14,10 +14,7 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
             let x: std::io::Result<String> = rkey.get_value("SourceModInstallPath");
             match x {
                 Ok(mut val) => {
-                    if val.ends_with("\\") == false {
-                        val.push_str("\\");
-                    }
-                    Ok(val)
+                    Ok(format_directory_path(val))
                 },
                 Err(e) => {
                     return Err(BeansError::RegistryKeyFailure {

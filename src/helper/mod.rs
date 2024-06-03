@@ -92,13 +92,15 @@ pub fn install_state(sourcemods_location: Option<String>) -> InstallType
         smp_x.pop();
     }
 
-    if file_exists(format!("{}{}.adastral", &smp_x, crate::data_dir())) {
+    let data_dir = join_path(smp_x, crate::data_dir());
+
+    if file_exists(format!("{}.adastral", data_dir)) {
         return InstallType::Adastral;
     }
-    else if file_exists(format!("{}{}.revision", &smp_x, crate::data_dir())) {
+    else if file_exists(format!("{}.revision", data_dir)) {
         return InstallType::OtherSource;
     }
-    else if file_exists(format!("{}{}gameinfo.txt", &smp_x, crate::data_dir())) {
+    else if file_exists(format!("{}gameinfo.txt", data_dir)) {
         return InstallType::OtherSourceManual;
     }
     return InstallType::NotInstalled;

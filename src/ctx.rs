@@ -66,12 +66,7 @@ impl RunnerContext
     ///      C:\Games\Steam\steamapps\sourcemods\open_fortress\
     pub fn get_mod_location(&mut self) -> String
     {
-        let mut smp_x = self.sourcemod_path.clone();
-        if smp_x.ends_with("/") || smp_x.ends_with("\\") {
-            smp_x.pop();
-        }
-        smp_x.push_str(&crate::data_dir());
-        smp_x
+        helper::join_path(self.sourcemod_path.clone(), crate::data_dir())
     }
 
     /// Get staging location for butler.
@@ -79,12 +74,7 @@ impl RunnerContext
     /// e.g; /home/kate/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/sourcemods/butler-staging
     ///      C:\Games\Steam\steamapps\sourcemods\butler-staging
     pub fn get_staging_location(&mut self) -> String {
-        let mut smp_x = self.sourcemod_path.clone();
-        if smp_x.ends_with("/") || smp_x.ends_with("\\") {
-            smp_x.pop();
-        }
-        smp_x.push_str(crate::STAGING_DIR);
-        smp_x
+        helper::join_path(self.sourcemod_path.clone(), crate::STAGING_DIR.to_string())
     }
 
     /// Get the latest item in `remote_version_list`
@@ -185,15 +175,8 @@ impl RunnerContext
             }
         }
 
-        #[cfg(target_os = "windows")]
-        if out_loc.ends_with("\\") == false {
-            out_loc.push_str("\\");
-        }
-        #[cfg(not(target_os = "windows"))]
-        if out_loc.ends_with("/") == false {
-            out_loc.push_str("/");
-        }
-        out_loc.push_str(format!("presz_{}", helper::generate_rand_str(12)).as_str());
+        let out_filename = format!("presz_{}", helper::generate_rand_str(12));
+        out_loc = helper::join_path(out_loc, out_filename);
 
         info!("[RunnerContext::download_package] writing to {}", out_loc);
         helper::download_with_progress(
