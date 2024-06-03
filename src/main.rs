@@ -7,10 +7,11 @@ use beans_rs::helper::parse_location;
 use beans_rs::SourceModDirectoryParam;
 use beans_rs::workflows::InstallWorkflow;
 
+pub const DEFAULT_LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Info;
 #[cfg(debug_assertions)]
 pub const DEFAULT_LOG_LEVEL: LevelFilter = LevelFilter::Trace;
 #[cfg(not(debug_assertions))]
-pub const DEFAULT_LOG_LEVEL: LevelFilter = LevelFilter::Info;
+pub const DEFAULT_LOG_LEVEL: LevelFilter = DEFAULT_LOG_LEVEL_RELEASE;
 
 fn main() {
     #[cfg(target_os = "windows")]
@@ -22,6 +23,7 @@ fn main() {
         release: sentry::release_name!(),
         debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
         max_breadcrumbs: 100,
+        auto_session_tracking: true,
         ..Default::default()
     }));
     init_panic_handle();
@@ -43,7 +45,8 @@ fn init_flags()
         flags::add_flag(LaunchFlag::DEBUG_MODE);
     }
     flags::add_flag(LaunchFlag::STANDALONE_APP);
-    beans_rs::logger::log_to_stdout(DEFAULT_LOG_LEVEL);
+    beans_rs::logger::set_filter(DEFAULT_LOG_LEVEL);
+    beans_rs::logger::log_to_stdout();
 }
 fn init_panic_handle()
 {
@@ -135,6 +138,10 @@ impl Launcher
                     .long("debug")
                     .help("Enable debug logging")
                     .action(ArgAction::SetTrue),
+                Arg::new("no-debug")
+                    .long("no-debug")
+                    .help("Disable mode. Mainly used for debug builds to not spew into the console.")
+                    .action(ArgAction::SetTrue),
                 Arg::new("no-pause")
                     .long("no-pause")
                     .help("When provided, beans-rs will not wait for user input before exiting.")
@@ -160,9 +167,14 @@ impl Launcher
     /// add `LaunchFlag::DEBUG_MODE` to `flags` when the `--debug` parameter flag is used.
     pub fn set_debug(&mut self)
     {
-        if self.root_matches.get_flag("debug") {
+        if self.root_matches.get_flag("no-debug") {
+            flags::remove_flag(LaunchFlag::DEBUG_MODE);
+            beans_rs::logger::set_filter(DEFAULT_LOG_LEVEL_RELEASE);
+            info!("Disabled Debug Mode");
+        }
+        else if self.root_matches.get_flag("debug") {
             flags::add_flag(LaunchFlag::DEBUG_MODE);
-            beans_rs::logger::log_to_stdout(LevelFilter::Off);
+            beans_rs::logger::set_filter(LevelFilter::max());
             trace!("Debug mode enabled");
         }
     }
