@@ -30,6 +30,12 @@ pub fn verify(
         Ok(mut v) => {
             let w = v.wait()?;
             debug!("[butler::verify] Exited with {:#?}", w);
+            if let Some(c) = w.code() {
+                if c != 0 {
+                    error!("[butler::verify] exited with code {c}, which isn't good!");
+                    panic!("[butler::verify] exited with code {c}");
+                }
+            }
             Ok(w)
         }
     }
@@ -87,6 +93,12 @@ pub fn patch(
         Ok(mut v) => {
             let w = v.wait()?;
             debug!("Exited with {:#?}", w);
+            if let Some(c) = w.code() {
+                if c != 0 {
+                    error!("[butler::patch] exited with code {c}, which isn't good!");
+                    panic!("[butler::patch] exited with code {c}");
+                }
+            }
             Ok(w)
         }
     }
