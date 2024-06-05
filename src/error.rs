@@ -126,6 +126,18 @@ pub enum BeansError
     AppVarDataSerializeFailure {
         error: serde_json::Error,
         data: AppVarData
+    },
+
+    #[error("Failed to read gameinfo.txt at {location} ({error:})")]
+    GameInfoFileReadFail {
+        error: std::io::Error,
+        location: String
+    },
+    #[error("Failed to set permissions on gameinfo.txt at {location} ({error:})")]
+    GameInfoPermissionSetFail {
+        error: std::io::Error,
+        permissions: std::fs::Permissions,
+        location: String
     }
 }
 #[derive(Debug)]
