@@ -14,7 +14,6 @@
 ## show wizard and use custom location
 ```
 ./beans-rs --location <sdk location>
-./beans-rs --location <sdk location> wizard
 ./beans-rs wizard --location <sdk location>
 ```
 
@@ -22,7 +21,6 @@
 ```
 ./beans-rs --no-pause --location <sourcemods location>
 ./beans-rs --no-pause wizard --location <sourcemods location>
-./beans-rs --no-pause --location <sourcemods location> wizard
 ```
 
 # install
