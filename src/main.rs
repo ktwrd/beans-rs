@@ -5,7 +5,7 @@ use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
 use beans_rs::flags::LaunchFlag;
 use beans_rs::helper::parse_location;
 use beans_rs::SourceModDirectoryParam;
-use beans_rs::workflows::{InstallWorkflow, VerifyWorkflow};
+use beans_rs::workflows::{InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
 
 pub const DEFAULT_LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Info;
 #[cfg(debug_assertions)]
@@ -144,7 +144,7 @@ impl Launcher
                     .action(ArgAction::SetTrue),
                 Arg::new("no-pause")
                     .long("no-pause")
-                    .help("When provided, beans-rs will not wait for user input before exiting.")
+                    .help("When provided, beans-rs will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts.")
                     .action(ArgAction::SetTrue),
                 Launcher::create_location_arg()
             ]);
@@ -318,6 +318,22 @@ impl Launcher
 
         if let Err(e) = VerifyWorkflow::wizard(&mut ctx).await {
             panic!("Failed to run VerifyWorkflow {:#?}", e);
+        } else {
+            logic_done();
+        }
+    }
+
+    /// handler for the `update` subcommand
+    ///
+    /// NOTE this function uses `panic!` when `UpdateWorkflow::wizard` fails. panics are handled
+    /// and are reported via sentry.
+    pub async fn task_update(&mut self, matches: &ArgMatches)
+    {
+        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        let mut ctx = self.try_create_context().await;
+
+        if let Err(e) = UpdateWorkflow::wizard(&mut ctx).await {
+            panic!("Failed to run UpdateWorkflow {:#?}", e);
         } else {
             logic_done();
         }
