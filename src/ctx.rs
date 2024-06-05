@@ -152,8 +152,17 @@ impl RunnerContext
     pub fn gameinfo_perms(&mut self) -> Result<(), BeansError> {
         let location = self.gameinfo_location();
         if helper::file_exists(location.clone()) {
-            let perm = std::fs::Permissions::from_mode(0644 as u32);
-            std::fs::set_permissions(&location, perm)?;
+            let perm = std::fs::Permissions::from_mode(0o644 as u32);
+            if let Err(e) = std::fs::set_permissions(&location, perm.clone()) {
+                let xe = BeansError::GameInfoPermissionSetFail {
+                    error: e,
+                    permissions: perm.clone(),
+                    location
+                };
+                sentry::capture_error(&xe);
+                return Err(xe);
+            }
+            debug!("[RunnerContext::gameinfo_perms] set permissions on {location} to {:#?}", perm);
         }
         Ok(())
     }
