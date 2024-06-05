@@ -5,7 +5,7 @@ use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
 use beans_rs::flags::LaunchFlag;
 use beans_rs::helper::parse_location;
 use beans_rs::SourceModDirectoryParam;
-use beans_rs::workflows::InstallWorkflow;
+use beans_rs::workflows::{InstallWorkflow, VerifyWorkflow};
 
 pub const DEFAULT_LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Info;
 #[cfg(debug_assertions)]
@@ -204,6 +204,9 @@ impl Launcher
             Some(("install", i_matches)) => {
                 self.task_install(i_matches).await;
             },
+            Some(("verify", v_matches)) => {
+                self.task_verify(v_matches).await;
+            }
             Some(("wizard", wz_matches)) => {
                 self.to_location = Launcher::find_arg_sourcemods_location(wz_matches);
                 self.task_wizard().await;
@@ -299,6 +302,22 @@ impl Launcher
             error!("Failed to run InstallWorkflow::install_version");
             sentry::capture_error(&e);
             panic!("{:#?}", e);
+        } else {
+            logic_done();
+        }
+    }
+
+    /// handler for the `verify` subcommand
+    ///
+    /// NOTE this function uses `panic!` when `VerifyWorkflow::wizard` fails. panics are handled
+    /// and are reported via sentry.
+    pub async fn task_verify(&mut self, matches: &ArgMatches)
+    {
+        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        let mut ctx = self.try_create_context().await;
+
+        if let Err(e) = VerifyWorkflow::wizard(&mut ctx).await {
+            panic!("Failed to run VerifyWorkflow {:#?}", e);
         } else {
             logic_done();
         }
