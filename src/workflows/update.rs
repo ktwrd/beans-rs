@@ -30,6 +30,7 @@ impl UpdateWorkflow
             }
         };
 
+        ctx.gameinfo_perms()?;
         let gameinfo_backup = ctx.read_gameinfo_file()?;
 
         if helper::has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq)? == false {
@@ -62,7 +63,7 @@ impl UpdateWorkflow
         ctx.gameinfo_perms()?;
         info!("[UpdateWorkflow] Patching game");
         if let Err(e) = butler::patch_dl(
-            format!("{}{}", &av.remote_info.base_url, patch.url),
+            format!("{}{}", &av.remote_info.base_url, patch.file),
             staging_dir_location,
             patch.file,
             mod_dir_location).await {
