@@ -132,11 +132,22 @@ impl RunnerContext
 
     /// Read the contents of `gameinfo.txt` in directory from `self.get_mod_location()`
     pub fn read_gameinfo_file(&mut self) -> Result<Option<Vec<u8>>, BeansError> {
+        self.gameinfo_perms()?;
         let location = self.gameinfo_location();
         if helper::file_exists(location.clone()) == false {
             return Ok(None);
         }
-        let file = std::fs::read(&location)?;
+        let file = match std::fs::read(&location) {
+            Ok(v) => v,
+            Err(e) => {
+                let ex = BeansError::GameInfoFileReadFail {
+                    error: e,
+                    location: location
+                };
+                sentry::capture_error(&ex);
+                return Err(ex);
+            }
+        };
         Ok(Some(file))
     }
 
