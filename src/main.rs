@@ -206,7 +206,10 @@ impl Launcher
             },
             Some(("verify", v_matches)) => {
                 self.task_verify(v_matches).await;
-            }
+            },
+            Some(("update", u_matches)) => {
+                self.task_update(u_matches).await;
+            },
             Some(("wizard", wz_matches)) => {
                 self.to_location = Launcher::find_arg_sourcemods_location(wz_matches);
                 self.task_wizard().await;
