@@ -175,12 +175,20 @@ pub fn format_directory_path(location: String) -> String
 
     x
 }
+#[cfg(not(target_os = "windows"))]
+pub fn canonicalize(location: &str) -> Result<PathBuf, std::io::Error> {
+    std::fs::canonicalize(location)
+}
+#[cfg(target_os = "windows")]
+pub fn canonicalize(location: &str) -> Result<PathBuf, std::io::Error> {
+    dunce::canonicalize(location)
+}
 pub fn parse_location(location: String) -> String
 {
     let path = std::path::Path::new(&location);
     let real_location = match path.to_str() {
         Some(v) => {
-            let p = std::fs::canonicalize(v);
+            let p = canonicalize(v);
             match p {
                 Ok(x) => {
                     match x.clone().to_str() {
