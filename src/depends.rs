@@ -3,7 +3,7 @@ use std::os::unix::fs::PermissionsExt;
 #[cfg(target_os = "windows")]
 use std::backtrace::Backtrace;
 use crate::{BeansError, BUTLER_BINARY, BUTLER_LIB_1, BUTLER_LIB_2, helper};
-use log::{debug, error};
+use log::{debug, error, info, trace};
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
@@ -64,10 +64,10 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
         return Ok(());
     }
 
-    log::info!("Installing Visual C++ Redistributable");
+    info!("Installing Visual C++ Redistributable");
     let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
     out_loc = helper::join_path(out_loc, "vc_redist.exe".to_string());
-
+    trace!("[try_install_vcredist] downloading to {out_loc}");
     crate::download::with_progress_cli(
         String::from("https://aka.ms/vs/17/release/vc_redist.x86.exe"),
         out_loc.clone()).await?;
