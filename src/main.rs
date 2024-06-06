@@ -351,14 +351,29 @@ impl Launcher
         match RunnerContext::create_auto(self.try_get_smdp()).await {
             Ok(v) => v,
             Err(e) => {
-                eprintln!("{:}", e);
+                error!("[try_create_context] {:}", e);
                 trace!("======== Full Error ========");
-                trace!("{:#?}", e);
-                let _ = helper::get_input("Press enter/return to exit");
-                panic!("Failed to create RunnerContext {:#?}", e);
+                trace!("{:#?}", &e);
+                show_msgbox_error(format!("{:}", &e));
+                sentry::capture_error(&e);
+                logic_done();
+                std::process::exit(1);
             }
         }
     }
+}
+fn show_msgbox_error(text: String) {
+    std::thread::spawn(move || {
+        let d = native_dialog::MessageDialog::new()
+            .set_type(native_dialog::MessageType::Error)
+            .set_title("beans - fatal error!")
+            .set_text(&format!("{}", text))
+            .show_alert();
+        if let Err(e) = d {
+            sentry::capture_error(&e);
+            eprintln!("Failed to show MessageDialog {:#?}", e);
+        }
+    });
 }
 
 
