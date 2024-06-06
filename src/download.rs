@@ -1,7 +1,6 @@
 ﻿use std::collections::HashMap;
-use std::io::{StdoutLock, Write};
+use std::io::Write;
 use std::sync::RwLock;
-// use app::channel;
 use fltk::app;
 use fltk::prelude::{GroupExt, WidgetBase, WidgetExt};
 use futures_util::StreamExt;
@@ -47,14 +46,12 @@ lazy_static!{
 /// is `false`.
 pub async fn with_progress(url: String, out_location: String, title: String) -> Result<(), BeansError>
 {
-    let mut use_gui = false;
     unsafe {
-        use_gui = crate::HEADLESS == false;
-    }
-    if use_gui {
-        with_progress_gui(url, out_location, title).await
-    } else {
-        with_progress_cli(url, out_location)
+        if crate::HEADLESS {
+            with_progress_cli(url, out_location).await
+        } else {
+            with_progress_gui(url, out_location, title).await
+        }
     }
 }
 /// Download a file without displaying a progress bar.
@@ -70,9 +67,9 @@ async fn with_progress_gui(url: String, out_location: String, title: String) -> 
             if let Ok(mut map) = GUI_MAP.write() {
                 if let Some(ui) = map.get_mut(&a.unique_id) {
                     let p = helper::calc_percentage(a.current, a.max);
-                    &ui.download_progress.set_value(p);
-                    &ui.label_left.set_label(&format!("{} remaining", helper::format_size((a.max - a.current) as usize)));
-                    &ui.label_right.set_label(&format!("{}", a.speed));
+                    let _ =&ui.download_progress.set_value(p);
+                    let _ =&ui.label_left.set_label(&format!("{} remaining", helper::format_size((a.max - a.current) as usize)));
+                    let _ = &ui.label_right.set_label(&format!("{}", a.speed));
                     app::redraw();
                     trace!("[with_progress_gui->progress] download_progress.set_value({p})");
                 }
@@ -107,7 +104,7 @@ async fn with_progress_gui(url: String, out_location: String, title: String) -> 
             ui.download_progress.set_value(0f64);
             ui.download_progress.set_maximum(100f64);
             let x = format!("{}", b.unique_id);
-            &ui.win.set_callback(move |_| {
+            let _ =&ui.win.set_callback(move |_| {
                 if fltk::app::event() == fltk::enums::Event::Close {
                     info!("[with_progress_gui->progress_init->ui.win.set_callback] Close event received, exiting application.");
                     sentry::end_session();
@@ -116,7 +113,7 @@ async fn with_progress_gui(url: String, out_location: String, title: String) -> 
             });
             std::thread::spawn(move || {
                 let mut do_thing: bool = false;
-                if let Ok(mut map) = GUI_MAP_COMPLETE.read() {
+                if let Ok(map) = GUI_MAP_COMPLETE.read() {
                     do_thing = map.get(&b.unique_id).unwrap_or(&Some(false)).unwrap_or(false);
                 }
                 while do_thing {
@@ -143,7 +140,7 @@ async fn with_progress_gui(url: String, out_location: String, title: String) -> 
                             }
                         }
                     }
-                    if let Ok(mut map) = GUI_MAP_COMPLETE.read() {
+                    if let Ok(map) = GUI_MAP_COMPLETE.read() {
                         do_thing = map.get(&b.unique_id).unwrap_or(&Some(false)).unwrap_or(false);
                     }
                 }
@@ -182,8 +179,8 @@ async fn with_progress_gui(url: String, out_location: String, title: String) -> 
             }
         }, move |id: String| {
             if let Ok(mut map) = APP_MAP.write() {
-                if let Some(app) = map.get_mut(&id) {
-                    app::wait_for(0.0f64);
+                if let Some(_) = map.get_mut(&id) {
+                    let _ = app::wait_for(0.0f64);
                 }
             }
         }).await
