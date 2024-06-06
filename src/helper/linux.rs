@@ -22,7 +22,10 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
         Ok(v) => v,
         Err(e) => {
             sentry::capture_error(&e);
-            return Err(BeansError::FileOpenFailure(reg_path, e));
+            return Err(BeansError::FileOpenFailure {
+                location: reg_path,
+                error: e
+            });
         }
     };
 
