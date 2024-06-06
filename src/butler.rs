@@ -1,6 +1,6 @@
 use std::backtrace::Backtrace;
 use std::process::ExitStatus;
-use log::{debug, error, info};
+use log::{debug, error, info, warn};
 use crate::{BeansError, depends, DownloadFailureReason, helper};
 
 pub fn verify(
@@ -72,7 +72,7 @@ pub fn patch(
     let mut cmd = std::process::Command::new(&depends::get_butler_location());
     cmd.args([
         "apply",
-        &format!("--staging-dir={}", staging_dir),
+        &format!("--staging-dir={}", &staging_dir),
         &patchfile_location,
         &gamedir
     ]);
@@ -97,6 +97,13 @@ pub fn patch(
                 if c != 0 {
                     error!("[butler::patch] exited with code {c}, which isn't good!");
                     panic!("[butler::patch] exited with code {c}");
+                }
+            } else {
+                if helper::file_exists(staging_dir.clone()) {
+                    if let Err(e) = std::fs::remove_dir_all(&staging_dir) {
+                        warn!("[butler::patch] Failed to delete staging directory after patch {:}", e);
+                        debug!("[butler::patch] {} {:#?}", staging_dir, e);
+                    }
                 }
             }
             Ok(w)
