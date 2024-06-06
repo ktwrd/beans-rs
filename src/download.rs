@@ -177,7 +177,8 @@ async fn with_progress_gui(url: String, out_location: String, title: String) -> 
                 }
                 map.remove(&c.unique_id);
             }
-        }, move |id: String| {
+        },
+        move |id: String| {
             if let Ok(mut map) = APP_MAP.write() {
                 if let Some(_) = map.get_mut(&id) {
                     let _ = app::wait_for(0.0f64);
