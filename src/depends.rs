@@ -68,9 +68,10 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
     let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
     out_loc = helper::join_path(out_loc, "vc_redist.exe".to_string());
     trace!("[try_install_vcredist] downloading to {out_loc}");
-    crate::download::with_progress_cli(
+    crate::download::with_progress(
         String::from("https://aka.ms/vs/17/release/vc_redist.x86.exe"),
-        out_loc.clone()).await?;
+        out_loc.clone(),
+        "Downloading Visual C++ Redistributable".to_string()).await?;
 
     if std::path::Path::new(&out_loc).exists() == false {
         return  Err(BeansError::FileNotFound {
