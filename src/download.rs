@@ -325,6 +325,9 @@ where FP: Fn(DownloadProgressArgs),
                 true => sx as usize,
                 false => 0usize
             };
+            // this is a blocking task when using `with_progress_gui` because i don't know how to
+            // properly multi-thread with fltk-rs
+            // - kate 2024/06/06
             progress(DownloadProgressArgs {
                 unique_id: unique_id.clone(),
                 max: total_size,
