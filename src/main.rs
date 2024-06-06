@@ -63,19 +63,25 @@ fn init_panic_handle()
 }
 fn custom_panic_handle()
 {
-    std::thread::spawn(|| {
-        let d = native_dialog::MessageDialog::new()
-            .set_type(native_dialog::MessageType::Error)
-            .set_title("beans - fatal error!")
-            .set_text(PANIC_MSG_CONTENT)
-            .show_alert();
-        if let Err(e) = d {
-            sentry::capture_error(&e);
-            eprintln!("Failed to show MessageDialog {:#?}", e);
-            eprintln!("[msgbox_panic] Come on, we failed to show a messagebox? Well, the error has been reported and we're on it.");
-            eprintln!("[msgbox_panic] PLEASE report this to kate@dariox.club with as much info as possible <3");
+    unsafe {
+        if beans_rs::PAUSE_ONCE_DONE {
+            std::thread::spawn(|| {
+                let d = native_dialog::MessageDialog::new()
+                    .set_type(native_dialog::MessageType::Error)
+                    .set_title("beans - fatal error!")
+                    .set_text(PANIC_MSG_CONTENT)
+                    .show_alert();
+                if let Err(e) = d {
+                    sentry::capture_error(&e);
+                    eprintln!("Failed to show MessageDialog {:#?}", e);
+                    eprintln!("[msgbox_panic] Come on, we failed to show a messagebox? Well, the error has been reported and we're on it.");
+                    eprintln!("[msgbox_panic] PLEASE report this to kate@dariox.club with as much info as possible <3");
+                }
+            });
+        } else {
+            info!("This error has been reported to the developers");
         }
-    });
+    }
 }
 /// should called once the logic flow is done!
 /// will call `helper::get_input` when `PAUSE_ONCE_DONE` is `true`.
@@ -359,17 +365,21 @@ impl Launcher
     }
 }
 fn show_msgbox_error(text: String) {
-    std::thread::spawn(move || {
-        let d = native_dialog::MessageDialog::new()
-            .set_type(native_dialog::MessageType::Error)
-            .set_title("beans - fatal error!")
-            .set_text(&format!("{}", text))
-            .show_alert();
-        if let Err(e) = d {
-            sentry::capture_error(&e);
-            eprintln!("Failed to show MessageDialog {:#?}", e);
+    unsafe {
+        if beans_rs::PAUSE_ONCE_DONE {
+            std::thread::spawn(move || {
+                let d = native_dialog::MessageDialog::new()
+                    .set_type(native_dialog::MessageType::Error)
+                    .set_title("beans - fatal error!")
+                    .set_text(&format!("{}", text))
+                    .show_alert();
+                if let Err(e) = d {
+                    sentry::capture_error(&e);
+                    eprintln!("Failed to show MessageDialog {:#?}", e);
+                }
+            });
         }
-    });
+    }
 }
 
 
