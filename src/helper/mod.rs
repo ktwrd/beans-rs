@@ -355,3 +355,11 @@ pub fn get_tmp_file(filename: String) -> String
     let head = format!("{}_{}", generate_rand_str(8), filename);
     join_path(tail, head)
 }
+pub fn calc_percentage(value: u64, max: u64) -> f64 {
+    if max == 0 {
+        // To handle division by zero, return 0.0 or handle it as needed
+        0.0
+    } else {
+        (value as f64 / max as f64) * 100.0
+    }
+}
