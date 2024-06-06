@@ -37,6 +37,12 @@ thread-id = "4.2.1"
 colored = "2.1.0"
 sentry-log = "0.33.0"
 
+fltk = { version = "1.4.30", features = ["fltk-bundled"] }
+fltk-theme = "0.7.2"
+
+[build-dependencies]
+fl2rust = "0.5.19"
+
 [target.'cfg(target_os = "windows")'.dependencies]
 winconsole = "0.11.1"
 winreg = "0.52.0"

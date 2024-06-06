@@ -1,0 +1,26 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0308
+header_name {.h}
+code_name {.cxx}
+class DownloadProgressInterface {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window win {
+      label {beans - Downloading File} open
+      xywh {3122 482 520 100} type Double visible
+    } {
+      Fl_Progress download_progress {
+        xywh {10 60 500 21} box GTK_DOWN_BOX selection_color 40
+      }
+      Fl_Text_Display label_left {
+        label left
+        xywh {10 25 0 0} box NO_BOX align 11
+      }
+      Fl_Text_Display label_right {
+        label right
+        xywh {510 25 0 0} box NO_BOX align 7
+      }
+    }
+  }
+}
