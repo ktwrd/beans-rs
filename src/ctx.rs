@@ -185,7 +185,7 @@ impl RunnerContext
 
     /// Download package with Progress Bar.
     /// Ok is the location to where it was downloaded to.
-    pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
+    pub async fn download_package(version: RemoteVersion, source: DownloadSource) -> Result<String, BeansError>
     {
         let av = crate::appvar::parse();
         let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
@@ -259,6 +259,12 @@ impl RunnerContext
         // ignored since this symlink stuff is for linux only
         Ok(())
     }
+}
+
+pub enum DownloadSource {
+    Install,
+    Update,
+    Verify
 }
 
 pub const SYMLINK_FILES: &'static [&'static [&'static str; 2]] = &[
