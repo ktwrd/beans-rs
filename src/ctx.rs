@@ -199,10 +199,17 @@ impl RunnerContext
         let out_filename = format!("presz_{}", helper::generate_rand_str(12));
         out_loc = helper::join_path(out_loc, out_filename);
 
+        let title = match source {
+            DownloadSource::Install => format!("Downloading {}", av.mod_info.name_stylized),
+            DownloadSource::Update => format!("Updating {}", av.mod_info.name_stylized),
+            DownloadSource::Verify => format!("Verifiying {}", av.mod_info.name_stylized)
+        };
+
         info!("[RunnerContext::download_package] writing to {}", out_loc);
-        helper::download_with_progress(
+        crate::download::with_progress(
             format!("{}{}", &av.remote_info.base_url, version.file.expect("No URL for latest package!")),
-            out_loc.clone()).await?;
+            out_loc.clone(),
+            title).await?;
 
         Ok(out_loc)
     }
