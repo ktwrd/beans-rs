@@ -148,18 +148,6 @@ async fn with_progress_gui(url: String, out_location: String, title: String) -> 
             if let Ok(mut map) = GUI_MAP.write() {
                 map.insert(x, ui);
             }
-            /*tokio::spawn(async move {
-                while app.wait() {
-                    if let Some(button_action) = receive_action.recv() {
-                        match button_action {
-                            GUIAppStatus::Quit => {
-                                app.quit();
-                            },
-                            _ => {}
-                        }
-                    }
-                }
-            });*/
         },
         move |c: DownloadCompleteArgs| {
             if let Ok(mut x) = GUI_MAP_COMPLETE.write() {
