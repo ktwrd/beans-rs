@@ -15,6 +15,7 @@ pub mod butler;
 pub mod flags;
 pub mod appvar;
 pub mod logger;
+pub mod download;
 
 /// NOTE do not change, fetches from the version of beans-rs on build
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
