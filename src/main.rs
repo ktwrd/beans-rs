@@ -67,12 +67,22 @@ fn init_panic_handle()
         logic_done();
     }));
 }
+#[cfg(target_os = "windows")]
+fn fix_msgbox_txt(txt: String) -> String {
+    txt.replace("\\n", "\r\n")
+}
+#[cfg(not(target_os = "windows"))]
+fn fix_msgbox_txt(txt: String) -> String {
+    txt
+}
 fn custom_panic_handle(msg: String)
 {
     unsafe {
         if beans_rs::PAUSE_ONCE_DONE {
+            let mut txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg);
+            txt = fix_msgbox_txt(txt);
             std::thread::spawn(move || {
-                let txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg);
+
                 let d = native_dialog::MessageDialog::new()
                     .set_type(native_dialog::MessageType::Error)
                     .set_title("beans - fatal error!")
@@ -378,7 +388,7 @@ fn show_msgbox_error(text: String) {
                 let d = native_dialog::MessageDialog::new()
                     .set_type(native_dialog::MessageType::Error)
                     .set_title("beans - fatal error!")
-                    .set_text(&format!("{}", text))
+                    .set_text(&format!("{}", fix_msgbox_txt(text)))
                     .show_alert();
                 if let Err(e) = d {
                     sentry::capture_error(&e);
