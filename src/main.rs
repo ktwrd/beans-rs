@@ -78,7 +78,7 @@ fn fix_msgbox_txt(txt: String) -> String {
 fn custom_panic_handle(msg: String)
 {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE {
+        if beans_rs::HEADLESS == false {
             let mut txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg);
             txt = fix_msgbox_txt(txt);
             std::thread::spawn(move || {
@@ -105,7 +105,7 @@ fn custom_panic_handle(msg: String)
 fn logic_done()
 {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE {
+        if beans_rs::HEADLESS == false {
             let _ = helper::get_input("Press enter/return to exit");
         }
     }
@@ -161,9 +161,9 @@ impl Launcher
                     .long("no-debug")
                     .help("Disable mode. Mainly used for debug builds to not spew into the console.")
                     .action(ArgAction::SetTrue),
-                Arg::new("no-pause")
-                    .long("no-pause")
-                    .help("When provided, beans-rs will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts.")
+                Arg::new("headless")
+                    .long("headless")
+                    .help("Provide this when you are using this application in an environment where this is being used in an automated script or there is no X11 display or Wayland session associated with the process that started this.")
                     .action(ArgAction::SetTrue),
                 Launcher::create_location_arg()
             ]);
@@ -201,7 +201,7 @@ impl Launcher
     pub fn set_no_pause(&mut self)
     {
         unsafe {
-            beans_rs::PAUSE_ONCE_DONE = self.root_matches.get_flag("no-pause") == false;
+            beans_rs::HEADLESS = self.root_matches.get_flag("headless");
         }
     }
 
@@ -383,7 +383,7 @@ impl Launcher
 }
 fn show_msgbox_error(text: String) {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE {
+        if beans_rs::HEADLESS == false {
             std::thread::spawn(move || {
                 let d = native_dialog::MessageDialog::new()
                     .set_type(native_dialog::MessageType::Error)

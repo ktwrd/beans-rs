@@ -23,10 +23,8 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const SENTRY_URL: &str = "https://e6e260fa3408f2cf934b4b3c4be71c74@sentry.kate.pet/2";
 /// content to display when showing a message box on panic.
 pub const PANIC_MSG_CONTENT: &str = include_str!("text/msgbox_panic_text.txt");
-/// once everything is done, do we wait for the user to press enter before exiting?
-///
-/// just like the `pause` thing in batch.
-pub static mut PAUSE_ONCE_DONE: bool = false;
+/// when `true`, gui elements will be used.
+pub static mut HEADLESS: bool = true;
 
 
 // ------------------------------------------------------------------------
