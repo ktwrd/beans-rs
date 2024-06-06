@@ -156,9 +156,23 @@ pub enum DownloadFailureReason
         url: String,
         error: reqwest::Error
     },
+    DownloadIncomplete {
+        url: String,
+        error: std::io::Error,
+        current_size: u64
+    },
+    ReqwestDownloadIncomplete {
+        url: String,
+        error: reqwest::Error,
+        current_size: u64
+    },
     /// The downloaded file could not be found, perhaps it failed?
     FileNotFound {
         location: String
+    },
+    FileWriteFail {
+        location: String,
+        error: std::io::Error
     }
 }
 #[derive(Debug)]
