@@ -1,1 +1,1 @@
-Something has gone terribly wrong with beans!\n\nThe developers have been notified, and we're (hopefully) getting\nto fixing the issue.
+$err_msg\n================\nSomething has gone terribly wrong with beans!\n\nThe developers have been notified, and we're (hopefully) getting\nto fixing the issue.

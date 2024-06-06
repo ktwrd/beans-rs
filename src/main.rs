@@ -1,3 +1,5 @@
+#![feature(panic_info_message)]
+
 use std::str::FromStr;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use log::{debug, error, info, LevelFilter, trace};
@@ -52,7 +54,7 @@ fn init_panic_handle()
 {
     std::panic::set_hook(Box::new(move |info| {
         debug!("[panic::set_hook] showing msgbox to notify user");
-        custom_panic_handle();
+        custom_panic_handle(info.message().into());
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
         sentry::integrations::panic::panic_handler(&info);
         if flags::has_flag(LaunchFlag::DEBUG_MODE) {
@@ -61,15 +63,16 @@ fn init_panic_handle()
         logic_done();
     }));
 }
-fn custom_panic_handle()
+fn custom_panic_handle(msg: Option<String>)
 {
     unsafe {
         if beans_rs::PAUSE_ONCE_DONE {
             std::thread::spawn(|| {
+                let txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg.unwrap_or("".to_string()));
                 let d = native_dialog::MessageDialog::new()
                     .set_type(native_dialog::MessageType::Error)
                     .set_title("beans - fatal error!")
-                    .set_text(PANIC_MSG_CONTENT)
+                    .set_text(&txt)
                     .show_alert();
                 if let Err(e) = d {
                     sentry::capture_error(&e);
