@@ -54,7 +54,11 @@ fn init_panic_handle()
 {
     std::panic::set_hook(Box::new(move |info| {
         debug!("[panic::set_hook] showing msgbox to notify user");
-        custom_panic_handle(info.message().into());
+        let mut x = String::new();
+        if let Some(m) = info.message() {
+            x = format!("{:#?}", m);
+        }
+        custom_panic_handle(x);
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
         sentry::integrations::panic::panic_handler(&info);
         if flags::has_flag(LaunchFlag::DEBUG_MODE) {
@@ -63,12 +67,12 @@ fn init_panic_handle()
         logic_done();
     }));
 }
-fn custom_panic_handle(msg: Option<String>)
+fn custom_panic_handle(msg: String)
 {
     unsafe {
         if beans_rs::PAUSE_ONCE_DONE {
-            std::thread::spawn(|| {
-                let txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg.unwrap_or("".to_string()));
+            std::thread::spawn(move || {
+                let txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg);
                 let d = native_dialog::MessageDialog::new()
                     .set_type(native_dialog::MessageType::Error)
                     .set_title("beans - fatal error!")
@@ -187,7 +191,7 @@ impl Launcher
     pub fn set_no_pause(&mut self)
     {
         unsafe {
-            PAUSE_ONCE_DONE = self.root_matches.get_flag("no-pause") == false;
+            beans_rs::PAUSE_ONCE_DONE = self.root_matches.get_flag("no-pause") == false;
         }
     }
 
