@@ -82,15 +82,11 @@ fn custom_panic_handle()
 fn logic_done()
 {
     unsafe {
-        if PAUSE_ONCE_DONE {
+        if beans_rs::PAUSE_ONCE_DONE {
             let _ = helper::get_input("Press enter/return to exit");
         }
     }
 }
-/// once everything is done, do we wait for the user to press enter before exiting?
-///
-/// just like the `pause` thing in batch.
-pub static mut PAUSE_ONCE_DONE: bool = false;
 pub struct Launcher {
     /// Output location. When none, `SourceModDirectoryParam::default()` will be used.
     pub to_location: Option<String>,
