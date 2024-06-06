@@ -2,12 +2,22 @@
 use log::{debug, error};
 use crate::BeansError;
 use crate::helper::format_directory_path;
+use keyvalues_parser::Vdf;
 
 /// all possible known directory where steam *might* be
 /// only is used on linux, since windows will use the registry.
 pub const STEAM_POSSIBLE_DIR:  &'static [&'static str] = &[
     "~/.steam/registry.vdf",
     "~/.var/app/com.valvesoftware.Steam/.steam/registry.vdf"
+];
+
+// Registry keys
+const REGISTRY_KEYS:  [&str; 5] = [
+    "HKCU",
+    "Software",
+    "Valve",
+    "Steam",
+    "SourceModInstallPath"
 ];
 
 /// find sourcemod path on linux.
@@ -29,18 +39,36 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
         }
     };
 
-    for line in reg_content.lines() {
-        if line.contains("SourceModInstallPath")
-        {
-            let split = &line.split("\"SourceModInstallPath\"");
-            let last = split.clone()
-                .last()
-                .expect("Failed to find SourceModInstallPath")
-                .trim()
-                .replace("\"", "");
-            return Ok(format_directory_path(last));
-        }
-    }
+    match Vdf::parse(&reg_content)
+    {
+        Ok(vdf) => {
+            let mut vdf_obj = vdf.value.get_obj();
+
+            let mut it = REGISTRY_KEYS.into_iter().peekable();
+            while let Some(x) = it.next() {                
+                match vdf_obj {
+                    Some(s) => {
+                        if let Some(elem) = s.get(x) {
+                            if let Some(entry) = elem.last() {
+                                if it.peek().is_none() {
+                                    if let Some(sourcemod_path) = entry.get_str() {
+                                        return Ok(format_directory_path(sourcemod_path.to_string()));
+                                    }
+                                }
+                                else {
+                                    vdf_obj = entry.get_obj();
+                                    continue;
+                                }
+                            }
+                        }
+                    },
+                    None => {},
+                }
+                break;
+            }
+        },
+        Err(_) => {},
+    };
 
     return Err(BeansError::SourceModLocationNotFound);
 }
