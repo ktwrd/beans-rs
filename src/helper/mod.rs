@@ -223,7 +223,9 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
         }
     }
 
-    Err(BeansError::FreeSpaceCheckFailure(real_location))
+    Err(BeansError::FreeSpaceCheckFailure {
+        location: real_location
+    })
 }
 /// Check if the location provided has enough free space.
 pub fn has_free_space(location: String, size: usize) -> Result<bool, BeansError>
@@ -268,7 +270,10 @@ pub async fn download_with_progress(url: String, out_location: String) -> Result
         Ok(v) => v,
         Err(e) => {
             sentry::capture_error(&e);
-            return Err(BeansError::FileOpenFailure(out_location, e));
+            return Err(BeansError::FileOpenFailure {
+                location: out_location,
+                error: e
+            });
         }
     };
     let mut downloaded: u64 = 0;

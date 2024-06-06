@@ -142,7 +142,8 @@ impl RunnerContext
             Err(e) => {
                 let ex = BeansError::GameInfoFileReadFail {
                     error: e,
-                    location: location
+                    location: location,
+                    backtrace: Backtrace::capture()
                 };
                 sentry::capture_error(&ex);
                 return Err(ex);
@@ -165,11 +166,11 @@ impl RunnerContext
         if helper::file_exists(location.clone()) {
             let perm = std::fs::Permissions::from_mode(0o644 as u32);
             if let Err(e) = std::fs::set_permissions(&location, perm.clone()) {
-                let xe = BeansError::GameInfoPermissionSetFail {
+                let xe = BeansError::GameInfoPermissionSetFail(GameInfoPermissionSetFailDetails {
                     error: e,
                     permissions: perm.clone(),
                     location
-                };
+                });
                 sentry::capture_error(&xe);
                 return Err(xe);
             }

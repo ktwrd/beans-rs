@@ -184,13 +184,19 @@ impl AdastralVersionFile {
                             Ok(ser) => {
                                 match file.write_all(ser.as_bytes()) {
                                     Ok(_) => Ok(()),
-                                    Err(e) => Err(BeansError::FileWriteFailure(vl, e))
+                                    Err(e) => Err(BeansError::FileWriteFailure {
+                                        location: vl,
+                                        error: e
+                                    })
                                 }
                             },
                             Err(e) => Err(e.into())
                         }
                     },
-                    Err(e) => Err(BeansError::FileOpenFailure(vl, e))
+                    Err(e) => Err(BeansError::FileOpenFailure {
+                        location: vl,
+                        error: e
+                    })
                 }
             },
             None => Err(BeansError::SourceModLocationNotFound)
