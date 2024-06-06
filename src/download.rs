@@ -146,19 +146,6 @@ where FP: Fn(DownloadProgressArgs),
                 }
             });
         }
-        if let Err(e) = file.write_all(&chunk) {
-            progress_complete(DownloadCompleteArgs {
-                unique_id: unique_id.clone(),
-                dl_size: downloaded,
-                error_content: Some(format!("{:#?}", e))
-            });
-            return Err(BeansError::DownloadFailure {
-                reason: DownloadFailureReason::FileWriteFail {
-                    location: out_location.clone(),
-                    error: e,
-                }
-            });
-        }
         let new = std::cmp::min(downloaded + (chunk.len() as u64), total_size);
         downloaded = new;
         progress(DownloadProgressArgs {
