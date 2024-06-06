@@ -38,7 +38,7 @@ impl InstallWorkflow {
         -> Result<(), BeansError>
     {
         println!("{:=>60}\nInstalling version {} to {}\n{0:=>60}", "=", version_id, &ctx.sourcemod_path);
-        let presz_loc = RunnerContext::download_package(version).await?;
+        let presz_loc = RunnerContext::download_package(version, crate::ctx::DownloadSource::Install).await?;
         Self::install_from(presz_loc.clone(), ctx.sourcemod_path.clone(), Some(version_id)).await?;
         if helper::file_exists(presz_loc.clone()) {
             std::fs::remove_file(presz_loc)?;
