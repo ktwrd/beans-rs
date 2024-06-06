@@ -68,7 +68,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
     let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
     out_loc = helper::join_path(out_loc, "vc_redist.exe".to_string());
 
-    helper::download_with_progress(
+    crate::download::with_progress_cli(
         String::from("https://aka.ms/vs/17/release/vc_redist.x86.exe"),
         out_loc.clone()).await?;
 
