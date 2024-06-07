@@ -78,7 +78,7 @@ impl UpdateWorkflow
                 trace!("gameinfo metadata: {:#?}", m);
             }
             if let Err(e) = std::fs::write(&loc, gi) {
-                trace!("error: {:#?}");
+                trace!("error: {:#?}", e);
                 error!("[UpdateWorkflow::wizard] Failed to write gameinfo.txt backup {:}", e);
             }
             if let Err(e) = ctx.gameinfo_perms() {
