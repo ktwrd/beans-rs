@@ -2,7 +2,7 @@
 use std::os::unix::fs::PermissionsExt;
 #[cfg(target_os = "windows")]
 use std::backtrace::Backtrace;
-use crate::{BeansError, BUTLER_BINARY, helper};
+use crate::{BeansError, BUTLER_BINARY, helper, butler};
 use log::{debug, error};
 
 /// try and write aria2c and butler if it doesn't exist
@@ -19,6 +19,11 @@ pub fn try_write_deps()
             error!("[depends::try_write_deps] {:#?}", e);
         }
         debug!("[depends::try_write_deps] set perms on {}", get_butler_location());
+    }
+
+    if let Err(e) = butler::fetch_7z_libs() {
+        error!("[depends::try_write_deps] Failed to fetch 7z libaries");
+        error!("[depends::try_write_deps] {:#?}", e);
     }
 }
 fn safe_write_file(location: &str, data: &[u8]) {
