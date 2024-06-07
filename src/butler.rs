@@ -98,13 +98,6 @@ pub fn patch(
                     error!("[butler::patch] exited with code {c}, which isn't good!");
                     panic!("[butler::patch] exited with code {c}");
                 }
-            } else {
-                if helper::file_exists(staging_dir.clone()) {
-                    if let Err(e) = std::fs::remove_dir_all(&staging_dir) {
-                        warn!("[butler::patch] Failed to delete staging directory after patch {:}", e);
-                        debug!("[butler::patch] {} {:#?}", staging_dir, e);
-                    }
-                }
             }
             Ok(w)
         }
