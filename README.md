@@ -19,7 +19,7 @@ When creating a PR, please please please branch off the `develop` branch. Any PR
 
 When adding a new feature (that a user will interact with), create a new file in `src/workflows/` with the name of the feature (for example, `launch.rs`). Inside of `launch.rs` you would have a struct with the name of `LaunchWorkflow`. It would look something like this;
 ```rust
-use crate::{RunnerContext, BeansError}
+use crate::{RunnerContext, BeansError};
 
 #[derive(Debug, Clone)]
 pub struct LaunchWorkflow {
