@@ -26,6 +26,7 @@ fn main() {
         debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
         max_breadcrumbs: 100,
         auto_session_tracking: true,
+        attach_stacktrace: true,
         ..Default::default()
     }));
     init_panic_handle();
