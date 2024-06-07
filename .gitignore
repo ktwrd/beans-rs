@@ -9,3 +9,4 @@ butler
 c7zip.dll
 libc7zip.so
 !Binaries/*
+sdktest
