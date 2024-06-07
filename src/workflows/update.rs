@@ -74,6 +74,9 @@ impl UpdateWorkflow
         if let Some(gi) = gameinfo_backup {
             let loc = ctx.gameinfo_location();
             trace!("gameinfo location: {}", &loc);
+            if let Ok(m) = std::fs::metadata(&loc) {
+                trace!("gameinfo metadata: {:#?}", m);
+            }
             if let Err(e) = std::fs::write(&loc, gi) {
                 trace!("error: {:#?}");
                 error!("[UpdateWorkflow::wizard] Failed to write gameinfo.txt backup {:}", e);
