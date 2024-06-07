@@ -21,6 +21,7 @@ fn main() {
 
     init_flags();
     // initialize sentry and custom panic handler for msgbox
+    #[cfg(not(debug_assertions))]
     let _guard = sentry::init((beans_rs::SENTRY_URL, sentry::ClientOptions {
         release: sentry::release_name!(),
         debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
