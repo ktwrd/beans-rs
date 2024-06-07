@@ -1,4 +1,4 @@
-use log::{debug, info};
+use log::{debug, error, info, trace};
 use crate::{BeansError, butler, helper, RunnerContext};
 
 pub struct UpdateWorkflow
@@ -73,8 +73,13 @@ impl UpdateWorkflow
 
         if let Some(gi) = gameinfo_backup {
             let loc = ctx.gameinfo_location();
-            std::fs::write(&loc, gi)?;
+            trace!("gameinfo location: {}", &loc);
+            if let Err(e) = std::fs::write(&loc, gi) {
+                trace!("error: {:#?}");
+                error!("[UpdateWorkflow::wizard] Failed to write gameinfo.txt backup {:}", e);
+            }
             if let Err(e) = ctx.gameinfo_perms() {
+                error!("[UpdateWorkflow::wizard] Failed to update permissions on gameinfo.txt {:}", e);
                 sentry::capture_error(&e);
                 return Err(e);
             }
