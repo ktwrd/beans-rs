@@ -18,3 +18,21 @@ pub fn window_centre_screen(window: &mut Window) {
     y -= height.clone() as f64;
     window.resize(((x / 2.0) as i32) + sx, ((y / 2.0) as i32) + sy, width, height);
 }
+
+#[macro_export]
+macro_rules! window_ensure {
+    ($ui:ident, $w:literal, $h:literal) => {
+    crate::gui::window_centre_screen(&mut ui.win);
+        $ui.win.handle(move |w, ev| match ev {
+            fltk::enums::Event::Resize => {
+                if w.width() > $w || w.height() > $h {
+                    w.set_size($w, $h);
+                }
+                true
+            },
+            _ => false
+        });
+        $ui.win.make_resizable(false);
+        $ui.win.show();
+    }
+}
