@@ -8,6 +8,7 @@ pub mod wizard_ui;
 pub mod wizard;
 pub mod install_confirm;
 pub mod update_alreadylatest;
+pub mod install_complete;
 pub mod update_nopatchavailable;
 pub mod dialog_notinstalled;
 
