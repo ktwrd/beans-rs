@@ -5,10 +5,19 @@ pub mod download_ui;
 pub mod wizard_ui;
 pub mod wizard;
 #[allow(dead_code)]
-#[derive(Copy, Clone)]
+#[derive(Copy, Clone, Debug)]
 pub enum GUIAppStatus {
     Update,
     Quit,
+
+    BtnContinue,
+    BtnCancel,
+    BtnYes,
+    BtnNo,
+    BtnOk,
+    BtnBack,
+
+    Wizard_BtnInstall
 }
 /// Make the `window` provided the in be the center of the current screen.
 pub fn window_centre_screen(window: &mut Window) {
