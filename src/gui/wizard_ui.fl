@@ -1,0 +1,39 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0308
+header_name {.h}
+code_name {.cxx}
+class WizardInterface {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window win {
+      label {beans for $MOD_NAME_STYLIZED} open selected
+      xywh {312 212 640 250} type Double visible
+    } {
+      Fl_Button btn_install {
+        label Install
+        xywh {25 25 70 24}
+      }
+      Fl_Text_Display label_install {
+        label {Install or reinstall $MOD_NAME_STYLIZED.}
+        xywh {25 50 0 0} box NO_BOX align 11
+      }
+      Fl_Button btn_update {
+        label Update
+        xywh {25 100 70 24}
+      }
+      Fl_Text_Display label_update {
+        label {Update to the latest available version of $MOD_NAME_STYLIZED.}
+        xywh {25 125 0 0} align 11
+      }
+      Fl_Button btn_verify {
+        label Verify
+        xywh {25 175 70 24}
+      }
+      Fl_Text_Display label_verify {
+        label {Verify the game files of $MOD_NAME_STYLIZED.}
+        xywh {25 200 0 0} align 11
+      }
+    }
+  }
+}

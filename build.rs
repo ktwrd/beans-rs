@@ -21,9 +21,13 @@ fn main() {
 
 fn fltk() -> Result<(), BuildError> {
     println!("cargo:rerun-if-changed=src/gui/download_ui.fl");
+    println!("cargo:rerun-if-changed=src/gui/wizard_ui.fl");
     let g = fl2rust::Generator::default();
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
     if let Err(e) = g.in_out("src/gui/download_ui.fl", out_path.join("download_ui.rs").to_str().unwrap()) {
+        return Err(BuildError::FLTK(format!("Failed to build download_ui.fl {:#?}", e)));
+    }
+    if let Err(e) = g.in_out("src/gui/wizard_ui.fl", out_path.join("wizard_ui.rs").to_str().unwrap()) {
         return Err(BuildError::FLTK(format!("Failed to build download_ui.fl {:#?}", e)));
     }
 
