@@ -297,6 +297,12 @@ impl Launcher
                 sentry::capture_error(&e);
                 panic!("{:#?}", e);
             } else {
+                unsafe {
+                    if !beans_rs::HEADLESS {
+                        beans_rs::gui::install_complete::run();
+                        beans_rs::HEADLESS = true;
+                    }
+                }
                 logic_done();
             }
         } else {
