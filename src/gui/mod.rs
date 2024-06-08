@@ -64,6 +64,7 @@ pub fn wait_for_quit(app: &app::App, receive_action: &Receiver<GUIAppStatus>) {
         if let Some(action) = receive_action.recv() {
             match action {
                 GUIAppStatus::Quit => {
+                    unsafe { crate::HEADLESS = true; }
                     app.quit();
                 },
                 _ => {}
