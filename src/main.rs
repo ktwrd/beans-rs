@@ -233,13 +233,13 @@ impl Launcher
             Some(("update", u_matches)) => {
                 self.task_update(u_matches).await;
             },
+            Some(("gui", g_matches)) => {
+                self.task_gui(g_matches).await;
+            },
             Some(("wizard", wz_matches)) => {
                 self.to_location = Launcher::find_arg_sourcemods_location(wz_matches);
                 self.task_wizard().await;
             },
-            Some(("gui", g_matches)) => {
-                self.task_gui().await;
-            }
             _ => {
                 self.task_wizard().await;
             }
@@ -366,6 +366,14 @@ impl Launcher
         } else {
             logic_done();
         }
+    }
+
+    /// Handler for the `gui` subcommand
+    pub async fn task_gui(&mut self, matches: &ArgMatches)
+    {
+        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        let mut ctx = self.try_create_context().await;
+        beans_rs::gui::wizard::run(&mut ctx).await;
     }
 
     /// try and create an instance of `RunnerContext` via the `create_auto` method while setting
