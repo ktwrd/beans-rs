@@ -8,14 +8,14 @@ class NotInstalledDialog {open
   } {
     Fl_Window win {
       label {beans - $ACTION $MOD_NAME_STYLIZED} open
-      xywh {910 475 600 70} type Double visible
+      xywh {526 575 600 70} type Double visible
     } {
       Fl_Text_Display label_1 {
         label {Unable to $ACTION since $MOD_NAME_STYLIZED is not installed.}
         xywh {25 10 0 0} align 11
       }
       Fl_Button btn_ok {
-        label Ok selected
+        label Ok
         xywh {25 40 70 24}
       }
     }
@@ -48,22 +48,22 @@ class InstallCompleteDialog {open
   } {
     Fl_Window win {
       label {$MOD_NAME_STYLIZED Install Complete} open
-      xywh {1194 330 550 205} type Double visible
+      xywh {1177 277 660 340} type Double visible
     } {
       Fl_Text_Display label_1 {
         label {$MOD_NAME_STYLIZED has finished installing!}
-        xywh {25 5 0 0} labelsize 18 align 11
+        xywh {25 5 0 0} box NO_BOX labelsize 18 align 11
       }
       Fl_Text_Display label_2 {
         label {To finalize the install, please do the following;}
-        xywh {25 35 0 0} align 11
+        xywh {25 35 0 0} box NO_BOX align 11
       }
       Fl_Text_Display display_instructions {
-        xywh {25 55 490 120}
+        xywh {25 55 610 251}
       }
       Fl_Button btn_ok {
         label Ok
-        xywh {25 180 70 20}
+        xywh {25 311 70 24}
       }
     }
   }
@@ -79,15 +79,15 @@ class UpdateAlreadyLatestDialog {open
     } {
       Fl_Text_Display label_1 {
         label {Latest Version already installed!}
-        xywh {25 5 0 0} labelsize 18 align 11
+        xywh {25 5 0 0} box NO_BOX labelsize 18 align 11
       }
       Fl_Text_Display label_2 {
         label {You already have the latest version of $MOD_NAME_STYLIZED installed.}
-        xywh {25 35 0 0} align 11
+        xywh {25 35 0 0} box NO_BOX align 11
       }
       Fl_Text_Display label_3 {
-        label {v%1 is installed, v%2 is latest.}
-        xywh {25 70 0 0} align 11
+        label {v%1 is installed, v%2 is latest.} selected
+        xywh {25 70 0 0} box NO_BOX align 11
       }
       Fl_Button btn_ok {
         label Ok
