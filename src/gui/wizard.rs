@@ -76,6 +76,33 @@ pub async fn run(ctx: &mut RunnerContext) {
                 }
             }
         },
+        Some(GUIAppStatus::WizardBtnUpdate) => {
+            let (i, r) = ctx.latest_remote_version();
+            if let Some(ci) = ctx.current_version {
+                if i >= ci {
+                    gui::update_alreadylatest::run(ci, i);
+                    // This is done so we don't prompt the user once the GUI has closed.
+                    unsafe {crate::HEADLESS = true;}
+                    return;
+                }
+            } else {
+                gui::dialog_notinstalled::run("Update");
+                // This is done so we don't prompt the user once the GUI has closed.
+                unsafe {crate::HEADLESS = true;}
+                return;
+            }
+            if ctx.has_patch_available().is_none() {
+                gui::update_nopatchavailable::run(i);
+                // This is done so we don't prompt the user once the GUI has closed.
+                unsafe {crate::HEADLESS = true;}
+                return;
+            }
+
+            let mut uwf = UpdateWorkflow {
+                ctx: ctx.clone()
+            };
+            trace!("[gui::wizard::run] User wants to update! Calling UpdateWorkflow");
+        }
         _ => {}
     }
 }
