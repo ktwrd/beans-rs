@@ -7,6 +7,7 @@ pub mod download_ui;
 pub mod wizard_ui;
 pub mod wizard;
 pub mod install_confirm;
+pub mod dialog_notinstalled;
 
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
