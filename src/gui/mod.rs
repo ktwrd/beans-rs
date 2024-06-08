@@ -2,6 +2,8 @@
 use fltk::window::Window;
 
 pub mod download_ui;
+pub mod wizard_ui;
+pub mod wizard;
 #[allow(dead_code)]
 #[derive(Copy, Clone)]
 pub enum GUIAppStatus {

@@ -153,6 +153,9 @@ impl Launcher
             .subcommand(Command::new("update")
                 .about("Update your installation")
                 .arg(Launcher::create_location_arg()))
+            .subcommand(Command::new("gui")
+                .about("In-development GUI Implementation of the Wizard")
+                .arg(Launcher::create_location_arg()))
             .args([
                 Arg::new("debug")
                     .long("debug")
@@ -234,6 +237,9 @@ impl Launcher
                 self.to_location = Launcher::find_arg_sourcemods_location(wz_matches);
                 self.task_wizard().await;
             },
+            Some(("gui", g_matches)) => {
+                self.task_gui().await;
+            }
             _ => {
                 self.task_wizard().await;
             }
