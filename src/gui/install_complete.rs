@@ -22,6 +22,6 @@ pub fn run() {
 
     ui.btn_ok.emit(send_action, GUIAppStatus::Quit);
 
-    gui::window_ensure(&mut ui.win, 660, 340);
+    gui::window_ensure(&mut ui.win, 660, 330);
     gui::wait_for_quit(&app, &receive_action);
 }
