@@ -14,6 +14,7 @@ pub fn run() {
     let mut ui = InstallCompleteDialog::make_window();
 
     ui.win.set_label(&format!("{} Install Complete", &av.mod_info.name_stylized));
+    ui.label_1.set_label(&format!("{} has finished installing!", &av.mod_info.name_stylized));
     let content = av.sub(INSTALL_FINISH_MSG.to_string());
     let mut buf = TextBuffer::default();
     buf.set_text(content.as_str());
@@ -21,6 +22,6 @@ pub fn run() {
 
     ui.btn_ok.emit(send_action, GUIAppStatus::Quit);
 
-    gui::window_ensure(&mut ui.win, 550, 205);
+    gui::window_ensure(&mut ui.win, 660, 340);
     gui::wait_for_quit(&app, &receive_action);
 }

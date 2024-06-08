@@ -8,7 +8,7 @@ class NotInstalledDialog {open
   } {
     Fl_Window win {
       label {beans - $ACTION $MOD_NAME_STYLIZED} open
-      xywh {526 575 600 70} type Double visible
+      xywh {396 930 600 70} type Double visible
     } {
       Fl_Text_Display label_1 {
         label {Unable to $ACTION since $MOD_NAME_STYLIZED is not installed.}
@@ -28,7 +28,7 @@ class UpdateNoPatchDialog {open
   } {
     Fl_Window win {
       label {beans - Update $MOD_NAME_STYLIZED} open
-      xywh {1201 825 500 70} type Double visible
+      xywh {901 827 500 70} type Double visible
     } {
       Fl_Text_Display label_1 {
         label {No patch available for v%1. Please re-install.}
@@ -47,16 +47,12 @@ class InstallCompleteDialog {open
   Function {make_window()} {open
   } {
     Fl_Window win {
-      label {$MOD_NAME_STYLIZED Install Complete} open
-      xywh {1177 277 660 340} type Double visible
+      label {$MOD_NAME_STYLIZED Install Complete} open selected
+      xywh {928 259 660 340} type Double visible
     } {
       Fl_Text_Display label_1 {
         label {$MOD_NAME_STYLIZED has finished installing!}
         xywh {25 5 0 0} box NO_BOX labelsize 18 align 11
-      }
-      Fl_Text_Display label_2 {
-        label {To finalize the install, please do the following;}
-        xywh {25 35 0 0} box NO_BOX align 11
       }
       Fl_Text_Display display_instructions {
         xywh {25 55 610 251}
@@ -75,7 +71,7 @@ class UpdateAlreadyLatestDialog {open
   } {
     Fl_Window win {
       label {beans - Update $MOD_NAME_STYLIZED} open
-      xywh {1201 667 600 125} type Double visible
+      xywh {1073 669 600 125} type Double visible
     } {
       Fl_Text_Display label_1 {
         label {Latest Version already installed!}
@@ -86,7 +82,7 @@ class UpdateAlreadyLatestDialog {open
         xywh {25 35 0 0} box NO_BOX align 11
       }
       Fl_Text_Display label_3 {
-        label {v%1 is installed, v%2 is latest.} selected
+        label {v%1 is installed, v%2 is latest.}
         xywh {25 70 0 0} box NO_BOX align 11
       }
       Fl_Button btn_ok {
@@ -103,7 +99,7 @@ class InstallConfirmInterface {open
   } {
     Fl_Window win {
       label {beans - $MOD_NAME_STYLIZED} open
-      xywh {1194 147 570 150} type Double visible
+      xywh {1024 62 570 150} type Double visible
     } {
       Fl_Text_Display label_1 {
         label {$MOD_NAME_STYLIZED Update $TARGET_VERSION}
