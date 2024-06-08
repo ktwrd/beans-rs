@@ -3,7 +3,7 @@ use log::{debug, error};
 use crate::appvar::AppVarData;
 use crate::gui::GUIAppStatus;
 use crate::gui::wizard_ui::InstallConfirmInterface;
-use crate::{helper, RunnerContext};
+use crate::{gui, helper, RunnerContext};
 use crate::version::RemoteVersion;
 
 #[derive(Clone, Copy, Debug)]
@@ -45,6 +45,7 @@ pub async fn run(ctx: &RunnerContext, version_id: usize, version_details: Remote
 
     // Initialize app & window.
     let app = app::App::default().with_scheme(app::AppScheme::Gtk);
+    gui::apply_app_scheme();
     let (s, receive_action) = app::channel::<GUIAppStatus>();
     let mut ui = InstallConfirmInterface::make_window();
 
@@ -74,7 +75,7 @@ pub async fn run(ctx: &RunnerContext, version_id: usize, version_details: Remote
     ui.btn_install.emit(s, GUIAppStatus::BtnContinue);
     ui.btn_cancel.emit(s, GUIAppStatus::BtnCancel);
 
-    crate::gui::window_ensure(&mut ui.win, 640, 250);
+    gui::window_ensure(&mut ui.win, 570, 150);
     while app.wait() {
         if let Some(action) = receive_action.recv() {
             match action {

@@ -6,12 +6,13 @@ use crate::appvar::AppVarData;
 use crate::gui::GUIAppStatus;
 use crate::gui::install_confirm::InstallConfirmResult;
 use crate::gui::wizard_ui::WizardInterface;
-use crate::workflows::InstallWorkflow;
+use crate::workflows::{InstallWorkflow, UpdateWorkflow};
 
 #[async_recursion]
 pub async fn run(ctx: &mut RunnerContext) {
     let av = AppVarData::get();
     let app = app::App::default().with_scheme(app::AppScheme::Gtk);
+    gui::apply_app_scheme();
     let (send_action, receive_action) = app::channel::<GUIAppStatus>();
     let mut ui = WizardInterface::make_window();
 
@@ -20,7 +21,8 @@ pub async fn run(ctx: &mut RunnerContext) {
     ui.label_update.set_label(&format!("Update to the latest available version of {}", &av.mod_info.name_stylized));
     ui.label_verify.set_label(&format!("Verify the game files of {}", &av.mod_info.name_stylized));
 
-    ui.btn_install.emit(send_action, GUIAppStatus::Wizard_BtnInstall);
+    ui.btn_install.emit(send_action, GUIAppStatus::WizardBtnInstall);
+    ui.btn_update.emit(send_action, GUIAppStatus::WizardBtnUpdate);
 
     gui::window_ensure(&mut ui.win, 640, 250);
     let mut final_action: Option<GUIAppStatus> = None;
@@ -32,18 +34,22 @@ pub async fn run(ctx: &mut RunnerContext) {
                     trace!("[gui::wizard::run] Received quit event!");
                     app.quit();
                 },
-                GUIAppStatus::Wizard_BtnInstall => {
-                    final_action = Some(GUIAppStatus::Wizard_BtnInstall);
+                GUIAppStatus::WizardBtnInstall => {
+                    final_action = Some(GUIAppStatus::WizardBtnInstall);
                     ui.win.hide();
-                    trace!("[gui::wizard::run] Attempting to quit");
                     app.quit();
-                }
+                },
+                GUIAppStatus::WizardBtnUpdate => {
+                    final_action = Some(GUIAppStatus::WizardBtnUpdate);
+                    ui.win.hide();
+                    app.quit();
+                },
                 _ => {}
             }
         }
     }
     match final_action {
-        Some(GUIAppStatus::Wizard_BtnInstall) => {
+        Some(GUIAppStatus::WizardBtnInstall) => {
             let (i, r) = ctx.latest_remote_version();
             trace!("[gui::wizard::run] Showing confirm dialog for v{}", i);
             match gui::install_confirm::run(ctx, i, r).await {
@@ -54,7 +60,9 @@ pub async fn run(ctx: &mut RunnerContext) {
                     trace!("[gui::wizard::run] User wants to install! Calling RunnerContext");
                     match iwf.install_version(i).await {
                         Ok(_) => {
-                            todo!("Show dialog with the post-install instructions");
+                            gui::install_complete::run();
+                            // This is done so we don't prompt the user once the GUI has closed.
+                            unsafe {crate::HEADLESS = true;}
                         },
                         Err(e) => {
                             error!("[gui::wizard::run] Failed to run InstallWorkflow::install_version({i}) {:#?}", e);

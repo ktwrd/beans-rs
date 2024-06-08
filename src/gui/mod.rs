@@ -1,5 +1,7 @@
-﻿use fltk::prelude::{GroupExt, WidgetBase, WidgetExt};
+﻿use fltk::{*, prelude::*};
+use fltk::app::Receiver;
 use fltk::window::Window;
+use fltk_theme::{color_themes, ColorTheme};
 
 pub mod download_ui;
 pub mod wizard_ui;
@@ -19,14 +21,15 @@ pub enum GUIAppStatus {
     BtnOk,
     BtnBack,
 
-    Wizard_BtnInstall
+    WizardBtnInstall,
+    WizardBtnUpdate
 }
 /// Make the `window` provided the in be the center of the current screen.
 pub fn window_centre_screen(window: &mut Window) {
-    let (sx, sy) = fltk::app::screen_coords();
+    let (sx, sy) = app::screen_coords();
     let width = window.width();
     let height = window.height();
-    let (mut x, mut y) = fltk::app::screen_size().clone();
+    let (mut x, mut y) = app::screen_size().clone();
     x -= width.clone() as f64;
     y -= height.clone() as f64;
     window.resize(((x / 2.0) as i32) + sx, ((y / 2.0) as i32) + sy, width, height);
@@ -47,4 +50,20 @@ pub fn window_ensure(win: &mut Window, width: i32, height: i32) {
     });
     win.make_resizable(false);
     win.show();
+}
+pub fn apply_app_scheme() {
+    let theme = ColorTheme::new(color_themes::DARK_THEME);
+    theme.apply();
+}
+pub fn wait_for_quit(app: &app::App, receive_action: &Receiver<GUIAppStatus>) {
+    while app.wait() {
+        if let Some(action) = receive_action.recv() {
+            match action {
+                GUIAppStatus::Quit => {
+                    app.quit();
+                },
+                _ => {}
+            }
+        }
+    }
 }
