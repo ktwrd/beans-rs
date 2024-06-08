@@ -1,9 +1,11 @@
-﻿use fltk::prelude::WidgetExt;
+﻿use fltk::prelude::{GroupExt, WidgetBase, WidgetExt};
 use fltk::window::Window;
 
 pub mod download_ui;
 pub mod wizard_ui;
 pub mod wizard;
+pub mod install_confirm;
+
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
 pub enum GUIAppStatus {
@@ -30,20 +32,19 @@ pub fn window_centre_screen(window: &mut Window) {
     window.resize(((x / 2.0) as i32) + sx, ((y / 2.0) as i32) + sy, width, height);
 }
 
-#[macro_export]
-macro_rules! window_ensure {
-    ($ui:ident, $w:literal, $h:literal) => {
-    crate::gui::window_centre_screen(&mut ui.win);
-        $ui.win.handle(move |w, ev| match ev {
-            fltk::enums::Event::Resize => {
-                if w.width() > $w || w.height() > $h {
-                    w.set_size($w, $h);
-                }
-                true
-            },
-            _ => false
-        });
-        $ui.win.make_resizable(false);
-        $ui.win.show();
-    }
+/// Ensure that a window has a fixed width & height, and that it will appear in the centre of the
+/// current screen.
+pub fn window_ensure(win: &mut Window, width: i32, height: i32) {
+    crate::gui::window_centre_screen(win);
+    win.handle(move |w, ev| match ev {
+        fltk::enums::Event::Resize => {
+            if w.width() > width || w.height() > height {
+                w.set_size(width, height);
+            }
+            true
+        },
+        _ => false
+    });
+    win.make_resizable(false);
+    win.show();
 }
