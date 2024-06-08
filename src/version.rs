@@ -2,8 +2,9 @@ use std::backtrace::Backtrace;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::io::Write;
-use log::{debug, error};
-use crate::helper;
+use log::{debug, error, trace};
+use crate::appvar::AppVarData;
+use crate::{DownloadFailureReason, helper};
 use crate::helper::{find_sourcemod_path, InstallType};
 use crate::BeansError;
 
@@ -217,6 +218,30 @@ pub struct RemoteVersion
     pub signature_url: Option<String>,
     #[serde(rename = "heal")]
     pub heal_url: Option<String>
+}
+impl RemoteVersion {
+    pub async fn get_download_size(&self) -> Option<u64> {
+        if let Some(f) = &self.file {
+            let av = AppVarData::get();
+            let url = format!("{}{}", av.remote_info.base_url, f);
+
+            trace!("[download::with_progress_custom] fetching details from {url}");
+            let res = match reqwest::Client::new()
+                .get(&url)
+                .send()
+                .await {
+                Ok(v) => v,
+                Err(e) => {
+                    trace!("[RemoteVersion::get_download_size] failed to get size from {url}\n {:#?}", e);
+                    return None;
+                }
+            };
+
+            return res.content_length();
+        } else {
+            return None;
+        }
+    }
 }
 /// `versions.json` response content from remote server.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
