@@ -1,11 +1,10 @@
 use async_recursion::async_recursion;
 use fltk::{*, prelude::*};
 use log::{debug, error, trace};
-use crate::{RunnerContext, BeansError, gui, helper};
+use crate::{RunnerContext, gui};
 use crate::appvar::AppVarData;
-use crate::gui::dialog_confirm::{ConfirmUpdateDialogDetails, DialogConfirmType, DialogResult};
+use crate::gui::dialog_confirm::{ConfirmInstallDialogDetails, ConfirmUpdateDialogDetails, DialogConfirmType, DialogResult};
 use crate::gui::GUIAppStatus;
-use crate::gui::install_confirm::InstallConfirmResult;
 use crate::gui::wizard_ui::WizardInterface;
 use crate::version::RemoteVersion;
 use crate::workflows::{InstallWorkflow, UpdateWorkflow};
@@ -68,9 +67,13 @@ async fn btn_install_latest(ctx: &mut RunnerContext) {
     btn_install(ctx, i, r).await;
 }
 async fn btn_install(ctx: &mut RunnerContext, id: usize, details: RemoteVersion) {
-    // TODO rewrite so it uses `dialog_confirm`.
-    match gui::install_confirm::run(ctx, id, details).await {
-        InstallConfirmResult::Continue => {
+    let mut ct = DialogConfirmType::Install(ConfirmInstallDialogDetails {
+        id,
+        details: details.clone(),
+        total_size_required: None
+    });
+    match gui::dialog_confirm::run(ctx, &mut ct).await {
+        DialogResult::Continue => {
             let mut iwf = InstallWorkflow {
                 context: ctx.clone()
             };
@@ -87,7 +90,7 @@ async fn btn_install(ctx: &mut RunnerContext, id: usize, details: RemoteVersion)
                 }
             };
         },
-        InstallConfirmResult::Cancel => {
+        _ => {
             debug!("[gui::wizard::btn_install] User clicked on the Cancel button, showing Wizard again");
             run(ctx).await;
         }
