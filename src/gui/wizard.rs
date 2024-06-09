@@ -123,7 +123,10 @@ async fn btn_update(ctx: &mut RunnerContext) {
         Some(p) => p,
         None => {
             // dialog::alert_default(&format!("No patch available for v{}. Please re-install.", i));
-            gui::update_nopatchavailable::run(i);
+            gui::dialog_generic::run(
+                &format!("beans - Update {}", &av.mod_info.name_stylized),
+                &format!("No patch available for {} v{}. Please re-install.", &av.mod_info.name_stylized, i)
+            );
             // This is done so we don't prompt the user once the GUI has closed.
             unsafe {crate::HEADLESS = true;}
             return;
