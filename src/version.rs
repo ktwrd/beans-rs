@@ -258,3 +258,12 @@ pub struct RemotePatch
     /// Amount of file space required for temporary file. Assumed to be measured in bytes.
     pub tempreq: usize
 }
+impl RemotePatch {
+    pub async fn get_download_size(&self) -> Option<u64> {
+        let av = AppVarData::get();
+        let url = format!("{}{}", av.remote_info.base_url, self.file);
+
+        trace!("[RemotePatch::get_download_size] fetching details from {url}");
+        return helper::get_download_size(url).await;
+    }
+}
