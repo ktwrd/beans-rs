@@ -3,6 +3,7 @@ use std::os::unix::fs::PermissionsExt;
 #[cfg(target_os = "windows")]
 use std::backtrace::Backtrace;
 use crate::{BeansError, BUTLER_BINARY, BUTLER_LIB_1, BUTLER_LIB_2, helper};
+#[allow(unused_imports)]
 use log::{debug, error, info, trace};
 
 /// try and write aria2c and butler if it doesn't exist

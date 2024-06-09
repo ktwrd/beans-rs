@@ -4,7 +4,7 @@ use std::fs::read_to_string;
 use std::io::Write;
 use log::{debug, error, trace};
 use crate::appvar::AppVarData;
-use crate::{DownloadFailureReason, helper};
+use crate::helper;
 use crate::helper::{find_sourcemod_path, InstallType};
 use crate::BeansError;
 

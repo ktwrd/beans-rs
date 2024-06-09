@@ -199,8 +199,7 @@ pub async fn run(ctx: &RunnerContext, confirm_type: &mut DialogConfirmType) -> D
                                 true => DialogResult::Continue,
                                 false => DialogResult::Cancel
                             }
-                        },
-                        _ => DialogResult::Continue
+                        }
                     };
                     trace!("[dialog_confirm::run->BtnContinue] Set return value to {:#?}", return_value);
                     app.quit();
