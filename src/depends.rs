@@ -66,7 +66,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
     }
 
     info!("Installing Visual C++ Redistributable");
-    let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
+    let mut out_loc = helper::get_tmp_dir();
     out_loc = helper::join_path(out_loc, "vc_redist.exe".to_string());
     trace!("[try_install_vcredist] downloading to {out_loc}");
     crate::download::with_progress(
@@ -105,23 +105,19 @@ pub fn butler_exists() -> bool {
 
 pub fn get_butler_location() -> String
 {
-    let mut path = get_tmp_dir();
+    let mut path = helper::get_tmp_dir();
     path.push_str(BUTLER_LOCATION);
     path
 }
 pub fn get_butler_1_location() -> String {
-    let mut path = get_tmp_dir();
+    let mut path = helper::get_tmp_dir();
     path.push_str(BUTLER_1);
     path
 }
 pub fn get_butler_2_location() -> String {
-    let mut path = get_tmp_dir();
+    let mut path = helper::get_tmp_dir();
     path.push_str(BUTLER_2);
     path
-}
-fn get_tmp_dir() -> String {
-    let path = std::env::temp_dir().to_str().unwrap_or("").to_string();
-    helper::format_directory_path(path)
 }
 
 #[cfg(target_os = "windows")]

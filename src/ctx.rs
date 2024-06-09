@@ -188,7 +188,7 @@ impl RunnerContext
     pub async fn download_package(version: RemoteVersion, source: DownloadSource) -> Result<String, BeansError>
     {
         let av = crate::appvar::parse();
-        let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
+        let mut out_loc = helper::get_tmp_dir();
 
         if let Some(size) = version.pre_sz {
             if helper::has_free_space(out_loc.clone(), size as u64)? == false {
