@@ -11,6 +11,8 @@ pub mod update_alreadylatest;
 pub mod install_complete;
 pub mod update_nopatchavailable;
 pub mod dialog_notinstalled;
+pub mod dialog_confirm;
+pub mod dialog_generic;
 
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
