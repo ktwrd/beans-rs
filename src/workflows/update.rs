@@ -33,8 +33,8 @@ impl UpdateWorkflow
         ctx.gameinfo_perms()?;
         let gameinfo_backup = ctx.read_gameinfo_file()?;
 
-        if helper::has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq)? == false {
-            println!("[UpdateWorkflow::wizard] Not enough free space! Requires {}", helper::format_size(patch.tempreq));
+        if helper::has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq as u64)? == false {
+            println!("[UpdateWorkflow::wizard] Not enough free space! Requires {}", helper::format_size(patch.tempreq as u64));
         }
         debug!("remote_version: {:#?}", remote_version);
         if remote_version.signature_url.is_none() {

@@ -68,7 +68,7 @@ async fn with_progress_gui(url: String, out_location: String, title: String) -> 
                 if let Some(ui) = map.get_mut(&a.unique_id) {
                     let p = helper::calc_percentage(a.current, a.max);
                     let _ =&ui.download_progress.set_value(p);
-                    let _ =&ui.label_left.set_label(&format!("{} remaining", helper::format_size((a.max - a.current) as usize)));
+                    let _ =&ui.label_left.set_label(&format!("{} remaining", helper::format_size(a.max - a.current)));
                     let _ = &ui.label_right.set_label(&format!("{}", a.speed));
                     app::redraw();
                     trace!("[with_progress_gui->progress] download_progress.set_value({p})");
@@ -313,7 +313,7 @@ where FP: Fn(DownloadProgressArgs),
             let ssx = match sx > 0.0f64 {
                 true => sx as usize,
                 false => 0usize
-            };
+            } as u64;
             // this is a blocking task when using `with_progress_gui` because i don't know how to
             // properly multi-thread with fltk-rs
             // - kate 2024/06/06

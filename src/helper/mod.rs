@@ -13,7 +13,7 @@ use std::io::Write;
 use std::path::PathBuf;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
-use log::debug;
+use log::{debug, trace};
 use crate::{BeansError, DownloadFailureReason};
 use rand::{distributions::Alphanumeric, Rng};
 
@@ -236,10 +236,25 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
     })
 }
 /// Check if the location provided has enough free space.
-pub fn has_free_space(location: String, size: usize) -> Result<bool, BeansError>
+pub fn has_free_space(location: String, size: u64) -> Result<bool, BeansError>
 {
     let space = get_free_space(location)?;
-    return Ok((size as u64) < space);
+    return Ok(size < space);
+}
+
+pub async fn get_download_size(url: String) -> Option<u64> {
+    let res = match reqwest::Client::new()
+        .get(&url)
+        .send()
+        .await {
+        Ok(v) => v,
+        Err(e) => {
+            trace!("[helper::get_download_size] failed to get size from {url}\n {:#?}", e);
+            return None;
+        }
+    };
+
+    return res.content_length();
 }
 
 /// Download file at the URL provided to the output location provided
@@ -301,7 +316,7 @@ pub async fn download_with_progress(url: String, out_location: String) -> Result
 }
 
 /// Format parameter `i` to a human-readable size.
-pub fn format_size(i: usize) -> String {
+pub fn format_size(i: u64) -> String {
     let value = i.to_string();
 
     let decimal_points: usize = 3;
@@ -323,7 +338,7 @@ pub fn format_size(i: usize) -> String {
     let dec: String = value.chars()
         .into_iter()
         .rev()
-        .take(dec_l as usize)
+        .take(dec_l)
         .collect();
 
     let mut dec_x: String = dec.chars().into_iter().rev().take(decimal_points).collect();
@@ -335,7 +350,7 @@ pub fn format_size(i: usize) -> String {
     if dec_x.len() > 0 {
         whole.push('.');
     }
-    let pfx_data: Vec<(usize, &str)> = vec![
+    let pfx_data: Vec<(u64, &str)> = vec![
         (1_000, "b"),
         (1_000_000, "kb"),
         (1_000_000_000, "mb"),

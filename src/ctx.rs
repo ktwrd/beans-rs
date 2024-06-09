@@ -191,7 +191,7 @@ impl RunnerContext
         let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
 
         if let Some(size) = version.pre_sz {
-            if helper::has_free_space(out_loc.clone(), size)? == false {
+            if helper::has_free_space(out_loc.clone(), size as u64)? == false {
                 panic!("Not enough free space to install latest version!");
             }
         }
