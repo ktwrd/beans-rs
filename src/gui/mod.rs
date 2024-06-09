@@ -6,8 +6,6 @@ use fltk_theme::{color_themes, ColorTheme};
 pub mod download_ui;
 pub mod wizard_ui;
 pub mod wizard;
-pub mod install_confirm;
-pub mod update_alreadylatest;
 pub mod install_complete;
 pub mod dialog_confirm;
 pub mod dialog_generic;

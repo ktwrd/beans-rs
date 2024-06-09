@@ -101,8 +101,6 @@ async fn btn_update(ctx: &mut RunnerContext) {
     let (i, _) = ctx.latest_remote_version();
     if let Some(ci) = ctx.current_version {
         if i <= ci {
-            // dialog::alert_default(&format!("Latest version of {} is already installed (v{})", av.mod_info.name_stylized, ci));
-            // gui::update_alreadylatest::run(ci, i);
             gui::dialog_generic::run(
                 &format!("beans - Update {}", &av.mod_info.name_stylized),
                 &format!("Latest version of {} is already installed (v{})", &av.mod_info.name_stylized, ci)
@@ -112,7 +110,6 @@ async fn btn_update(ctx: &mut RunnerContext) {
             return;
         }
     } else {
-        // gui::dialog_notinstalled::run("Update");
         gui::dialog_generic::run(
             &format!("beans - Update {}", &av.mod_info.name_stylized),
             &format!("Unable to update since {} is not installed.", &av.mod_info.name_stylized)
@@ -125,7 +122,6 @@ async fn btn_update(ctx: &mut RunnerContext) {
     let target_patch = match ctx.has_patch_available() {
         Some(p) => p,
         None => {
-            // dialog::alert_default(&format!("No patch available for v{}. Please re-install.", i));
             gui::dialog_generic::run(
                 &format!("beans - Update {}", &av.mod_info.name_stylized),
                 &format!("No patch available for {} v{}. Please re-install.", &av.mod_info.name_stylized, i)
