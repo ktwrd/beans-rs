@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 use clap::{Arg, ArgAction, ArgMatches, Command};
-use log::{debug, error, info, LevelFilter, trace, warn};
+use log::{debug, error, info, LevelFilter, trace};
 use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
 use beans_rs::flags::LaunchFlag;
 use beans_rs::helper::{find_sourcemod_path, parse_location};
