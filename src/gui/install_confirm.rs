@@ -14,7 +14,6 @@ pub enum InstallConfirmResult {
 /// Will return `Continue` when the `Install` button was clicked and we have enough space.
 pub async fn run(ctx: &RunnerContext, version_id: usize, version_details: RemoteVersion)
     -> InstallConfirmResult {
-    let mut result = InstallConfirmResult::Cancel;
     let av = AppVarData::get();
 
     // Initialize the sizes that are displayed.
@@ -25,7 +24,7 @@ pub async fn run(ctx: &RunnerContext, version_id: usize, version_details: Remote
         None => None
     };
     let dl_size_txt = match dl_size {
-        Some(x) => helper::format_size(x),
+        Some(x) => helper::format_size(x as u64),
         None => String::from("<unknown>")
     };
     let install_size = match version_details.post_sz {
@@ -38,10 +37,10 @@ pub async fn run(ctx: &RunnerContext, version_id: usize, version_details: Remote
         None => None
     };
     let install_size_txt = match install_size {
-        Some(x) => helper::format_size(x),
+        Some(x) => helper::format_size(x as u64),
         None => String::from("<unknown>")
     };
-    let total_size = dl_size.unwrap_or(0usize) + install_size.unwrap_or(0usize);
+    let total_size = (dl_size.unwrap_or(0usize) + install_size.unwrap_or(0usize)) as u64;
 
     // Initialize app & window.
     let app = app::App::default().with_scheme(app::AppScheme::Gtk);
@@ -76,28 +75,32 @@ pub async fn run(ctx: &RunnerContext, version_id: usize, version_details: Remote
     ui.btn_cancel.emit(s, GUIAppStatus::BtnCancel);
 
     gui::window_ensure(&mut ui.win, 570, 150);
+    let mut return_value = InstallConfirmResult::Cancel;
     while app.wait() {
         if let Some(action) = receive_action.recv() {
             match action {
                 GUIAppStatus::Quit => {
+                    ui.win.hide();
                     app.quit();
-                    return result;
                 },
                 GUIAppStatus::BtnContinue => {
+                    ui.win.hide();
                     app.quit();
-                    return match has_space {
+                    return_value = match has_space {
                         true => InstallConfirmResult::Continue,
                         false => InstallConfirmResult::Cancel
                     };
                 },
                 GUIAppStatus::BtnCancel => {
+                    ui.win.hide();
                     app.quit();
-                    return InstallConfirmResult::Cancel;
+                    return_value = InstallConfirmResult::Cancel;
                 },
                 _ => {}
             }
         }
     }
+    ui.win.hide();
     app.quit();
-    return result;
+    return return_value;
 }
