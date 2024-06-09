@@ -29,7 +29,8 @@ pub enum GUIAppStatus {
     BtnContinue,
 
     WizardBtnInstall,
-    WizardBtnUpdate
+    WizardBtnUpdate,
+    WizardBtnVerify
 }
 /// Make the `window` provided the in be the center of the current screen.
 pub fn window_centre_screen(window: &mut Window) {

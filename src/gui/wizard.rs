@@ -4,10 +4,10 @@ use log::{debug, error, trace};
 use crate::{RunnerContext, gui};
 use crate::appvar::AppVarData;
 use crate::gui::dialog_confirm::{ConfirmInstallDialogDetails, ConfirmUpdateDialogDetails, DialogConfirmType, DialogResult};
-use crate::gui::GUIAppStatus;
+use crate::gui::{dialog_generic, GUIAppStatus};
 use crate::gui::wizard_ui::WizardInterface;
 use crate::version::RemoteVersion;
-use crate::workflows::{InstallWorkflow, UpdateWorkflow};
+use crate::workflows::{InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
 
 #[async_recursion]
 pub async fn run(ctx: &mut RunnerContext) {
@@ -24,6 +24,7 @@ pub async fn run(ctx: &mut RunnerContext) {
 
     ui.btn_install.emit(send_action, GUIAppStatus::WizardBtnInstall);
     ui.btn_update.emit(send_action, GUIAppStatus::WizardBtnUpdate);
+    ui.btn_verify.emit(send_action, GUIAppStatus::WizardBtnVerify);
 
     gui::window_ensure(&mut ui.win, 640, 250);
     let mut final_action: Option<GUIAppStatus> = None;
@@ -37,14 +38,19 @@ pub async fn run(ctx: &mut RunnerContext) {
                 },
                 GUIAppStatus::WizardBtnInstall => {
                     final_action = Some(GUIAppStatus::WizardBtnInstall);
-                    ui.win.hide();
+                    ui.win.platform_hide();
                     app.quit();
                 },
                 GUIAppStatus::WizardBtnUpdate => {
                     final_action = Some(GUIAppStatus::WizardBtnUpdate);
-                    ui.win.hide();
+                    ui.win.platform_hide();
                     app.quit();
                 },
+                GUIAppStatus::WizardBtnVerify => {
+                    final_action = Some(GUIAppStatus::WizardBtnVerify);
+                    ui.win.platform_hide();
+                    app.quit();
+                }
                 _ => {}
             }
         }
@@ -56,7 +62,10 @@ pub async fn run(ctx: &mut RunnerContext) {
         },
         Some(GUIAppStatus::WizardBtnUpdate) => {
             btn_update(&mut x).await;
-        }
+        },
+        Some(GUIAppStatus::WizardBtnVerify) => {
+            btn_verify(&mut x).await;
+        },
         _ => {}
     }
 }
@@ -159,5 +168,59 @@ async fn btn_update(ctx: &mut RunnerContext) {
             debug!("[gui::wizard::btn_update] User clicked on the Cancel button, showing Wizard again");
             run(ctx).await;
         }
+    }
+}
+async fn btn_verify(ctx: &mut RunnerContext) {
+    let av = AppVarData::get();
+
+    let current_version = match ctx.current_version {
+        Some(x) => x,
+        None => {
+            dialog_generic::run(
+                "beans - Failed to Verify",
+                &format!("Unable to verify game files since {} is not installed.", av.mod_info.name_stylized));
+            run(ctx).await;
+            return;
+        }
+    };
+
+    match ctx.current_remote_version() {
+        Ok(x) => {
+            if x.heal_url.is_none() {
+                dialog_generic::run(
+                    "beans - Failed to Verify",
+                    &format!("Missing heal URL for {} v{}", av.mod_info.name_stylized, current_version));
+                run(ctx).await;
+                return;
+            }
+            if x.signature_url.is_none() {
+                dialog_generic::run(
+                    "beans - Failed to Verify",
+                    &format!("Missing signature URL for {} v{}", av.mod_info.name_stylized, current_version));
+                run(ctx).await;
+                return;
+            }
+        },
+        Err(e) => {
+            error!("[gui::wizard::btn_verify] Failed to get current version details. {:#?}", e);
+            dialog_generic::run(
+                "beans - Failed to Verify",
+                &format!("Failed to get current version details for {} v{}.\nReason: {:}",
+                         av.mod_info.name_stylized,
+                         current_version,
+                         e));
+            return;
+        }
+    };
+
+    if let Err(e) = VerifyWorkflow::wizard(ctx).await {
+        error!("[gui::wizard::btn_verify] Failed to run VerifyWorkflow {:#?}", e);
+        dialog_generic::run(
+            "beans - Failed to Verify",
+            &format!("Failed to verify {}.\nReason: {:}", av.mod_info.name_stylized, e));
+    } else {
+        dialog_generic::run(
+            "beans - Verification",
+            &format!("Verification for {} has completed.\nAny corruption has been repaired", av.mod_info.name_stylized));
     }
 }
