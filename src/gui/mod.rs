@@ -18,12 +18,17 @@ pub enum GUIAppStatus {
     Update,
     Quit,
 
-    BtnContinue,
+    UnknownStatus,
+
+    BtnOk,
     BtnCancel,
+    BtnAbort,
+    BtnRetry,
+    BtnIgnore,
     BtnYes,
     BtnNo,
-    BtnOk,
-    BtnBack,
+    BtnTryAgain,
+    BtnContinue,
 
     WizardBtnInstall,
     WizardBtnUpdate
