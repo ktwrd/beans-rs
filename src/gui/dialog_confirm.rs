@@ -1,5 +1,5 @@
 use fltk::{*, prelude::*};
-use log::{error, trace};
+use log::error;
 use crate::gui::GUIAppStatus;
 use crate::{gui, helper, RunnerContext};
 use crate::appvar::AppVarData;
@@ -201,7 +201,6 @@ pub async fn run(ctx: &RunnerContext, confirm_type: &mut DialogConfirmType) -> D
                             }
                         }
                     };
-                    trace!("[dialog_confirm::run->BtnContinue] Set return value to {:#?}", return_value);
                     app.quit();
                 },
                 GUIAppStatus::BtnCancel => {
