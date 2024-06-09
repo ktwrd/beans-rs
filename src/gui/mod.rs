@@ -43,11 +43,17 @@ pub fn window_centre_screen(window: &mut Window) {
     y -= height.clone() as f64;
     window.resize(((x / 2.0) as i32) + sx, ((y / 2.0) as i32) + sy, width, height);
 }
+/// Get the X and Y position of the center of the current screen.
+pub fn get_center_screen() -> (i32, i32) {
+    let (px, py) = app::screen_coords();
+    let (sw, sh) = app::screen_size();
+    return (((sw / 2.0) as i32) + px, ((sh / 2.0) as i32) + py);
+}
 
 /// Ensure that a window has a fixed width & height, and that it will appear in the centre of the
 /// current screen.
 pub fn window_ensure(win: &mut Window, width: i32, height: i32) {
-    crate::gui::window_centre_screen(win);
+    window_centre_screen(win);
     win.handle(move |w, ev| match ev {
         fltk::enums::Event::Resize => {
             if w.width() > width || w.height() > height {
