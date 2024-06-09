@@ -2,6 +2,92 @@
 version 1.0308
 header_name {.h}
 code_name {.cxx}
+class GenericDialog {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window win {open
+      xywh {910 31 500 150} type Double visible
+    } {
+      Fl_Text_Display label {selected
+        xywh {25 10 0 0} box NO_BOX align 11
+      }
+      Fl_Button btn_ok {
+        label Ok
+        xywh {25 121 70 24}
+      }
+    }
+  }
+}
+
+class GenericConfirmDialog {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window win {
+      label {beans - Confirm} open
+      xywh {376 728 550 150} type Double visible
+    } {
+      Fl_Text_Display label_title {
+        label Title
+        xywh {25 10 0 0} labelsize 18 align 11
+      }
+      Fl_Text_Display label_desc1 {
+        label label_desc1
+        xywh {25 40 0 0} align 11
+      }
+      Fl_Text_Display label_desc2 {
+        label label_desc2
+        xywh {25 60 0 0} align 11
+      }
+      Fl_Text_Display label_desc3 {
+        label label_desc3
+        xywh {25 80 0 0} box NO_BOX align 11
+      }
+      Fl_Button btn_continue {
+        label Continue
+        xywh {25 116 80 24}
+      }
+      Fl_Button btn_cancel {
+        label Cancel
+        xywh {120 116 80 24}
+      }
+    }
+  }
+}
+
+class UpdateConfirmDialog {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window win {
+      label {beans - $MOD_NAME_STYLIZED} open
+      xywh {376 147 570 115} type Double visible
+    } {
+      Fl_Text_Display label_1 {
+        label {Update $MOD_NAME_STYLIZED}
+        xywh {25 0 0 0} labelsize 18 align 11
+      }
+      Fl_Text_Display label_2 {
+        label {Updating to v%1 from v%2}
+        xywh {25 35 0 0} align 11
+      }
+      Fl_Text_Display label_3 {
+        label {Download Size: %1}
+        xywh {25 55 0 0} align 11
+      }
+      Fl_Button btn_update {
+        label Update
+        xywh {25 85 70 24}
+      }
+      Fl_Button btn_cancel {
+        label Cancel
+        xywh {120 85 70 24}
+      }
+    }
+  }
+}
+
 class NotInstalledDialog {open
 } {
   Function {make_window()} {open
@@ -28,7 +114,7 @@ class UpdateNoPatchDialog {open
   } {
     Fl_Window win {
       label {beans - Update $MOD_NAME_STYLIZED} open
-      xywh {901 827 500 70} type Double visible
+      xywh {1004 930 500 70} type Double visible
     } {
       Fl_Text_Display label_1 {
         label {No patch available for v%1. Please re-install.}
@@ -47,8 +133,8 @@ class InstallCompleteDialog {open
   Function {make_window()} {open
   } {
     Fl_Window win {
-      label {$MOD_NAME_STYLIZED Install Complete} open selected
-      xywh {928 259 660 330} type Double visible
+      label {$MOD_NAME_STYLIZED Install Complete} open
+      xywh {1131 221 660 330} type Double visible
     } {
       Fl_Text_Display label_1 {
         label {$MOD_NAME_STYLIZED has finished installing!}
@@ -131,10 +217,11 @@ class InstallConfirmInterface {open
 
 class WizardInterface {open
 } {
-  Function {make_window()} {} {
+  Function {make_window()} {open
+  } {
     Fl_Window win {
       label {beans for $MOD_NAME_STYLIZED} open
-      xywh {376 147 640 250} type Double visible
+      xywh {418 329 640 250} type Double visible
     } {
       Fl_Button btn_install {
         label Install

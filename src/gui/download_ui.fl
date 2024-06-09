@@ -11,7 +11,7 @@ class DownloadProgressInterface {open
       xywh {3122 482 520 100} type Double visible
     } {
       Fl_Progress download_progress {
-        xywh {10 60 500 21} box GTK_DOWN_BOX selection_color 40
+        xywh {10 60 500 21} box GTK_DOWN_BOX selection_color 39
       }
       Fl_Text_Display label_left {
         label left
