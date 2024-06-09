@@ -153,6 +153,12 @@ async fn with_progress_gui(url: String, out_location: String, title: String) -> 
             if let Ok(mut x) = GUI_MAP_COMPLETE.write() {
                 x.insert(c.unique_id.clone(), Some(true));
             }
+            if let Ok(mut map) = GUI_MAP.write() {
+                if let Some(ui) = map.get(&c.unique_id) {
+                    ui.win.platform_hide();
+                }
+                map.remove(&c.unique_id);
+            }
             if let Ok(mut map) = APP_MAP.write() {
                 if let Some(app) = map.get_mut(&c.unique_id) {
                     trace!("[download::with_progress_gui->progress_complete] calling app.quit");
@@ -160,9 +166,6 @@ async fn with_progress_gui(url: String, out_location: String, title: String) -> 
                 } else {
                     trace!("[download::with_progress_gui->progress_complete] couldn't find {} in APP_MAP", &c.unique_id);
                 }
-                map.remove(&c.unique_id);
-            }
-            if let Ok(mut map) = GUI_MAP.write() {
                 map.remove(&c.unique_id);
             }
         },

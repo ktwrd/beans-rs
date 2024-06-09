@@ -3,7 +3,6 @@ use log::{error, trace};
 use crate::gui::GUIAppStatus;
 use crate::{gui, helper, RunnerContext};
 use crate::appvar::AppVarData;
-use crate::gui::install_confirm::InstallConfirmResult;
 use crate::gui::wizard_ui::GenericConfirmDialog;
 use crate::version::{RemotePatch, RemoteVersion};
 
@@ -187,7 +186,7 @@ pub async fn run(ctx: &RunnerContext, confirm_type: &mut DialogConfirmType) -> D
                     app.quit();
                 },
                 GUIAppStatus::BtnContinue => {
-                    ui.win.hide();
+                    ui.win.platform_hide();
                     return_value = match confirm_type {
                         DialogConfirmType::Install(details) => {
                             match details.has_space(&mut ctx_c) {
@@ -204,10 +203,12 @@ pub async fn run(ctx: &RunnerContext, confirm_type: &mut DialogConfirmType) -> D
                         _ => DialogResult::Continue
                     };
                     trace!("[dialog_confirm::run->BtnContinue] Set return value to {:#?}", return_value);
+                    app.quit();
                 },
                 GUIAppStatus::BtnCancel => {
-                    ui.win.hide();
+                    ui.win.platform_hide();
                     return_value = DialogResult::Cancel;
+                    app.quit();
                 },
                 _ => {}
             }
