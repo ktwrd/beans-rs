@@ -221,26 +221,15 @@ pub struct RemoteVersion
 }
 impl RemoteVersion {
     pub async fn get_download_size(&self) -> Option<u64> {
-        if let Some(f) = &self.file {
-            let av = AppVarData::get();
-            let url = format!("{}{}", av.remote_info.base_url, f);
-
-            trace!("[download::with_progress_custom] fetching details from {url}");
-            let res = match reqwest::Client::new()
-                .get(&url)
-                .send()
-                .await {
-                Ok(v) => v,
-                Err(e) => {
-                    trace!("[RemoteVersion::get_download_size] failed to get size from {url}\n {:#?}", e);
-                    return None;
-                }
-            };
-
-            return res.content_length();
-        } else {
-            return None;
-        }
+        let av = AppVarData::get();
+        return match &self.file {
+            Some(t) => {
+                let url = format!("{}{}", av.remote_info.base_url, t);
+                trace!("[RemoteVersion::get_download_size] fetching details from {url}");
+                return helper::get_download_size(url).await;
+            },
+            None => None
+        };
     }
 }
 /// `versions.json` response content from remote server.
