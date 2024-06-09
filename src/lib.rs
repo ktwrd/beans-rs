@@ -53,11 +53,3 @@ pub const STAGING_DIR: &str = "\\butler-staging";
 flate!(pub static BUTLER_BINARY: [u8] from "Binaries/butler.exe");
 #[cfg(not(target_os = "windows"))]
 flate!(pub static BUTLER_BINARY: [u8] from "Binaries/butler");
-#[cfg(target_os = "windows")]
-flate!(pub static BUTLER_LIB_1: [u8] from "Binaries/7z.dll");
-#[cfg(not(target_os = "windows"))]
-flate!(pub static BUTLER_LIB_1: [u8] from "Binaries/7z.so");
-#[cfg(target_os = "windows")]
-flate!(pub static BUTLER_LIB_2: [u8] from "Binaries/c7zip.dll");
-#[cfg(not(target_os = "windows"))]
-flate!(pub static BUTLER_LIB_2: [u8] from "Binaries/libc7zip.so");
