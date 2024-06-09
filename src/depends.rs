@@ -65,7 +65,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
     }
 
     log::info!("Installing Visual C++ Redistributable");
-    let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
+    let mut out_loc = helper::get_tmp_dir();
     out_loc = helper::join_path(out_loc, "vc_redist.exe".to_string());
 
     helper::download_with_progress(
@@ -118,7 +118,7 @@ pub fn get_butler_2_location() -> String {
     path
 }
 fn get_tmp_dir() -> String {
-    let path = std::env::temp_dir().to_str().unwrap_or("").to_string();
+    let path = helper::get_tmp_dir();
     helper::format_directory_path(path)
 }
 

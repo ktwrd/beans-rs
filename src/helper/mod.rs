@@ -348,10 +348,16 @@ pub fn format_size(i: usize) -> String {
     }
     return format!("{}{}", whole, dec_x);
 }
+pub fn get_tmp_dir() -> String
+{
+    #[cfg(not(target_os = "windows"))]
+    return format_directory_path(String::from("/var/tmp"));
+    #[cfg(target_os = "windows")]
+    return format_directory_path(std::env::temp_dir().to_str().unwrap_or("").to_string());
+}
 /// Generate a full file location for a temporary file.
 pub fn get_tmp_file(filename: String) -> String
 {
-    let tail = std::env::temp_dir().to_str().unwrap_or("").to_string();
     let head = format!("{}_{}", generate_rand_str(8), filename);
-    join_path(tail, head)
+    join_path(get_tmp_dir(), head)
 }
