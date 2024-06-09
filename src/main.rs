@@ -2,10 +2,10 @@
 
 use std::str::FromStr;
 use clap::{Arg, ArgAction, ArgMatches, Command};
-use log::{debug, error, info, LevelFilter, trace};
+use log::{debug, error, info, LevelFilter, trace, warn};
 use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
 use beans_rs::flags::LaunchFlag;
-use beans_rs::helper::parse_location;
+use beans_rs::helper::{find_sourcemod_path, parse_location};
 use beans_rs::SourceModDirectoryParam;
 use beans_rs::workflows::{InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
 
@@ -378,6 +378,26 @@ impl Launcher
     pub async fn task_gui(&mut self, matches: &ArgMatches)
     {
         self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        match self.try_get_smdp() {
+            SourceModDirectoryParam::AutoDetect => {
+                if let Err(e) = find_sourcemod_path() {
+                    info!("[Launcher::task_gui] Failed to find sourcemods directory {:}", e);
+                    beans_rs::gui::dialog_generic::run(
+                        "beans - Directory Not Found",
+                        "Could not find sourcemods directory. \nYou'll need to manually specify it's location.");
+                    if let Some(file) = fltk::dialog::dir_chooser("Select sourcemods Directory", "", true) {
+                        let fixed = helper::canonicalize(&file).unwrap();
+                        let fixed_str = fixed.to_str().unwrap_or("");
+                        self.to_location = Some(fixed_str.to_string());
+                    } else {
+                        info!("[btn_root_directory_click] operation aborted by user");
+                        logic_done();
+                        return;
+                    }
+                }
+            },
+            _ => {}
+        };
         let mut ctx = self.try_create_context().await;
         beans_rs::gui::wizard::run(&mut ctx).await;
     }
