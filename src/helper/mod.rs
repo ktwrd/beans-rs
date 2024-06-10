@@ -1,5 +1,7 @@
 ﻿#[cfg(not(target_os = "windows"))]
 mod linux;
+
+use std::backtrace::Backtrace;
 #[cfg(not(target_os = "windows"))]
 pub use linux::*;
 
@@ -13,9 +15,12 @@ use std::io::Write;
 use std::path::PathBuf;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
-use log::debug;
+use futures_util::SinkExt;
+use log::{debug, trace};
 use crate::{BeansError, DownloadFailureReason};
 use rand::{distributions::Alphanumeric, Rng};
+use reqwest::header::USER_AGENT;
+use crate::version::RemoteVersionResponse;
 
 #[derive(Clone, Debug)]
 pub enum InstallType
@@ -360,4 +365,51 @@ pub fn get_tmp_file(filename: String) -> String
 {
     let head = format!("{}_{}", generate_rand_str(8), filename);
     join_path(get_tmp_dir(), head)
+}
+/// Check if there is an update available. When the latest release doesn't match the current release.
+pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
+{
+    let rs = reqwest::Client::new()
+        .get(GITHUB_RELEASES_URL)
+        .header(USER_AGENT, &format!("beans-rs/{}", crate::VERSION))
+        .send().await;
+    let response = match rs {
+        Ok(v) => v,
+        Err(e) => {
+            trace!("Failed get latest release from github \nerror: {:#?}", e);
+            return Err(BeansError::Reqwest{
+                error: e,
+                backtrace: Backtrace::capture()
+            });
+        }
+    };
+    let response_text = response.text().await?;
+    let data: GithubReleaseItem = match serde_json::from_str(&response_text) {
+        Ok(v) => v,
+        Err(e) => {
+            trace!("Failed to deserialize GithubReleaseItem\nerror: {:#?}\ncontent: {:#?}", e, response_text);
+            return Err(BeansError::SerdeJson {
+                error: e,
+                backtrace: Backtrace::capture()
+            });
+        }
+    };
+    if data.draft == false && data.prerelease == false && data.tag_name != crate::VERSION.to_string() {
+        return Ok(Some(data.clone()));
+    }
+    trace!("{:#?}", data);
+    return Ok(None);
+}
+const GITHUB_RELEASES_URL: &str = "https://api.github.com/repos/adastralgroup/beans-rs/releases/latest";
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+pub struct GithubReleaseItem
+{
+    #[serde(rename = "id")]
+    pub _id: u64,
+    pub created_at: String,
+    pub tag_name: String,
+    pub url: String,
+    pub html_url: String,
+    pub draft: bool,
+    pub prerelease: bool
 }
