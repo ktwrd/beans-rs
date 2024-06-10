@@ -171,6 +171,12 @@ impl Launcher
             ]);
 
         let mut i = Self::new(&cmd.get_matches());
+        if let Ok(r) = helper::beans_has_update().await {
+            if let Some(v) = r {
+                info!("A new version of beans-rs is available!", v.tag_name);
+                info!("{}", v.html_url);
+            }
+        }
         i.subcommand_processor().await;
     }
     pub fn new(matches: &ArgMatches) -> Self {
