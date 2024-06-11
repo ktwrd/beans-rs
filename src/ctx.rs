@@ -4,14 +4,15 @@ use crate::helper::{find_sourcemod_path, InstallType, parse_location};
 use crate::version::{RemotePatch, RemoteVersion, RemoteVersionResponse};
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
-use log::{debug, error};
+use log::{debug, error, info};
 
 #[derive(Debug, Clone)]
 pub struct RunnerContext
 {
     pub sourcemod_path: String,
     pub remote_version_list: RemoteVersionResponse,
-    pub current_version: Option<usize>
+    pub current_version: Option<usize>,
+    pub appvar: crate::appvar::AppVarData
 }
 impl RunnerContext
 {
@@ -48,7 +49,8 @@ impl RunnerContext
         {
             sourcemod_path: parse_location(sourcemod_path.clone()),
             remote_version_list: version_list,
-            current_version: crate::version::get_current_version(Some(sourcemod_path.clone()))
+            current_version: crate::version::get_current_version(Some(sourcemod_path.clone())),
+            appvar: crate::appvar::parse()
         });
     }
     /// Sets `remote_version_list` from `version::get_version_list()`
@@ -64,12 +66,7 @@ impl RunnerContext
     ///      C:\Games\Steam\steamapps\sourcemods\open_fortress\
     pub fn get_mod_location(&mut self) -> String
     {
-        let mut smp_x = self.sourcemod_path.clone();
-        if smp_x.ends_with("/") || smp_x.ends_with("\\") {
-            smp_x.pop();
-        }
-        smp_x.push_str(crate::DATA_DIR);
-        smp_x
+        helper::join_path(self.sourcemod_path.clone(), crate::data_dir())
     }
 
     /// Get staging location for butler.
@@ -77,12 +74,7 @@ impl RunnerContext
     /// e.g; /home/kate/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/sourcemods/butler-staging
     ///      C:\Games\Steam\steamapps\sourcemods\butler-staging
     pub fn get_staging_location(&mut self) -> String {
-        let mut smp_x = self.sourcemod_path.clone();
-        if smp_x.ends_with("/") || smp_x.ends_with("\\") {
-            smp_x.pop();
-        }
-        smp_x.push_str(crate::STAGING_DIR);
-        smp_x
+        helper::join_path(self.sourcemod_path.clone(), crate::STAGING_DIR.to_string())
     }
 
     /// Get the latest item in `remote_version_list`
@@ -128,7 +120,7 @@ impl RunnerContext
         match current_version {
             Some(cv) => {
                 for (_, patch) in self.remote_version_list.clone().patches.into_iter() {
-                    if patch.file == format!("{}-{}to{}.pwr", crate::MOD_NAME_SHORT, cv, remote_version) {
+                    if patch.file == format!("{}-{}to{}.pwr", &self.appvar.mod_info.short_name, cv, remote_version) {
                         return Some(patch);
                     }
                 }
@@ -140,11 +132,23 @@ impl RunnerContext
 
     /// Read the contents of `gameinfo.txt` in directory from `self.get_mod_location()`
     pub fn read_gameinfo_file(&mut self) -> Result<Option<Vec<u8>>, BeansError> {
+        self.gameinfo_perms()?;
         let location = self.gameinfo_location();
         if helper::file_exists(location.clone()) == false {
             return Ok(None);
         }
-        let file = std::fs::read(&location)?;
+        let file = match std::fs::read(&location) {
+            Ok(v) => v,
+            Err(e) => {
+                let ex = BeansError::GameInfoFileReadFail {
+                    error: e,
+                    location: location,
+                    backtrace: Backtrace::capture()
+                };
+                sentry::capture_error(&ex);
+                return Err(ex);
+            }
+        };
         Ok(Some(file))
     }
 
@@ -160,8 +164,17 @@ impl RunnerContext
     pub fn gameinfo_perms(&mut self) -> Result<(), BeansError> {
         let location = self.gameinfo_location();
         if helper::file_exists(location.clone()) {
-            let perm = std::fs::Permissions::from_mode(0644 as u32);
-            std::fs::set_permissions(&location, perm)?;
+            let perm = std::fs::Permissions::from_mode(0o644 as u32);
+            if let Err(e) = std::fs::set_permissions(&location, perm.clone()) {
+                let xe = BeansError::GameInfoPermissionSetFail {
+                    error: e,
+                    permissions: perm.clone(),
+                    location
+                };
+                sentry::capture_error(&xe);
+                return Err(xe);
+            }
+            debug!("[RunnerContext::gameinfo_perms] set permissions on {location} to {:#?}", perm);
         }
         Ok(())
     }
@@ -174,7 +187,8 @@ impl RunnerContext
     /// Ok is the location to where it was downloaded to.
     pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
     {
-        let mut out_loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
+        let av = crate::appvar::parse();
+        let mut out_loc = helper::get_tmp_dir();
 
         if let Some(size) = version.pre_sz {
             if helper::has_free_space(out_loc.clone(), size)? == false {
@@ -182,19 +196,12 @@ impl RunnerContext
             }
         }
 
-        #[cfg(target_os = "windows")]
-        if out_loc.ends_with("\\") == false {
-            out_loc.push_str("\\");
-        }
-        #[cfg(not(target_os = "windows"))]
-        if out_loc.ends_with("/") == false {
-            out_loc.push_str("/");
-        }
-        out_loc.push_str(format!("presz_{}", helper::generate_rand_str(12)).as_str());
+        let out_filename = format!("presz_{}", helper::generate_rand_str(12));
+        out_loc = helper::join_path(out_loc, out_filename);
 
-        println!("[debug] writing output file to {}", out_loc);
+        info!("[RunnerContext::download_package] writing to {}", out_loc);
         helper::download_with_progress(
-            format!("{}{}", crate::SOURCE_URL, version.file.expect("No URL for latest package!")),
+            format!("{}{}", &av.remote_info.base_url, version.file.expect("No URL for latest package!")),
             out_loc.clone()).await?;
 
         Ok(out_loc)

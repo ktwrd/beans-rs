@@ -1,4 +1,4 @@
-use log::{debug, info};
+use log::{debug, error, info, trace};
 use crate::{BeansError, butler, helper, RunnerContext};
 
 pub struct UpdateWorkflow
@@ -9,6 +9,8 @@ impl UpdateWorkflow
 {
     pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError>
     {
+        let av = crate::appvar::parse();
+
         let current_version_id = match ctx.current_version {
             Some(v) => v,
             None => {
@@ -28,6 +30,7 @@ impl UpdateWorkflow
             }
         };
 
+        ctx.gameinfo_perms()?;
         let gameinfo_backup = ctx.read_gameinfo_file()?;
 
         if helper::has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq)? == false {
@@ -51,16 +54,16 @@ impl UpdateWorkflow
         ctx.gameinfo_perms()?;
         info!("[UpdateWorkflow] Verifying game");
         if let Err(e) = butler::verify(
-            format!("{}{}", crate::SOURCE_URL, remote_version.signature_url.unwrap()),
+            format!("{}{}", &av.remote_info.base_url, remote_version.signature_url.unwrap()),
             mod_dir_location.clone(),
-            format!("{}{}", crate::SOURCE_URL, remote_version.heal_url.unwrap())) {
+            format!("{}{}", &av.remote_info.base_url, remote_version.heal_url.unwrap())) {
             sentry::capture_error(&e);
             return Err(e);
         }
         ctx.gameinfo_perms()?;
         info!("[UpdateWorkflow] Patching game");
         if let Err(e) = butler::patch_dl(
-            format!("{}{}", crate::SOURCE_URL, patch.url),
+            format!("{}{}", &av.remote_info.base_url, patch.file),
             staging_dir_location,
             patch.file,
             mod_dir_location).await {
@@ -70,8 +73,16 @@ impl UpdateWorkflow
 
         if let Some(gi) = gameinfo_backup {
             let loc = ctx.gameinfo_location();
-            std::fs::write(&loc, gi)?;
+            trace!("gameinfo location: {}", &loc);
+            if let Ok(m) = std::fs::metadata(&loc) {
+                trace!("gameinfo metadata: {:#?}", m);
+            }
+            if let Err(e) = std::fs::write(&loc, gi) {
+                trace!("error: {:#?}", e);
+                error!("[UpdateWorkflow::wizard] Failed to write gameinfo.txt backup {:}", e);
+            }
             if let Err(e) = ctx.gameinfo_perms() {
+                error!("[UpdateWorkflow::wizard] Failed to update permissions on gameinfo.txt {:}", e);
                 sentry::capture_error(&e);
                 return Err(e);
             }

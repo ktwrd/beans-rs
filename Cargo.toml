@@ -1,6 +1,6 @@
 [package]
 name = "beans-rs"
-version = "1.4.0-rc1"
+version = "1.4.0"
 edition = "2021"
 authors = [
     "Adastral Group (https://adastral.net)",
@@ -31,12 +31,16 @@ clap = { version = "4.5.4", features = ["cargo"] }
 bitflags = "2.5.0"
 log = "0.4.21"
 native-dialog = "0.7.0"
-simple-logging = "2.0.2"
 sentry = "0.33.0"
+lazy_static = "1.4.0"
+thread-id = "4.2.1"
+colored = "2.1.0"
+sentry-log = "0.33.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winconsole = "0.11.1"
 winreg = "0.52.0"
+dunce = "1.0.4"
 
 [dependencies.tokio]
 version = "1.37.0"

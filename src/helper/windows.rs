@@ -2,7 +2,7 @@
 use std::backtrace::Backtrace;
 use winreg::RegKey;
 use crate::BeansError;
-use crate::helper::generate_rand_str;
+use crate::helper::format_directory_path;
 
 /// TODO use windows registry to get the SourceModInstallPath
 /// HKEY_CURRENT_USER\Software\Value\Steam
@@ -13,11 +13,8 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
         Ok(rkey) => {
             let x: std::io::Result<String> = rkey.get_value("SourceModInstallPath");
             match x {
-                Ok(mut val) => {
-                    if val.ends_with("\\") == false {
-                        val.push_str("\\");
-                    }
-                    Ok(val)
+                Ok(val) => {
+                    Ok(format_directory_path(val))
                 },
                 Err(e) => {
                     return Err(BeansError::RegistryKeyFailure {
@@ -36,15 +33,4 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
             });
         }
     }
-}
-
-pub fn get_tmp_file(filename: String) -> String
-{
-    let mut loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
-    if loc.ends_with("\\") == false && loc.len() > 1 {
-        loc.push_str("\\");
-    }
-    loc.push_str(generate_rand_str(8).as_str());
-    loc.push_str(&filename);
-    loc
 }

@@ -37,6 +37,7 @@ impl InstallWorkflow {
     pub async fn install_with_remote_version(ctx: &mut RunnerContext, version_id: usize, version: RemoteVersion)
         -> Result<(), BeansError>
     {
+        println!("{:=>60}\nInstalling version {} to {}\n{0:=>60}", "=", version_id, &ctx.sourcemod_path);
         let presz_loc = RunnerContext::download_package(version).await?;
         Self::install_from(presz_loc.clone(), ctx.sourcemod_path.clone(), Some(version_id)).await?;
         if helper::file_exists(presz_loc.clone()) {
@@ -75,7 +76,8 @@ impl InstallWorkflow {
         } else {
             warn!("Not writing .adastral since the version wasn't provided");
         }
-        println!("{}", INSTALL_FINISH_MSG);
+        let av = crate::appvar::parse();
+        println!("{}", av.sub(INSTALL_FINISH_MSG.to_string()));
         Ok(())
     }
 }

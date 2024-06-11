@@ -1,6 +1,7 @@
 ﻿use std::fs::read_to_string;
+use log::{debug, error};
 use crate::BeansError;
-use crate::helper::generate_rand_str;
+use crate::helper::format_directory_path;
 
 /// all possible known directory where steam *might* be
 /// only is used on linux, since windows will use the registry.
@@ -21,7 +22,10 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
         Ok(v) => v,
         Err(e) => {
             sentry::capture_error(&e);
-            return Err(BeansError::FileOpenFailure(reg_path, e));
+            return Err(BeansError::FileOpenFailure {
+                location: reg_path,
+                error: e
+            });
         }
     };
 
@@ -29,17 +33,12 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
         if line.contains("SourceModInstallPath")
         {
             let split = &line.split("\"SourceModInstallPath\"");
-            let mut last = split.clone()
+            let last = split.clone()
                 .last()
                 .expect("Failed to find SourceModInstallPath")
                 .trim()
-                .replace("\\\\", "/")
-                .replace("\\", "/")
                 .replace("\"", "");
-            if last.ends_with("/") == false {
-                last.push_str("/");
-            }
-            return Ok(last);
+            return Ok(format_directory_path(last));
         }
     }
 
@@ -53,35 +52,25 @@ fn find_steam_reg_path() -> Result<String, BeansError>
             Some(v) => {
                 match v.to_str() {
                     Some(k) => {
-                        let mut h = k.to_string();
-                        if h.ends_with("/") {
-                            h.pop();
-                        }
+                        let h = format_directory_path(k.to_string());
                         let reg_loc = x.replace("~", h.as_str());
                         if crate::helper::file_exists(reg_loc.clone())
                         {
-                            return Ok(reg_loc);
+                            return Ok(reg_loc.clone());
                         }
                     },
                     None => {
+                        debug!("[helper::find_steam_reg_path] simple_home_dir::home_dir().to_str() returned None!");
                         return Err(BeansError::SteamNotFound);
                     }
                 }
             },
             None => {
+                debug!("[helper::find_steam_reg_path] simple_home_dir::home_dir() returned None!");
                 return Err(BeansError::SteamNotFound);
             }
         }
     }
+    error!("Couldn't find any of the locations in STEAM_POSSIBLE_DIR");
     return Err(BeansError::SteamNotFound);
-}
-pub fn get_tmp_file(filename: String) -> String
-{
-    let mut loc = std::env::temp_dir().to_str().unwrap_or("").to_string();
-    if loc.ends_with("/") == false && loc.len() > 1{
-        loc.push_str("/");
-    }
-    loc.push_str(generate_rand_str(8).as_str());
-    loc.push_str(format!("_{}", filename).as_str());
-    loc
 }

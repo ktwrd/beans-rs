@@ -1,5 +1,7 @@
 ﻿#[cfg(not(target_os = "windows"))]
 mod linux;
+
+use std::backtrace::Backtrace;
 #[cfg(not(target_os = "windows"))]
 pub use linux::*;
 
@@ -13,9 +15,12 @@ use std::io::Write;
 use std::path::PathBuf;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
-use log::debug;
+use futures_util::SinkExt;
+use log::{debug, trace};
 use crate::{BeansError, DownloadFailureReason};
 use rand::{distributions::Alphanumeric, Rng};
+use reqwest::header::USER_AGENT;
+use crate::version::RemoteVersionResponse;
 
 #[derive(Clone, Debug)]
 pub enum InstallType
@@ -92,13 +97,15 @@ pub fn install_state(sourcemods_location: Option<String>) -> InstallType
         smp_x.pop();
     }
 
-    if file_exists(format!("{}{}.adastral", &smp_x, crate::DATA_DIR)) {
+    let data_dir = join_path(smp_x, crate::data_dir());
+
+    if file_exists(format!("{}.adastral", data_dir)) {
         return InstallType::Adastral;
     }
-    else if file_exists(format!("{}{}.revision", &smp_x, crate::DATA_DIR)) {
+    else if file_exists(format!("{}.revision", data_dir)) {
         return InstallType::OtherSource;
     }
-    else if file_exists(format!("{}{}gameinfo.txt", &smp_x, crate::DATA_DIR)) {
+    else if file_exists(format!("{}gameinfo.txt", data_dir)) {
         return InstallType::OtherSourceManual;
     }
     return InstallType::NotInstalled;
@@ -144,26 +151,65 @@ pub fn generate_rand_str(length: usize) -> String
         .collect();
     s.to_uppercase()
 }
+/// Join the path, using `tail` as the base, and `head` as the thing to add on top of it.
+///
+/// This will also convert backslashes/forwardslashes to the compiled separator in `crate::PATH_SEP`
+pub fn join_path(tail: String, head: String) -> String
+{
+    let mut h = head.to_string()
+        .replace("/", crate::PATH_SEP)
+        .replace("\\", crate::PATH_SEP);
+    while h.starts_with(crate::PATH_SEP) {
+        h.remove(0);
+    }
 
+    format!("{}{}", format_directory_path(tail), h)
+}
+/// Make sure that the location provided is formatted as a directory (ends with `crate::PATH_SEP`).
+pub fn format_directory_path(location: String) -> String
+{
+    let mut x = location.to_string()
+        .replace("/", crate::PATH_SEP)
+        .replace("\\", crate::PATH_SEP);
+    while x.ends_with(crate::PATH_SEP) {
+        x.pop();
+    }
+    if x.ends_with(crate::PATH_SEP) == false {
+        x.push_str(crate::PATH_SEP);
+    }
+
+    x
+}
+#[cfg(not(target_os = "windows"))]
+pub fn canonicalize(location: &str) -> Result<PathBuf, std::io::Error> {
+    std::fs::canonicalize(location)
+}
+#[cfg(target_os = "windows")]
+pub fn canonicalize(location: &str) -> Result<PathBuf, std::io::Error> {
+    dunce::canonicalize(location)
+}
 pub fn parse_location(location: String) -> String
 {
     let path = std::path::Path::new(&location);
     let real_location = match path.to_str() {
         Some(v) => {
-            let p = std::fs::canonicalize(v);
+            let p = canonicalize(v);
             match p {
                 Ok(x) => {
                     match x.clone().to_str() {
                         Some(m) => m.to_string(),
                         None => {
-                            eprintln!("[helper::parse_location] Failed to parse location {}", location);
+                            debug!("[helper::parse_location] Failed to parse location to string {}", location);
                             return location;
                         }
                     }
                 },
                 Err(e) => {
+                    if format!("{:}", e).starts_with("No such file or directory") {
+                        return location;
+                    }
                     sentry::capture_error(&e);
-                    eprintln!("[helper::parse_location] Failed to parse location {}", location);
+                    eprintln!("[helper::parse_location] Failed to canonicalize location {}", location);
                     eprintln!("[helper::parse_location] {:}", e);
                     debug!("{:#?}", e);
                     return location;
@@ -171,7 +217,7 @@ pub fn parse_location(location: String) -> String
             }
         },
         None => {
-            eprintln!("[helper::parse_location] Failed to parse location {}", location);
+            debug!("[helper::parse_location] Failed to parse location {}", location);
             return location;
         }
     };
@@ -190,7 +236,9 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
         }
     }
 
-    Err(BeansError::FreeSpaceCheckFailure(real_location))
+    Err(BeansError::FreeSpaceCheckFailure {
+        location: real_location
+    })
 }
 /// Check if the location provided has enough free space.
 pub fn has_free_space(location: String, size: usize) -> Result<bool, BeansError>
@@ -235,7 +283,10 @@ pub async fn download_with_progress(url: String, out_location: String) -> Result
         Ok(v) => v,
         Err(e) => {
             sentry::capture_error(&e);
-            return Err(BeansError::FileOpenFailure(out_location, e));
+            return Err(BeansError::FileOpenFailure {
+                location: out_location,
+                error: e
+            });
         }
     };
     let mut downloaded: u64 = 0;
@@ -301,4 +352,64 @@ pub fn format_size(i: usize) -> String {
         }
     }
     return format!("{}{}", whole, dec_x);
+}
+pub fn get_tmp_dir() -> String
+{
+    #[cfg(not(target_os = "windows"))]
+    return format_directory_path(String::from("/var/tmp"));
+    #[cfg(target_os = "windows")]
+    return format_directory_path(std::env::temp_dir().to_str().unwrap_or("").to_string());
+}
+/// Generate a full file location for a temporary file.
+pub fn get_tmp_file(filename: String) -> String
+{
+    let head = format!("{}_{}", generate_rand_str(8), filename);
+    join_path(get_tmp_dir(), head)
+}
+/// Check if there is an update available. When the latest release doesn't match the current release.
+pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
+{
+    let rs = reqwest::Client::new()
+        .get(GITHUB_RELEASES_URL)
+        .header(USER_AGENT, &format!("beans-rs/{}", crate::VERSION))
+        .send().await;
+    let response = match rs {
+        Ok(v) => v,
+        Err(e) => {
+            trace!("Failed get latest release from github \nerror: {:#?}", e);
+            return Err(BeansError::Reqwest{
+                error: e,
+                backtrace: Backtrace::capture()
+            });
+        }
+    };
+    let response_text = response.text().await?;
+    let data: GithubReleaseItem = match serde_json::from_str(&response_text) {
+        Ok(v) => v,
+        Err(e) => {
+            trace!("Failed to deserialize GithubReleaseItem\nerror: {:#?}\ncontent: {:#?}", e, response_text);
+            return Err(BeansError::SerdeJson {
+                error: e,
+                backtrace: Backtrace::capture()
+            });
+        }
+    };
+    if data.draft == false && data.prerelease == false && data.tag_name != crate::VERSION.to_string() {
+        return Ok(Some(data.clone()));
+    }
+    trace!("{:#?}", data);
+    return Ok(None);
+}
+const GITHUB_RELEASES_URL: &str = "https://api.github.com/repos/adastralgroup/beans-rs/releases/latest";
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+pub struct GithubReleaseItem
+{
+    #[serde(rename = "id")]
+    pub _id: u64,
+    pub created_at: String,
+    pub tag_name: String,
+    pub url: String,
+    pub html_url: String,
+    pub draft: bool,
+    pub prerelease: bool
 }

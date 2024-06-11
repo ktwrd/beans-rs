@@ -1,21 +1,30 @@
 use std::backtrace::Backtrace;
 use std::num::ParseIntError;
 use thiserror::Error;
+use crate::appvar::AppVarData;
 use crate::version::AdastralVersionFile;
 
 #[derive(Debug, Error)]
 pub enum BeansError
 {
     /// Failed to check if there is free space. Value is the location
-    #[error("Not enough free space in {0}")]
-    FreeSpaceCheckFailure(String),
+    #[error("Not enough free space in {location}")]
+    FreeSpaceCheckFailure {
+        location: String
+    },
     /// Failed to find the sourcemod mod folder.
-    #[error("Failed to detect sourcemod folder")]
+    #[error("Failed to detect sourcemod folder. Please provide it via the --location argument.")]
     SourceModLocationNotFound,
-    #[error("Failed to open file at {0}")]
-    FileOpenFailure(String, std::io::Error),
-    #[error("Failed to write file at {0}")]
-    FileWriteFailure(String, std::io::Error),
+    #[error("Failed to open file at {location} ({error:})")]
+    FileOpenFailure {
+        location: String,
+        error: std::io::Error
+    },
+    #[error("Failed to write file at {location} ({error:})")]
+    FileWriteFailure {
+        location: String,
+        error: std::io::Error
+    },
     #[error("Failed to extract {src_file} to directory {target_dir}")]
     TarExtractFailure {
         src_file: String,
@@ -44,7 +53,7 @@ pub enum BeansError
         reason: DownloadFailureReason
     },
 
-    #[error("IO Error\n{error:#?}")]
+    #[error("General IO Error\n{error:#?}")]
     IO {
         error: std::io::Error,
         backtrace: Backtrace
@@ -65,7 +74,7 @@ pub enum BeansError
         backtrace: Backtrace
     },
 
-    #[error("Failed to run the apply command with butler.")]
+    #[error("Failed to run the apply command with butler. {error:}")]
     ButlerPatchFailure {
         patchfile_location: String,
         gamedir: String,
@@ -84,7 +93,7 @@ pub enum BeansError
         version: Option<usize>
     },
 
-    #[error("Could not find steam installation")]
+    #[error("Could not find steam installation, which means we can't find the sourcemods folder. Please provide the sourcemods folder with the --location parameter.")]
     SteamNotFound,
 
     #[error("{msg}")]
@@ -94,17 +103,17 @@ pub enum BeansError
         backtrace: Backtrace
     },
 
-    #[error("Failed to migrate old version file to the new format at {location}")]
+    #[error("Failed to migrate old version file to the new format at {location} ({error:})")]
     VersionFileMigrationFailure {
         error: std::io::Error,
         location: String
     },
-    #[error("Failed to delete old version file {location}")]
+    #[error("Failed to delete old version file {location} ({error:})")]
     VersionFileMigrationDeleteFailure {
         error: std::io::Error,
         location: String
     },
-    #[error("Failed to convert version file to JSON format.")]
+    #[error("Failed to convert version file to JSON format. ({error:})")]
     VersionFileSerialize {
         error: serde_json::Error,
         instance: AdastralVersionFile
@@ -115,9 +124,28 @@ pub enum BeansError
         old_location: String,
         old_content: String
     },
-    #[error("Failed to read version file at {location}. {error:}")]
+    #[error("Failed to read version file at {location}. ({error:})")]
     VersionFileReadFailure {
         error: std::io::Error,
+        location: String
+    },
+
+    #[error("Failed to serialize provided AppVarData to JSON. ({error:})")]
+    AppVarDataSerializeFailure {
+        error: serde_json::Error,
+        data: AppVarData
+    },
+
+    #[error("Failed to read gameinfo.txt at {location} ({error:})")]
+    GameInfoFileReadFail {
+        error: std::io::Error,
+        location: String,
+        backtrace: Backtrace
+    },
+    #[error("Failed to set permissions on gameinfo.txt at {location} ({error:})")]
+    GameInfoPermissionSetFail {
+        error: std::io::Error,
+        permissions: std::fs::Permissions,
         location: String
     }
 }

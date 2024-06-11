@@ -1,3 +1,5 @@
+#![feature(panic_info_message)]
+
 use std::str::FromStr;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use log::{debug, error, info, LevelFilter, trace};
@@ -5,12 +7,13 @@ use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
 use beans_rs::flags::LaunchFlag;
 use beans_rs::helper::parse_location;
 use beans_rs::SourceModDirectoryParam;
-use beans_rs::workflows::InstallWorkflow;
+use beans_rs::workflows::{InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
 
+pub const DEFAULT_LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Info;
 #[cfg(debug_assertions)]
 pub const DEFAULT_LOG_LEVEL: LevelFilter = LevelFilter::Trace;
 #[cfg(not(debug_assertions))]
-pub const DEFAULT_LOG_LEVEL: LevelFilter = LevelFilter::Info;
+pub const DEFAULT_LOG_LEVEL: LevelFilter = DEFAULT_LOG_LEVEL_RELEASE;
 
 fn main() {
     #[cfg(target_os = "windows")]
@@ -18,10 +21,13 @@ fn main() {
 
     init_flags();
     // initialize sentry and custom panic handler for msgbox
+    #[cfg(not(debug_assertions))]
     let _guard = sentry::init((beans_rs::SENTRY_URL, sentry::ClientOptions {
         release: sentry::release_name!(),
         debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
         max_breadcrumbs: 100,
+        auto_session_tracking: true,
+        attach_stacktrace: true,
         ..Default::default()
     }));
     init_panic_handle();
@@ -36,19 +42,25 @@ fn main() {
 }
 fn init_flags()
 {
+    flags::remove_flag(LaunchFlag::DEBUG_MODE);
     #[cfg(debug_assertions)]
     flags::add_flag(LaunchFlag::DEBUG_MODE);
     if std::env::var("BEANS_DEBUG").is_ok_and(|x| x == "1") {
         flags::add_flag(LaunchFlag::DEBUG_MODE);
     }
     flags::add_flag(LaunchFlag::STANDALONE_APP);
-    simple_logging::log_to_stderr(DEFAULT_LOG_LEVEL);
+    beans_rs::logger::set_filter(DEFAULT_LOG_LEVEL);
+    beans_rs::logger::log_to_stdout();
 }
 fn init_panic_handle()
 {
     std::panic::set_hook(Box::new(move |info| {
         debug!("[panic::set_hook] showing msgbox to notify user");
-        custom_panic_handle();
+        let mut x = String::new();
+        if let Some(m) = info.message() {
+            x = format!("{:#?}", m);
+        }
+        custom_panic_handle(x);
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
         sentry::integrations::panic::panic_handler(&info);
         if flags::has_flag(LaunchFlag::DEBUG_MODE) {
@@ -57,36 +69,49 @@ fn init_panic_handle()
         logic_done();
     }));
 }
-fn custom_panic_handle()
+#[cfg(target_os = "windows")]
+fn fix_msgbox_txt(txt: String) -> String {
+    txt.replace("\\n", "\r\n")
+}
+#[cfg(not(target_os = "windows"))]
+fn fix_msgbox_txt(txt: String) -> String {
+    txt
+}
+fn custom_panic_handle(msg: String)
 {
-    std::thread::spawn(|| {
-        let d = native_dialog::MessageDialog::new()
-            .set_type(native_dialog::MessageType::Error)
-            .set_title("beans - fatal error!")
-            .set_text(PANIC_MSG_CONTENT)
-            .show_alert();
-        if let Err(e) = d {
-            sentry::capture_error(&e);
-            eprintln!("Failed to show MessageDialog {:#?}", e);
-            eprintln!("[msgbox_panic] Come on, we failed to show a messagebox? Well, the error has been reported and we're on it.");
-            eprintln!("[msgbox_panic] PLEASE report this to kate@dariox.club with as much info as possible <3");
+    unsafe {
+        if beans_rs::PAUSE_ONCE_DONE {
+            let mut txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg);
+            txt = fix_msgbox_txt(txt);
+            std::thread::spawn(move || {
+
+                let d = native_dialog::MessageDialog::new()
+                    .set_type(native_dialog::MessageType::Error)
+                    .set_title("beans - fatal error!")
+                    .set_text(&txt)
+                    .show_alert();
+                if let Err(e) = d {
+                    sentry::capture_error(&e);
+                    eprintln!("Failed to show MessageDialog {:#?}", e);
+                    eprintln!("[msgbox_panic] Come on, we failed to show a messagebox? Well, the error has been reported and we're on it.");
+                    eprintln!("[msgbox_panic] PLEASE report this to kate@dariox.club with as much info as possible <3");
+                }
+            });
+        } else {
+            info!("This error has been reported to the developers");
         }
-    });
+    }
 }
 /// should called once the logic flow is done!
 /// will call `helper::get_input` when `PAUSE_ONCE_DONE` is `true`.
 fn logic_done()
 {
     unsafe {
-        if PAUSE_ONCE_DONE {
+        if beans_rs::PAUSE_ONCE_DONE {
             let _ = helper::get_input("Press enter/return to exit");
         }
     }
 }
-/// once everything is done, do we wait for the user to press enter before exiting?
-///
-/// just like the `pause` thing in batch.
-pub static mut PAUSE_ONCE_DONE: bool = false;
 pub struct Launcher {
     /// Output location. When none, `SourceModDirectoryParam::default()` will be used.
     pub to_location: Option<String>,
@@ -134,14 +159,24 @@ impl Launcher
                     .long("debug")
                     .help("Enable debug logging")
                     .action(ArgAction::SetTrue),
+                Arg::new("no-debug")
+                    .long("no-debug")
+                    .help("Disable mode. Mainly used for debug builds to not spew into the console.")
+                    .action(ArgAction::SetTrue),
                 Arg::new("no-pause")
                     .long("no-pause")
-                    .help("When provided, beans-rs will not wait for user input before exiting.")
+                    .help("When provided, beans-rs will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts.")
                     .action(ArgAction::SetTrue),
                 Launcher::create_location_arg()
             ]);
 
         let mut i = Self::new(&cmd.get_matches());
+        if let Ok(r) = helper::beans_has_update().await {
+            if let Some(v) = r {
+                info!("A new version of beans-rs is available!");
+                info!("{}", v.html_url);
+            }
+        }
         i.subcommand_processor().await;
     }
     pub fn new(matches: &ArgMatches) -> Self {
@@ -159,9 +194,14 @@ impl Launcher
     /// add `LaunchFlag::DEBUG_MODE` to `flags` when the `--debug` parameter flag is used.
     pub fn set_debug(&mut self)
     {
-        if self.root_matches.get_flag("debug") {
+        if self.root_matches.get_flag("no-debug") {
+            flags::remove_flag(LaunchFlag::DEBUG_MODE);
+            beans_rs::logger::set_filter(DEFAULT_LOG_LEVEL_RELEASE);
+            info!("Disabled Debug Mode");
+        }
+        else if self.root_matches.get_flag("debug") {
             flags::add_flag(LaunchFlag::DEBUG_MODE);
-            simple_logging::log_to_stderr(LevelFilter::Trace);
+            beans_rs::logger::set_filter(LevelFilter::max());
             trace!("Debug mode enabled");
         }
     }
@@ -169,7 +209,7 @@ impl Launcher
     pub fn set_no_pause(&mut self)
     {
         unsafe {
-            PAUSE_ONCE_DONE = self.root_matches.get_flag("no-pause") == false;
+            beans_rs::PAUSE_ONCE_DONE = self.root_matches.get_flag("no-pause") == false;
         }
     }
 
@@ -190,6 +230,12 @@ impl Launcher
         match self.root_matches.clone().subcommand() {
             Some(("install", i_matches)) => {
                 self.task_install(i_matches).await;
+            },
+            Some(("verify", v_matches)) => {
+                self.task_verify(v_matches).await;
+            },
+            Some(("update", u_matches)) => {
+                self.task_update(u_matches).await;
             },
             Some(("wizard", wz_matches)) => {
                 self.to_location = Launcher::find_arg_sourcemods_location(wz_matches);
@@ -291,6 +337,38 @@ impl Launcher
         }
     }
 
+    /// handler for the `verify` subcommand
+    ///
+    /// NOTE this function uses `panic!` when `VerifyWorkflow::wizard` fails. panics are handled
+    /// and are reported via sentry.
+    pub async fn task_verify(&mut self, matches: &ArgMatches)
+    {
+        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        let mut ctx = self.try_create_context().await;
+
+        if let Err(e) = VerifyWorkflow::wizard(&mut ctx).await {
+            panic!("Failed to run VerifyWorkflow {:#?}", e);
+        } else {
+            logic_done();
+        }
+    }
+
+    /// handler for the `update` subcommand
+    ///
+    /// NOTE this function uses `panic!` when `UpdateWorkflow::wizard` fails. panics are handled
+    /// and are reported via sentry.
+    pub async fn task_update(&mut self, matches: &ArgMatches)
+    {
+        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        let mut ctx = self.try_create_context().await;
+
+        if let Err(e) = UpdateWorkflow::wizard(&mut ctx).await {
+            panic!("Failed to run UpdateWorkflow {:#?}", e);
+        } else {
+            logic_done();
+        }
+    }
+
     /// try and create an instance of `RunnerContext` via the `create_auto` method while setting
     /// the `sml_via` parameter to the output of `self.try_get_smdp()`
     ///
@@ -300,12 +378,31 @@ impl Launcher
         match RunnerContext::create_auto(self.try_get_smdp()).await {
             Ok(v) => v,
             Err(e) => {
-                eprintln!("{:}", e);
+                error!("[try_create_context] {:}", e);
                 trace!("======== Full Error ========");
-                trace!("{:#?}", e);
-                let _ = helper::get_input("Press enter/return to exit");
-                panic!("Failed to create RunnerContext {:#?}", e);
+                trace!("{:#?}", &e);
+                show_msgbox_error(format!("{:}", &e));
+                sentry::capture_error(&e);
+                logic_done();
+                std::process::exit(1);
             }
+        }
+    }
+}
+fn show_msgbox_error(text: String) {
+    unsafe {
+        if beans_rs::PAUSE_ONCE_DONE {
+            std::thread::spawn(move || {
+                let d = native_dialog::MessageDialog::new()
+                    .set_type(native_dialog::MessageType::Error)
+                    .set_title("beans - fatal error!")
+                    .set_text(&format!("{}", fix_msgbox_txt(text)))
+                    .show_alert();
+                if let Err(e) = d {
+                    sentry::capture_error(&e);
+                    eprintln!("Failed to show MessageDialog {:#?}", e);
+                }
+            });
         }
     }
 }

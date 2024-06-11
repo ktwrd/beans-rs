@@ -7,6 +7,8 @@ pub struct VerifyWorkflow {
 impl VerifyWorkflow {
     pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError>
     {
+        let av = crate::appvar::parse();
+
         let current_version_id = match ctx.current_version {
             Some(v) => v,
             None => {
@@ -29,9 +31,9 @@ impl VerifyWorkflow {
 
         let mod_dir_location = ctx.get_mod_location();
         butler::verify(
-            format!("{}{}", crate::SOURCE_URL, remote.signature_url.unwrap()),
+            format!("{}{}", &av.remote_info.base_url, remote.signature_url.unwrap()),
             mod_dir_location.clone(),
-            format!("{}{}", crate::SOURCE_URL, remote.heal_url.unwrap()))?;
+            format!("{}{}", &av.remote_info.base_url, remote.heal_url.unwrap()))?;
         println!("[VerifyWorkflow::wizard] The verification process has completed, and any corruption has been repaired.");
         Ok(())
     }

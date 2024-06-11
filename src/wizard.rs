@@ -9,7 +9,8 @@ use crate::workflows::{InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
 #[derive(Debug, Clone)]
 pub struct WizardContext
 {
-    pub context: RunnerContext
+    pub context: RunnerContext,
+    pub menu_trigger_count: u32
 }
 impl WizardContext
 {
@@ -50,12 +51,14 @@ impl WizardContext
         let ctx = RunnerContext {
             sourcemod_path: sourcemod_path.clone(),
             remote_version_list: version_list,
-            current_version: crate::version::get_current_version(Some(sourcemod_path))
+            current_version: crate::version::get_current_version(Some(sourcemod_path)),
+            appvar: crate::appvar::parse()
         };
 
         let mut i = Self
         {
-            context: ctx
+            context: ctx,
+            menu_trigger_count: 0u32
         };
         i.menu().await;
         return Ok(());
@@ -66,6 +69,15 @@ impl WizardContext
     #[async_recursion]
     pub async fn menu<'a>(&'a mut self)
     {
+        if self.menu_trigger_count == 0 {
+            let av = crate::appvar::AppVarData::get();
+            if let Some(cv) = self.context.current_version {
+                let (rv, _) = self.context.latest_remote_version();
+                if cv < rv {
+                    println!("======== A new update for {} is available! (v{rv}) ========", av.mod_info.name_stylized);
+                }
+            }
+        }
         println!();
         println!("1 - Install or reinstall the game");
         println!("2 - Check for and apply any available updates");
@@ -88,6 +100,7 @@ impl WizardContext
             "q" => std::process::exit(0),
             _ => {
                 println!("Unknown option \"{}\"", user_input);
+                self.menu_trigger_count += 1;
                 self.menu().await;
             }
         };

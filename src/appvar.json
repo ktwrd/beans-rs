@@ -1,0 +1,11 @@
+{
+  "mod": {
+    "sm_name": "open_fortress",
+    "short_name": "of",
+    "name_stylized": "Open Fortress"
+  },
+  "remote": {
+    "base_url": "https://of-proxy.kate.pet/",
+    "versions_url": "https://of-proxy.kate.pet/versions.json"
+  }
+}

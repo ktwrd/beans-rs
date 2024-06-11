@@ -37,7 +37,7 @@ fn get_version_location(sourcemods_location: Option<String>) -> Option<String>
 /// get the full location of the sourcemod mod directory.
 fn get_mod_location(sourcemods_location: Option<String>) -> Option<String>
 {
-    let mut smp_x = match sourcemods_location {
+    let smp_x = match sourcemods_location {
         Some(v) => v,
         None => match find_sourcemod_path() {
             Ok(v) => v,
@@ -48,11 +48,7 @@ fn get_mod_location(sourcemods_location: Option<String>) -> Option<String>
             }
         }
     };
-    if smp_x.ends_with("/") || smp_x.ends_with("\\") {
-        smp_x.pop();
-    }
-    smp_x.push_str(crate::DATA_DIR);
-    Some(smp_x)
+    return Some(helper::join_path(smp_x, crate::data_dir()))
 }
 /// migrate from old file (.revision) to new file (.adastral) in sourcemod mod directory.
 pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), BeansError>
@@ -73,7 +69,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
         return Ok(());
     }
 
-    let mut smp_x = match sourcemods_location {
+    let smp_x = match sourcemods_location {
         Some(v) => v,
         None => match find_sourcemod_path() {
             Ok(v) => v,
@@ -84,13 +80,11 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                 return Err(e);
             }
         }
-
     };
-    if smp_x.ends_with("/") || smp_x.ends_with("\\") {
-        smp_x.pop();
-    }
 
-    let old_version_file_location = format!("{}{}.revision", smp_x, crate::DATA_DIR);
+    let data_dir = helper::join_path(smp_x, crate::data_dir());
+
+    let old_version_file_location = format!("{}.revision", &data_dir);
     let old_version_file_content = match read_to_string(&old_version_file_location) {
         Ok(v) => v,
         Err(e) => {
@@ -120,7 +114,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
         version: old_version_idx.to_string()
     };
 
-    let new_version_file_location = format!("{}{}.adastral", smp_x, crate::DATA_DIR);
+    let new_version_file_location = format!("{}.adastral", &data_dir);
     let new_version_file_content = match serde_json::to_string(&new_file_content) {
         Ok(v) => v,
         Err(e) => {
@@ -153,7 +147,8 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
 /// fetch the version list from `{crate::SOURCE_URL}versions.json`
 pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
 {
-    let response = match reqwest::get(crate::VERSION_URL).await {
+    let av = crate::appvar::parse();
+    let response = match reqwest::get(&av.remote_info.versions_url).await {
         Ok(v) => v,
         Err(e) => {
             error!("[version::get_version_list] Failed to get available versions! {:}", e);
@@ -189,13 +184,19 @@ impl AdastralVersionFile {
                             Ok(ser) => {
                                 match file.write_all(ser.as_bytes()) {
                                     Ok(_) => Ok(()),
-                                    Err(e) => Err(BeansError::FileWriteFailure(vl, e))
+                                    Err(e) => Err(BeansError::FileWriteFailure {
+                                        location: vl,
+                                        error: e
+                                    })
                                 }
                             },
                             Err(e) => Err(e.into())
                         }
                     },
-                    Err(e) => Err(BeansError::FileOpenFailure(vl, e))
+                    Err(e) => Err(BeansError::FileOpenFailure {
+                        location: vl,
+                        error: e
+                    })
                 }
             },
             None => Err(BeansError::SourceModLocationNotFound)
