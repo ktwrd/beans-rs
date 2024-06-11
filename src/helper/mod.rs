@@ -16,8 +16,8 @@ use std::path::PathBuf;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
 use futures_util::SinkExt;
-use log::{debug, trace};
-use crate::{BeansError, DownloadFailureReason};
+use log::{debug, error, trace};
+use crate::{BeansError, DownloadFailureReason, RunnerContext};
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::header::USER_AGENT;
 use crate::version::RemoteVersionResponse;
@@ -399,6 +399,23 @@ pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
         return Ok(Some(data.clone()));
     }
     return Ok(None);
+}
+pub fn restore_gameinfo(ctx: &mut RunnerContext, data: Vec<u8>) -> Result<(), BeansError> {
+    let loc = ctx.gameinfo_location();
+    trace!("gameinfo location: {}", &loc);
+    if let Ok(m) = std::fs::metadata(&loc) {
+        trace!("gameinfo metadata: {:#?}", m);
+    }
+    if let Err(e) = std::fs::write(&loc, data) {
+        trace!("error: {:#?}", e);
+        error!("[UpdateWorkflow::wizard] Failed to write gameinfo.txt backup {:}", e);
+    }
+    if let Err(e) = ctx.gameinfo_perms() {
+        error!("[UpdateWorkflow::wizard] Failed to update permissions on gameinfo.txt {:}", e);
+        sentry::capture_error(&e);
+        return Err(e);
+    }
+    return Ok(());
 }
 const GITHUB_RELEASES_URL: &str = "https://api.github.com/repos/adastralgroup/beans-rs/releases/latest";
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
