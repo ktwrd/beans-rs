@@ -394,10 +394,10 @@ pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
             });
         }
     };
-    if data.draft == false && data.prerelease == false && data.tag_name != crate::VERSION.to_string() {
+    trace!("{:#?}", data);
+    if data.draft == false && data.prerelease == false && data.tag_name != format!("v{}", crate::VERSION) {
         return Ok(Some(data.clone()));
     }
-    trace!("{:#?}", data);
     return Ok(None);
 }
 const GITHUB_RELEASES_URL: &str = "https://api.github.com/repos/adastralgroup/beans-rs/releases/latest";
