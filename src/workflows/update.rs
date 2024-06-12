@@ -71,21 +71,9 @@ impl UpdateWorkflow
             return Err(e);
         }
 
+        ctx.gameinfo_perms()?;
         if let Some(gi) = gameinfo_backup {
-            let loc = ctx.gameinfo_location();
-            trace!("gameinfo location: {}", &loc);
-            if let Ok(m) = std::fs::metadata(&loc) {
-                trace!("gameinfo metadata: {:#?}", m);
-            }
-            if let Err(e) = std::fs::write(&loc, gi) {
-                trace!("error: {:#?}", e);
-                error!("[UpdateWorkflow::wizard] Failed to write gameinfo.txt backup {:}", e);
-            }
-            if let Err(e) = ctx.gameinfo_perms() {
-                error!("[UpdateWorkflow::wizard] Failed to update permissions on gameinfo.txt {:}", e);
-                sentry::capture_error(&e);
-                return Err(e);
-            }
+            helper::restore_gameinfo(ctx, gi)?;
         }
 
         println!("Game has been updated!");

@@ -1,6 +1,6 @@
 [package]
 name = "beans-rs"
-version = "1.4.0-rc1"
+version = "1.4.2"
 edition = "2021"
 authors = [
     "Adastral Group (https://adastral.net)",

@@ -21,6 +21,7 @@ fn main() {
 
     init_flags();
     // initialize sentry and custom panic handler for msgbox
+    #[cfg(not(debug_assertions))]
     let _guard = sentry::init((beans_rs::SENTRY_URL, sentry::ClientOptions {
         release: sentry::release_name!(),
         debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
@@ -173,6 +174,12 @@ impl Launcher
             ]);
 
         let mut i = Self::new(&cmd.get_matches());
+        if let Ok(r) = helper::beans_has_update().await {
+            if let Some(v) = r {
+                info!("A new version of beans-rs is available!");
+                info!("{}", v.html_url);
+            }
+        }
         i.subcommand_processor().await;
     }
     pub fn new(matches: &ArgMatches) -> Self {

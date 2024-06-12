@@ -1,4 +1,4 @@
-use crate::{BeansError, butler, RunnerContext};
+use crate::{BeansError, butler, helper, RunnerContext};
 use crate::version::RemoteVersion;
 
 pub struct VerifyWorkflow {
@@ -29,11 +29,17 @@ impl VerifyWorkflow {
             return Ok(());
         }
 
+        ctx.gameinfo_perms()?;
+        let gameinfo_backup = ctx.read_gameinfo_file()?;
         let mod_dir_location = ctx.get_mod_location();
         butler::verify(
             format!("{}{}", &av.remote_info.base_url, remote.signature_url.unwrap()),
             mod_dir_location.clone(),
             format!("{}{}", &av.remote_info.base_url, remote.heal_url.unwrap()))?;
+        ctx.gameinfo_perms()?;
+        if let Some(gi) = gameinfo_backup {
+            helper::restore_gameinfo(ctx, gi)?;
+        }
         println!("[VerifyWorkflow::wizard] The verification process has completed, and any corruption has been repaired.");
         Ok(())
     }

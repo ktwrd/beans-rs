@@ -1,5 +1,7 @@
 ﻿#[cfg(not(target_os = "windows"))]
 mod linux;
+
+use std::backtrace::Backtrace;
 #[cfg(not(target_os = "windows"))]
 pub use linux::*;
 
@@ -13,9 +15,12 @@ use std::io::Write;
 use std::path::PathBuf;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
-use log::{debug, trace};
-use crate::{BeansError, DownloadFailureReason};
+use futures_util::SinkExt;
+use log::{debug, error, trace};
+use crate::{BeansError, DownloadFailureReason, RunnerContext};
 use rand::{distributions::Alphanumeric, Rng};
+use reqwest::header::USER_AGENT;
+use crate::version::RemoteVersionResponse;
 
 #[derive(Clone, Debug)]
 pub enum InstallType
@@ -383,4 +388,68 @@ pub fn calc_percentage(value: u64, max: u64) -> f64 {
     } else {
         (value as f64 / max as f64) * 100.0
     }
+}
+/// Check if there is an update available. When the latest release doesn't match the current release.
+pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
+{
+    let rs = reqwest::Client::new()
+        .get(GITHUB_RELEASES_URL)
+        .header(USER_AGENT, &format!("beans-rs/{}", crate::VERSION))
+        .send().await;
+    let response = match rs {
+        Ok(v) => v,
+        Err(e) => {
+            trace!("Failed get latest release from github \nerror: {:#?}", e);
+            return Err(BeansError::Reqwest{
+                error: e,
+                backtrace: Backtrace::capture()
+            });
+        }
+    };
+    let response_text = response.text().await?;
+    let data: GithubReleaseItem = match serde_json::from_str(&response_text) {
+        Ok(v) => v,
+        Err(e) => {
+            trace!("Failed to deserialize GithubReleaseItem\nerror: {:#?}\ncontent: {:#?}", e, response_text);
+            return Err(BeansError::SerdeJson {
+                error: e,
+                backtrace: Backtrace::capture()
+            });
+        }
+    };
+    trace!("{:#?}", data);
+    if data.draft == false && data.prerelease == false && data.tag_name != format!("v{}", crate::VERSION) {
+        return Ok(Some(data.clone()));
+    }
+    return Ok(None);
+}
+pub fn restore_gameinfo(ctx: &mut RunnerContext, data: Vec<u8>) -> Result<(), BeansError> {
+    let loc = ctx.gameinfo_location();
+    trace!("gameinfo location: {}", &loc);
+    if let Ok(m) = std::fs::metadata(&loc) {
+        trace!("gameinfo metadata: {:#?}", m);
+    }
+    if let Err(e) = std::fs::write(&loc, data) {
+        trace!("error: {:#?}", e);
+        error!("[UpdateWorkflow::wizard] Failed to write gameinfo.txt backup {:}", e);
+    }
+    if let Err(e) = ctx.gameinfo_perms() {
+        error!("[UpdateWorkflow::wizard] Failed to update permissions on gameinfo.txt {:}", e);
+        sentry::capture_error(&e);
+        return Err(e);
+    }
+    return Ok(());
+}
+const GITHUB_RELEASES_URL: &str = "https://api.github.com/repositories/805393469/releases/latest";
+#[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
+pub struct GithubReleaseItem
+{
+    #[serde(rename = "id")]
+    pub _id: u64,
+    pub created_at: String,
+    pub tag_name: String,
+    pub url: String,
+    pub html_url: String,
+    pub draft: bool,
+    pub prerelease: bool
 }

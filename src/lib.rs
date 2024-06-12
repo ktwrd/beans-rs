@@ -21,7 +21,7 @@ pub mod gui;
 /// NOTE do not change, fetches from the version of beans-rs on build
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// sentry url, change on fork please.
-pub const SENTRY_URL: &str = "https://e6e260fa3408f2cf934b4b3c4be71c74@sentry.kate.pet/2";
+pub const SENTRY_URL: &str = "https://9df80170f0a4411bb9c834ac54734380@sentry.kate.pet/1";
 /// content to display when showing a message box on panic.
 pub const PANIC_MSG_CONTENT: &str = include_str!("text/msgbox_panic_text.txt");
 /// when `true`, gui elements will be used.
@@ -53,11 +53,3 @@ pub const STAGING_DIR: &str = "\\butler-staging";
 flate!(pub static BUTLER_BINARY: [u8] from "Binaries/butler.exe");
 #[cfg(not(target_os = "windows"))]
 flate!(pub static BUTLER_BINARY: [u8] from "Binaries/butler");
-#[cfg(target_os = "windows")]
-flate!(pub static BUTLER_LIB_1: [u8] from "Binaries/7z.dll");
-#[cfg(not(target_os = "windows"))]
-flate!(pub static BUTLER_LIB_1: [u8] from "Binaries/7z.so");
-#[cfg(target_os = "windows")]
-flate!(pub static BUTLER_LIB_2: [u8] from "Binaries/c7zip.dll");
-#[cfg(not(target_os = "windows"))]
-flate!(pub static BUTLER_LIB_2: [u8] from "Binaries/libc7zip.so");

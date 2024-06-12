@@ -59,6 +59,7 @@ jobs:
           tag_name: ${{ github.event.inputs.tag }}
           draft: false
           prerelease: true
+          target_commitish: ${{ github.sha }}
       #- name: Create Sentry release
       #  if: ${{ matrix.os == 'ubuntu-latest' }}
       #  uses: getsentry/action-release@v1
