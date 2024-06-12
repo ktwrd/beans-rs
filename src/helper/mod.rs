@@ -417,7 +417,7 @@ pub fn restore_gameinfo(ctx: &mut RunnerContext, data: Vec<u8>) -> Result<(), Be
     }
     return Ok(());
 }
-const GITHUB_RELEASES_URL: &str = "https://api.github.com/repos/adastralgroup/beans-rs/releases/latest";
+const GITHUB_RELEASES_URL: &str = "https://api.github.com/repositories/805393469/releases/latest";
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct GithubReleaseItem
 {
