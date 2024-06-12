@@ -27,6 +27,8 @@ pub const PANIC_MSG_CONTENT: &str = include_str!("text/msgbox_panic_text.txt");
 ///
 /// just like the `pause` thing in batch.
 pub static mut PAUSE_ONCE_DONE: bool = false;
+/// Default upstream URL that is returns an array of CockatooApplicationDetail
+pub const DEFAULT_UPSTREAM_URL: &str = "";
 
 
 // ------------------------------------------------------------------------
