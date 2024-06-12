@@ -37,7 +37,8 @@ lazy_static! {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct UserConfigData
 {
-    pub sourcemods_location: Option<String>
+    pub sourcemods_location: Option<String>,
+    pub upstream_url: String
 }
 impl UserConfigData {
     /// Set the content of `sourcemod_locations` on `UCD_INSTANCE`
