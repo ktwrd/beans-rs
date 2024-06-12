@@ -4,7 +4,7 @@ use crate::helper::{find_sourcemod_path, InstallType, parse_location};
 use crate::version::{RemotePatch, RemoteVersion, RemoteVersionResponse};
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
-use log::{debug, error, info};
+use log::{debug, error, info, trace};
 
 #[derive(Debug, Clone)]
 pub struct RunnerContext
@@ -228,12 +228,17 @@ impl RunnerContext
             }
         }
         match x {
-            Err(e) => Err(BeansError::TarExtractFailure{
-                src_file: tar_tmp_location,
-                target_dir: out_dir,
-                error: e,
-                backtrace: Backtrace::capture()
-            }),
+            Err(e) => {
+                let xe = BeansError::TarExtractFailure {
+                    src_file: tar_tmp_location,
+                    target_dir: out_dir,
+                    error: e,
+                    backtrace: Backtrace::capture()
+                };
+                trace!("[RunnerContext::extract_package] {:}\n{:#?}" xe, xe);
+                sentry::capture_error(&xe);
+                return Err(xe);
+            },
             Ok(_) => Ok(())
         }
     }
@@ -247,7 +252,10 @@ impl RunnerContext
             let ln_location = format!("{}{}", mod_location, target);
             if helper::file_exists(ln_location.clone())
             && helper::is_symlink(ln_location.clone()) == false {
-                std::fs::remove_file(&ln_location)?;
+                if let Err(e) = std::fs::remove_file(&ln_location) {
+                    trace!("[RunnerContext::prepare_symlink] failed to remove {}\n{:#?}", ln_location, e);
+                    return Err(e.into());
+                }
             }
         }
 
