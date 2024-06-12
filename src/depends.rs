@@ -110,10 +110,6 @@ pub fn get_butler_location() -> String
     path.push_str(BUTLER_LOCATION);
     path
 }
-fn get_tmp_dir() -> String {
-    let path = helper::get_tmp_dir();
-    helper::format_directory_path(path)
-}
 
 #[cfg(target_os = "windows")]
 const BUTLER_LOCATION: &str = "butler.exe";
