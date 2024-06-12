@@ -24,8 +24,7 @@ impl CustomLogger {
             sentry: sentry_log::SentryLogger::new().filter(|md| match md.level() {
                 log::Level::Error => LogFilter::Exception,
                 log::Level::Warn => LogFilter::Event,
-                log::Level::Info | log::Level::Debug => LogFilter::Breadcrumb,
-                log::Level::Trace => LogFilter::Ignore,
+                log::Level::Info | log::Level::Debug | log::Level::Trace => LogFilter::Breadcrumb,
             })
         });
     }
