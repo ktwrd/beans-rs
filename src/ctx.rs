@@ -235,7 +235,7 @@ impl RunnerContext
                     error: e,
                     backtrace: Backtrace::capture()
                 };
-                trace!("[RunnerContext::extract_package] {:}\n{:#?}" xe, xe);
+                trace!("[RunnerContext::extract_package] {:}\n{:#?}", xe, xe);
                 sentry::capture_error(&xe);
                 return Err(xe);
             },
