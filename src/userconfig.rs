@@ -37,9 +37,29 @@ lazy_static! {
 #[derive(Clone, Debug, serde::Serialize, serde::Deserialize)]
 pub struct UserConfigData
 {
-    pub sourcemods_location: String
+    pub sourcemods_location: Option<String>
 }
 impl UserConfigData {
+    /// Set the content of `sourcemod_locations` on `UCD_INSTANCE`
+    ///
+    /// NOTE will panic from `Self::set()` or `Self::get()`
+    pub fn set_sourcemods_location(value: Option<String>)
+    {
+        let mut data = Self::get();
+        data.sourcemods_location = value;
+        data.set();
+    }
+
+    /// Get the content of `sourcemods_location` on `UCD_INSTANCE`
+    ///
+    /// NOTE will panic from `Self::get()`
+    pub fn get_sourcemods_location() -> Option<String>
+    {
+        let data = Self::get();
+        data.sourcemods_location
+    }
+
+
     /// Parse `JSON_DATA` to AppVarData. Should only be called by `reset()`.
     ///
     /// NOTE panics when `serde_json::from_str()` is Err, or when `JSON_DATA.read()` is Err.
