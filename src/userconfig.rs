@@ -40,6 +40,14 @@ pub struct UserConfigData
     pub sourcemods_location: Option<String>,
     pub custom_upstream_url: Option<String>
 }
+impl Default for UserConfigData {
+    fn default() -> Self {
+        Self {
+            sourcemods_location: None,
+            custom_upstream_url: None
+        }
+    }
+}
 impl UserConfigData {
     /// Set the content of `sourcemod_locations` on `UCD_INSTANCE`
     ///
