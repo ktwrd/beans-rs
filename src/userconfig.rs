@@ -78,6 +78,23 @@ impl UserConfigData {
         Self::set_instance_blank()
     }
 
+    /// Set the content of `UCD_INSTANCE` to `self`.
+    ///
+    /// NOTE this function will panic when Err on `UCD_INSTANCE.write()`
+    pub fn set(&self)
+    {
+        match UCD_INSTANCE.write()
+        {
+            Ok(mut data) => {
+                *data = Some(self.clone());
+                debug!("[set] Set self to UCD_INSTANCE {:#?}", self);
+            },
+            Err(e) => {
+                panic!("[set] Failed to write self to UDC_INSTANCE {:#?}", e);
+            }
+        }
+    }
+
     /// Set the content of `UCD_INSTANCE` to the result of `UserConfigData::parse()`
     ///
     /// NOTE this function panics when Err on `UCD_INSTANCE.write()`
