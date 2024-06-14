@@ -1,4 +1,5 @@
 #![feature(error_generic_member_access)]
+#![feature(panic_info_message)]
 
 use include_flate::flate;
 
