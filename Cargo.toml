@@ -38,7 +38,7 @@ colored = "2.1.0"
 sentry-log = "0.33.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-winconsole = "0.11.1"
+winconsole = { version = "0.11.1", features = ["window"] }
 winreg = "0.52.0"
 dunce = "1.0.4"
 
