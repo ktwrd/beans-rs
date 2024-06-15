@@ -406,12 +406,17 @@ pub fn restore_gameinfo(ctx: &mut RunnerContext, data: Vec<u8>) -> Result<(), Be
     if let Ok(m) = std::fs::metadata(&loc) {
         trace!("gameinfo metadata: {:#?}", m);
     }
+    if let Err(e) = ctx.gameinfo_perms() {
+        error!("[helper::restore_gameinfo] Failed to update permissions on gameinfo.txt {:}", e);
+        sentry::capture_error(&e);
+        return Err(e);
+    }
     if let Err(e) = std::fs::write(&loc, data) {
         trace!("error: {:#?}", e);
-        error!("[UpdateWorkflow::wizard] Failed to write gameinfo.txt backup {:}", e);
+        error!("[helper::restore_gameinfo] Failed to write gameinfo.txt backup {:}", e);
     }
     if let Err(e) = ctx.gameinfo_perms() {
-        error!("[UpdateWorkflow::wizard] Failed to update permissions on gameinfo.txt {:}", e);
+        error!("[helper::restore_gameinfo] Failed to update permissions on gameinfo.txt {:}", e);
         sentry::capture_error(&e);
         return Err(e);
     }
