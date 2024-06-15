@@ -16,7 +16,7 @@ use std::path::PathBuf;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
 use futures_util::SinkExt;
-use log::{debug, error, trace};
+use log::{debug, error, trace, warn};
 use crate::{BeansError, DownloadFailureReason, RunnerContext};
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::header::USER_AGENT;
@@ -353,12 +353,29 @@ pub fn format_size(i: usize) -> String {
     }
     return format!("{}{}", whole, dec_x);
 }
+/// Create directory in temp directory with name of "beans-rs"
 pub fn get_tmp_dir() -> String
 {
-    #[cfg(not(target_os = "windows"))]
-    return format_directory_path(String::from("/var/tmp"));
-    #[cfg(target_os = "windows")]
-    return format_directory_path(std::env::temp_dir().to_str().unwrap_or("").to_string());
+    let mut dir = std::env::temp_dir().to_str().unwrap_or("").to_string();
+    if cfg!(target_os = "android") {
+        dir = String::from("/data/var/tmp");
+    } else if cfg!(not(target_os = "windows")) {
+        dir = String::from("/var/tmp");
+    }
+    dir = format_directory_path(dir);
+    dir = join_path(dir, String::from("beans-rs"));
+    dir = format_directory_path(dir);
+
+    if !file_exists(dir.clone()) {
+        if let Err(e) = std::fs::create_dir(&dir) {
+            warn!("[helper::get_tmp_dir] failed to make tmp directory at {} ({:})", dir, e);
+            sentry::capture_error(&e);
+        } else {
+            trace!("[helper::get_tmp_dir] created directory {}", dir);
+        }
+    }
+
+    return dir;
 }
 /// Generate a full file location for a temporary file.
 pub fn get_tmp_file(filename: String) -> String
