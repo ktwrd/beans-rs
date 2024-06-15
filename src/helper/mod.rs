@@ -20,7 +20,6 @@ use log::{debug, error, trace, warn};
 use crate::{BeansError, DownloadFailureReason, RunnerContext};
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::header::USER_AGENT;
-use crate::version::RemoteVersionResponse;
 
 #[derive(Clone, Debug)]
 pub enum InstallType

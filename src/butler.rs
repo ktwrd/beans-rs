@@ -1,6 +1,6 @@
 use std::backtrace::Backtrace;
 use std::process::ExitStatus;
-use log::{debug, error, info, warn};
+use log::{debug, error, info};
 use crate::{BeansError, depends, DownloadFailureReason, helper};
 
 pub fn verify(
