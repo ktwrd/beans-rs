@@ -17,6 +17,8 @@ pub const DEFAULT_LOG_LEVEL: LevelFilter = DEFAULT_LOG_LEVEL_RELEASE;
 
 fn main() {
     #[cfg(target_os = "windows")]
+    let _ = winconsole::window::show(true);
+    #[cfg(target_os = "windows")]
     let _ = winconsole::console::set_title(format!("beans v{}", beans_rs::VERSION).as_str());
 
     init_flags();

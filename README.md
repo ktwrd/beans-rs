@@ -64,4 +64,6 @@ pub async fn task_launch(&mut self, matches: &ArgMatches) {
 ### Binaries
 All the bundled/embedded binaries are for x86-64/AMD64 systems. We only support that architecture because that's what Open Fortress supports.
 
+Please do not make any PRs to remove the embedded executables in favor of downloading. Some users would like to use this application offline, or they may have unreliable internet.
+
 Linux Systems not using glibc have not been tested.

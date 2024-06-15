@@ -1,13 +1,12 @@
 [package]
 name = "beans-rs"
-version = "1.4.3"
+version = "1.4.4"
 edition = "2021"
 authors = [
-    "Adastral Group (https://adastral.net)",
     "Kate Ward <kate@dariox.club>"
 ]
 description = "Installer for Open Fortress"
-repository = "https://github.com/AdastralGroup/beans-rs"
+repository = "https://github.com/ktwrd/beans-rs"
 license = "GPL-3.0"
 
 [dependencies]
@@ -31,14 +30,14 @@ clap = { version = "4.5.4", features = ["cargo"] }
 bitflags = "2.5.0"
 log = "0.4.21"
 native-dialog = "0.7.0"
-sentry = "0.33.0"
+sentry = "0.34.0"
 lazy_static = "1.4.0"
 thread-id = "4.2.1"
 colored = "2.1.0"
-sentry-log = "0.33.0"
+sentry-log = "0.34.0"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-winconsole = "0.11.1"
+winconsole = { version = "0.11.1", features = ["window"] }
 winreg = "0.52.0"
 dunce = "1.0.4"
 

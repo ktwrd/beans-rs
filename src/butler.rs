@@ -1,6 +1,6 @@
 use std::backtrace::Backtrace;
 use std::process::ExitStatus;
-use log::{debug, error, info, warn};
+use log::{debug, error, info};
 use crate::{BeansError, depends, DownloadFailureReason, helper};
 
 pub fn verify(
@@ -99,28 +99,6 @@ pub fn patch(
                     panic!("[butler::patch] exited with code {c}");
                 }
             }
-            Ok(w)
-        }
-    }
-}
-
-pub fn fetch_7z_libs() -> Result<ExitStatus, BeansError> {
-    println!("[butler::fetch_7z_libs] fetching 7z libraries");
-    match std::process::Command::new(&depends::get_butler_location())
-        .arg("fetch-7z-libs")
-        .spawn() {
-        Err(e) => {
-            let xe = BeansError::IO {
-                error: e,
-                backtrace: Backtrace::capture()
-            };
-
-            sentry::capture_error(&xe);
-            Err(xe)
-        },
-        Ok(mut v) => {
-            let w = v.wait()?;
-            debug!("Exited with {:#?}", w);
             Ok(w)
         }
     }
