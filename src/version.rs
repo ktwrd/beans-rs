@@ -161,6 +161,7 @@ pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
         }
     };
     let response_text = response.text().await?;
+    trace!("[version::get_version_list] response text: {}", response_text);
     let data: RemoteVersionResponse = serde_json::from_str(&response_text)?;
 
     return Ok(data);

@@ -1,4 +1,4 @@
-use log::{debug, error, info, trace};
+use log::{debug, info};
 use crate::{BeansError, butler, helper, RunnerContext};
 
 pub struct UpdateWorkflow

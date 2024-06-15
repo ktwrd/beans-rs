@@ -25,19 +25,19 @@ pub enum BeansError
         location: String,
         error: std::io::Error
     },
-    #[error("Failed to extract {src_file} to directory {target_dir}")]
+    #[error("Failed to extract {src_file} to directory {target_dir} ({error:})")]
     TarExtractFailure {
         src_file: String,
         target_dir: String,
         error: std::io::Error,
         backtrace: Backtrace
     },
-    #[error("Failed to send request")]
+    #[error("Failed to send request ({error:})")]
     Reqwest {
         error: reqwest::Error,
         backtrace: Backtrace
     },
-    #[error("Failed to serialize or deserialize data")]
+    #[error("Failed to serialize or deserialize data ({error:})")]
     SerdeJson {
         error: serde_json::Error,
         backtrace: Backtrace
@@ -65,7 +65,7 @@ pub enum BeansError
         backtrace: Backtrace
     },
 
-    #[error("Failed to run the verify command with butler.")]
+    #[error("Failed to run the verify command with butler. ({error:})")]
     ButlerVerifyFailure {
         signature_url: String,
         gamedir: String,
@@ -118,7 +118,7 @@ pub enum BeansError
         error: serde_json::Error,
         instance: AdastralVersionFile
     },
-    #[error("Failed to parse the version in {old_location}. It's content was {old_content}")]
+    #[error("Failed to parse the version in {old_location}. It's content was {old_content} ({error:})")]
     VersionFileParseFailure {
         error: ParseIntError,
         old_location: String,
