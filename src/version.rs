@@ -2,7 +2,7 @@ use std::backtrace::Backtrace;
 use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::io::Write;
-use log::{debug, error};
+use log::{debug, error, trace};
 use crate::helper;
 use crate::helper::{find_sourcemod_path, InstallType};
 use crate::BeansError;
@@ -160,6 +160,7 @@ pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
         }
     };
     let response_text = response.text().await?;
+    trace!("[version::get_version_list] response text: {}", response_text);
     let data: RemoteVersionResponse = serde_json::from_str(&response_text)?;
 
     return Ok(data);
