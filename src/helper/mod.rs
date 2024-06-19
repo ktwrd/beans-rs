@@ -496,3 +496,10 @@ pub fn tee_hook<R, W, F>(reader: R, mut writer: W, line_callback: F) -> JoinHand
         Ok(capture)
     })
 }
+pub fn tee<R, W>(reader: R, mut writer: W) -> JoinHandle<std::io::Result<String>>
+    where
+        R: BufRead + Send + 'static,
+        W: Write + Send + 'static
+{
+    tee_hook(reader, writer.as_mut(), |_| {})
+}
