@@ -10,7 +10,7 @@ mod windows;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
-
+#[allow(unused_imports)]
 use std::io::{BufRead, Write};
 use std::path::PathBuf;
 use std::thread::JoinHandle;
@@ -496,10 +496,10 @@ pub fn tee_hook<R, W, F>(reader: R, mut writer: W, line_callback: F) -> JoinHand
         Ok(capture)
     })
 }
-pub fn tee<R, W>(reader: R, mut writer: W) -> JoinHandle<std::io::Result<String>>
+pub fn tee<R, W>(reader: R, writer: W) -> JoinHandle<std::io::Result<String>>
     where
         R: BufRead + Send + 'static,
         W: Write + Send + 'static
 {
-    tee_hook(reader, writer.as_mut(), |_| {})
+    tee_hook(reader, writer, |_| {})
 }

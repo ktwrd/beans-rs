@@ -9,15 +9,17 @@ pub fn verify(
     gamedir: String,
     remote: String
 ) -> Result<ExitStatus, BeansError> {
-    verify_with_events(signature_url, gamedir, remote, move |_| {})
+    verify_with_events(signature_url, gamedir, remote,  |_| {},  |_| {})
 }
-pub fn verify_with_events<EF>(
+pub fn verify_with_events<EF, ED>(
     signature_url: String,
     gamedir: String,
     remote: String,
-    event_callback: EF
+    event_callback: EF,
+    event_done: ED
 ) -> Result<ExitStatus, BeansError>
-    where EF: Fn(ButlerMessage) + Send + 'static {
+    where EF: Fn(ButlerMessage) + Send + 'static,
+          ED: Fn(ButlerMessage) + Send + 'static  {
     let mut cmd = std::process::Command::new(&depends::get_butler_location());
     cmd.args([
         "verify",
@@ -43,7 +45,7 @@ pub fn verify_with_events<EF>(
         },
         Ok(mut v) => {
             if let Some(x) = v.stdout.take() {
-                let m = helper::tee_hook(std::io::BufReader::new(x), std::io::stdout(), move |line|
+                let m = helper::tee_hook(BufReader::new(x), std::io::stdout(), move |line|
                     {
                         debug!("[butler::verify_with_events] received line!\n{line}");
                         let xe: serde_json::error::Result<ButlerMessage> = serde_json::from_str(&line);
@@ -85,7 +87,7 @@ pub fn verify_with_events<EF>(
                     panic!("[butler::verify_with_events] exited with code {c}");
                 }
             }
-            event_callback(ButlerMessage::Done {
+            event_done(ButlerMessage::Done {
                 exit_status: w.code()
             });
             Ok(w)
@@ -121,15 +123,17 @@ pub fn patch(
     staging_dir: String,
     gamedir: String
 ) -> Result<ExitStatus, BeansError> {
-    patch_with_events(patchfile_location, staging_dir, gamedir, |_| {})
+    patch_with_events(patchfile_location, staging_dir, gamedir, |_| {},  |_| {})
 }
-pub fn patch_with_events<EF>(
+pub fn patch_with_events<EF, ED>(
     patchfile_location: String,
     staging_dir: String,
     gamedir: String,
-    event_callback: EF
+    event_callback: EF,
+    event_done: ED
 ) -> Result<ExitStatus, BeansError>
-where EF: Fn(ButlerMessage) + Send + 'static {
+where EF: Fn(ButlerMessage) + Send + 'static,
+      ED: Fn(ButlerMessage) + Send + 'static {
     let mut cmd = std::process::Command::new(&depends::get_butler_location());
     cmd.args([
         "apply",
@@ -157,7 +161,7 @@ where EF: Fn(ButlerMessage) + Send + 'static {
         },
         Ok(mut v) => {
             if let Some(x) = v.stderr.take() {
-                let m = helper::tee_hook(std::io::BufReader::new(x), std::io::stderr(), move |line|
+                let m = helper::tee_hook(BufReader::new(x), std::io::stderr(), move |line|
                 {
                     debug!("[butler::patch_with_events] received line!\n{line}");
                     let xe: serde_json::error::Result<ButlerMessage> = serde_json::from_str(&line);
@@ -199,7 +203,7 @@ where EF: Fn(ButlerMessage) + Send + 'static {
                     panic!("[butler::patch_with_events] exited with code {c}");
                 }
             }
-            event_callback(ButlerMessage::Done {
+            event_done(ButlerMessage::Done {
                 exit_status: w.code()
             });
             Ok(w)
