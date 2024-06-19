@@ -11,8 +11,9 @@ mod windows;
 pub use windows::*;
 
 
-use std::io::Write;
+use std::io::{BufRead, Write};
 use std::path::PathBuf;
+use std::thread::JoinHandle;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
 use futures_util::SinkExt;
@@ -473,4 +474,25 @@ pub struct GithubReleaseItem
     pub html_url: String,
     pub draft: bool,
     pub prerelease: bool
+}
+pub fn tee_hook<R, W, F>(reader: R, mut writer: W, line_callback: F) -> JoinHandle<std::io::Result<String>>
+    where
+        R: BufRead + Send + 'static,
+        W: Write + Send + 'static,
+        F: Fn(String) + Send + 'static
+{
+    std::thread::spawn(move || {
+        let mut capture = String::new();
+
+        for line in reader.lines() {
+            let line = line?;
+            line_callback(line.clone());
+            capture.push_str(&line);
+            writer.write_all(line.as_bytes())?;
+            writer.write(b"\n")?;
+            writer.flush()?;
+        }
+
+        Ok(capture)
+    })
 }
