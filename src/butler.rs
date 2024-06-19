@@ -184,12 +184,12 @@ where EF: Fn(ButlerMessage) + Send + 'static {
             if let Some(x) = v.stderr.take() {
                 let m = helper::tee(BufReader::new(x), std::io::stderr());
                 if let Err(e) = m.join() {
-                    warn!("[butler::verify_with_events] Failed to hook stderr {:#?}", e);
+                    warn!("[butler::patch_with_events] Failed to hook stderr {:#?}", e);
                 }
             }
             else
             {
-                debug!("[butler::verify_with_events] failed to pipe stderr");
+                debug!("[butler::patch_with_events] failed to pipe stderr");
             }
             let w = v.wait()?;
             debug!("Exited with {:#?}", w);
