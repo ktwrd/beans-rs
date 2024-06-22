@@ -1,0 +1,116 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0308
+header_name {.h}
+code_name {.cxx}
+class GenericDialog {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window win {open
+      xywh {376 147 500 150} type Double visible
+    } {
+      Fl_Text_Display label {
+        xywh {25 10 0 0} box NO_BOX align 11
+      }
+      Fl_Button btn_ok {
+        label Ok
+        xywh {25 121 70 24}
+      }
+    }
+  }
+}
+
+class GenericConfirmDialog {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window win {
+      label {beans - Confirm} open
+      xywh {376 728 550 150} type Double visible
+    } {
+      Fl_Text_Display label_title {
+        label Title
+        xywh {25 10 0 0} labelsize 18 align 11
+      }
+      Fl_Text_Display label_desc1 {
+        label label_desc1
+        xywh {25 40 0 0} align 11
+      }
+      Fl_Text_Display label_desc2 {
+        label label_desc2
+        xywh {25 60 0 0} align 11
+      }
+      Fl_Text_Display label_desc3 {
+        label label_desc3
+        xywh {25 80 0 0} box NO_BOX align 11
+      }
+      Fl_Button btn_continue {
+        label Continue
+        xywh {25 116 80 24}
+      }
+      Fl_Button btn_cancel {
+        label Cancel
+        xywh {120 116 80 24}
+      }
+    }
+  }
+}
+
+class InstallCompleteDialog {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window win {
+      label {$MOD_NAME_STYLIZED Install Complete} open
+      xywh {1131 221 660 330} type Double visible
+    } {
+      Fl_Text_Display label_1 {
+        label {$MOD_NAME_STYLIZED has finished installing!}
+        xywh {25 10 0 0} box NO_BOX labelsize 18 align 11
+      }
+      Fl_Text_Display display_instructions {
+        xywh {25 45 610 251}
+      }
+      Fl_Button btn_ok {
+        label Ok
+        xywh {25 301 70 24}
+      }
+    }
+  }
+}
+
+class WizardInterface {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window win {
+      label {beans for $MOD_NAME_STYLIZED} open
+      xywh {418 329 640 250} type Double visible
+    } {
+      Fl_Button btn_install {
+        label Install
+        xywh {25 25 70 24}
+      }
+      Fl_Text_Display label_install {
+        label {Install or reinstall $MOD_NAME_STYLIZED.}
+        xywh {25 50 0 0} box NO_BOX align 11
+      }
+      Fl_Button btn_update {
+        label Update
+        xywh {25 100 70 24}
+      }
+      Fl_Text_Display label_update {
+        label {Update to the latest available version of $MOD_NAME_STYLIZED.}
+        xywh {25 125 0 0} align 11
+      }
+      Fl_Button btn_verify {
+        label Verify
+        xywh {25 175 70 24}
+      }
+      Fl_Text_Display label_verify {
+        label {Verify the game files of $MOD_NAME_STYLIZED.}
+        xywh {25 200 0 0} align 11
+      }
+    }
+  }
+}

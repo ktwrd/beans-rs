@@ -3,7 +3,8 @@ use std::os::unix::fs::PermissionsExt;
 #[cfg(target_os = "windows")]
 use std::backtrace::Backtrace;
 use crate::{BeansError, BUTLER_BINARY, BUTLER_LIB_1, BUTLER_LIB_2, helper};
-use log::{debug, error};
+#[allow(unused_imports)]
+use log::{debug, error, trace, info};
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
@@ -64,13 +65,14 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
         return Ok(());
     }
 
-    log::info!("Installing Visual C++ Redistributable");
+    info!("Installing Visual C++ Redistributable");
     let mut out_loc = helper::get_tmp_dir();
     out_loc = helper::join_path(out_loc, "vc_redist.exe".to_string());
-
-    helper::download_with_progress(
+    trace!("[try_install_vcredist] downloading to {out_loc}");
+    crate::download::with_progress(
         String::from("https://aka.ms/vs/17/release/vc_redist.x86.exe"),
-        out_loc.clone()).await?;
+        out_loc.clone(),
+        "Downloading Visual C++ Redistributable".to_string()).await?;
 
     if std::path::Path::new(&out_loc).exists() == false {
         return  Err(BeansError::FileNotFound {
@@ -103,7 +105,7 @@ pub fn butler_exists() -> bool {
 
 pub fn get_butler_location() -> String
 {
-    let mut path = get_tmp_dir();
+    let mut path = helper::get_tmp_dir();
     path.push_str(BUTLER_LOCATION);
     path
 }

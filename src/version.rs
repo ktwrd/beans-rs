@@ -3,6 +3,7 @@ use std::collections::HashMap;
 use std::fs::read_to_string;
 use std::io::Write;
 use log::{debug, error, trace};
+use crate::appvar::AppVarData;
 use crate::helper;
 use crate::helper::{find_sourcemod_path, InstallType};
 use crate::BeansError;
@@ -219,6 +220,19 @@ pub struct RemoteVersion
     #[serde(rename = "heal")]
     pub heal_url: Option<String>
 }
+impl RemoteVersion {
+    pub async fn get_download_size(&self) -> Option<u64> {
+        let av = AppVarData::get();
+        return match &self.file {
+            Some(t) => {
+                let url = format!("{}{}", av.remote_info.base_url, t);
+                trace!("[RemoteVersion::get_download_size] fetching details from {url}");
+                return helper::get_download_size(url).await;
+            },
+            None => None
+        };
+    }
+}
 /// `versions.json` response content from remote server.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct RemoteVersionResponse
@@ -233,4 +247,13 @@ pub struct RemotePatch
     pub file: String,
     /// Amount of file space required for temporary file. Assumed to be measured in bytes.
     pub tempreq: usize
+}
+impl RemotePatch {
+    pub async fn get_download_size(&self) -> Option<u64> {
+        let av = AppVarData::get();
+        let url = format!("{}{}", av.remote_info.base_url, self.file);
+
+        trace!("[RemotePatch::get_download_size] fetching details from {url}");
+        return helper::get_download_size(url).await;
+    }
 }

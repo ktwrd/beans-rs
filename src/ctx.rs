@@ -185,13 +185,13 @@ impl RunnerContext
 
     /// Download package with Progress Bar.
     /// Ok is the location to where it was downloaded to.
-    pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
+    pub async fn download_package(version: RemoteVersion, source: DownloadSource) -> Result<String, BeansError>
     {
         let av = crate::appvar::parse();
         let mut out_loc = helper::get_tmp_dir();
 
         if let Some(size) = version.pre_sz {
-            if helper::has_free_space(out_loc.clone(), size)? == false {
+            if helper::has_free_space(out_loc.clone(), size as u64)? == false {
                 panic!("Not enough free space to install latest version!");
             }
         }
@@ -199,10 +199,17 @@ impl RunnerContext
         let out_filename = format!("presz_{}", helper::generate_rand_str(12));
         out_loc = helper::join_path(out_loc, out_filename);
 
+        let title = match source {
+            DownloadSource::Install => format!("Downloading {}", av.mod_info.name_stylized),
+            DownloadSource::Update => format!("Updating {}", av.mod_info.name_stylized),
+            DownloadSource::Verify => format!("Verifiying {}", av.mod_info.name_stylized)
+        };
+
         info!("[RunnerContext::download_package] writing to {}", out_loc);
-        helper::download_with_progress(
+        crate::download::with_progress(
             format!("{}{}", &av.remote_info.base_url, version.file.expect("No URL for latest package!")),
-            out_loc.clone()).await?;
+            out_loc.clone(),
+            title).await?;
 
         Ok(out_loc)
     }
@@ -267,6 +274,12 @@ impl RunnerContext
         // ignored since this symlink stuff is for linux only
         Ok(())
     }
+}
+
+pub enum DownloadSource {
+    Install,
+    Update,
+    Verify
 }
 
 pub const SYMLINK_FILES: &'static [&'static [&'static str; 2]] = &[

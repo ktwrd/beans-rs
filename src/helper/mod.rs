@@ -10,9 +10,10 @@ mod windows;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
-
-use std::io::Write;
+#[allow(unused_imports)]
+use std::io::{BufRead, Write};
 use std::path::PathBuf;
+use std::thread::JoinHandle;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
 use futures_util::SinkExt;
@@ -240,10 +241,25 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
     })
 }
 /// Check if the location provided has enough free space.
-pub fn has_free_space(location: String, size: usize) -> Result<bool, BeansError>
+pub fn has_free_space(location: String, size: u64) -> Result<bool, BeansError>
 {
     let space = get_free_space(location)?;
-    return Ok((size as u64) < space);
+    return Ok(size < space);
+}
+
+pub async fn get_download_size(url: String) -> Option<u64> {
+    let res = match reqwest::Client::new()
+        .get(&url)
+        .send()
+        .await {
+        Ok(v) => v,
+        Err(e) => {
+            trace!("[helper::get_download_size] failed to get size from {url}\n {:#?}", e);
+            return None;
+        }
+    };
+
+    return res.content_length();
 }
 
 /// Download file at the URL provided to the output location provided
@@ -305,7 +321,7 @@ pub async fn download_with_progress(url: String, out_location: String) -> Result
 }
 
 /// Format parameter `i` to a human-readable size.
-pub fn format_size(i: usize) -> String {
+pub fn format_size(i: u64) -> String {
     let value = i.to_string();
 
     let decimal_points: usize = 3;
@@ -327,7 +343,7 @@ pub fn format_size(i: usize) -> String {
     let dec: String = value.chars()
         .into_iter()
         .rev()
-        .take(dec_l as usize)
+        .take(dec_l)
         .collect();
 
     let mut dec_x: String = dec.chars().into_iter().rev().take(decimal_points).collect();
@@ -339,7 +355,7 @@ pub fn format_size(i: usize) -> String {
     if dec_x.len() > 0 {
         whole.push('.');
     }
-    let pfx_data: Vec<(usize, &str)> = vec![
+    let pfx_data: Vec<(u64, &str)> = vec![
         (1_000, "b"),
         (1_000_000, "kb"),
         (1_000_000_000, "mb"),
@@ -381,6 +397,14 @@ pub fn get_tmp_file(filename: String) -> String
 {
     let head = format!("{}_{}", generate_rand_str(8), filename);
     join_path(get_tmp_dir(), head)
+}
+pub fn calc_percentage(value: u64, max: u64) -> f64 {
+    if max == 0 {
+        // To handle division by zero, return 0.0 or handle it as needed
+        0.0
+    } else {
+        (value as f64 / max as f64) * 100.0
+    }
 }
 /// Check if there is an update available. When the latest release doesn't match the current release.
 pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
@@ -450,4 +474,32 @@ pub struct GithubReleaseItem
     pub html_url: String,
     pub draft: bool,
     pub prerelease: bool
+}
+pub fn tee_hook<R, W, F>(reader: R, mut writer: W, line_callback: F) -> JoinHandle<std::io::Result<String>>
+    where
+        R: BufRead + Send + 'static,
+        W: Write + Send + 'static,
+        F: Fn(String) + Send + 'static
+{
+    std::thread::spawn(move || {
+        let mut capture = String::new();
+
+        for line in reader.lines() {
+            let line = line?;
+            line_callback(line.clone());
+            capture.push_str(&line);
+            writer.write_all(line.as_bytes())?;
+            writer.write(b"\n")?;
+            writer.flush()?;
+        }
+
+        Ok(capture)
+    })
+}
+pub fn tee<R, W>(reader: R, writer: W) -> JoinHandle<std::io::Result<String>>
+    where
+        R: BufRead + Send + 'static,
+        W: Write + Send + 'static
+{
+    tee_hook(reader, writer, |_| {})
 }

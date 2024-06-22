@@ -1,5 +1,6 @@
 #![feature(error_generic_member_access)]
 #![feature(panic_info_message)]
+#![feature(async_closure)]
 
 use include_flate::flate;
 
@@ -16,6 +17,8 @@ pub mod butler;
 pub mod flags;
 pub mod appvar;
 pub mod logger;
+pub mod download;
+pub mod gui;
 
 /// NOTE do not change, fetches from the version of beans-rs on build
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -23,10 +26,8 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const SENTRY_URL: &str = "https://9df80170f0a4411bb9c834ac54734380@sentry.kate.pet/1";
 /// content to display when showing a message box on panic.
 pub const PANIC_MSG_CONTENT: &str = include_str!("text/msgbox_panic_text.txt");
-/// once everything is done, do we wait for the user to press enter before exiting?
-///
-/// just like the `pause` thing in batch.
-pub static mut PAUSE_ONCE_DONE: bool = false;
+/// when `true`, gui elements will be used.
+pub static mut HEADLESS: bool = true;
 
 
 // ------------------------------------------------------------------------

@@ -5,7 +5,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use log::{debug, error, info, LevelFilter, trace};
 use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
 use beans_rs::flags::LaunchFlag;
-use beans_rs::helper::parse_location;
+use beans_rs::helper::{find_sourcemod_path, parse_location};
 use beans_rs::SourceModDirectoryParam;
 use beans_rs::workflows::{InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
 
@@ -82,7 +82,7 @@ fn fix_msgbox_txt(txt: String) -> String {
 fn custom_panic_handle(msg: String)
 {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE {
+        if beans_rs::HEADLESS == false {
             let mut txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg);
             txt = fix_msgbox_txt(txt);
             std::thread::spawn(move || {
@@ -109,7 +109,7 @@ fn custom_panic_handle(msg: String)
 fn logic_done()
 {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE {
+        if beans_rs::HEADLESS == false {
             let _ = helper::get_input("Press enter/return to exit");
         }
     }
@@ -156,6 +156,9 @@ impl Launcher
             .subcommand(Command::new("update")
                 .about("Update your installation")
                 .arg(Launcher::create_location_arg()))
+            .subcommand(Command::new("gui")
+                .about("In-development GUI Implementation of the Wizard")
+                .arg(Launcher::create_location_arg()))
             .args([
                 Arg::new("debug")
                     .long("debug")
@@ -165,9 +168,9 @@ impl Launcher
                     .long("no-debug")
                     .help("Disable mode. Mainly used for debug builds to not spew into the console.")
                     .action(ArgAction::SetTrue),
-                Arg::new("no-pause")
-                    .long("no-pause")
-                    .help("When provided, beans-rs will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts.")
+                Arg::new("headless")
+                    .long("headless")
+                    .help("Provide this when you are using this application in an environment where this is being used in an automated script or there is no X11 display or Wayland session associated with the process that started this.")
                     .action(ArgAction::SetTrue),
                 Launcher::create_location_arg()
             ]);
@@ -211,7 +214,7 @@ impl Launcher
     pub fn set_no_pause(&mut self)
     {
         unsafe {
-            beans_rs::PAUSE_ONCE_DONE = self.root_matches.get_flag("no-pause") == false;
+            beans_rs::HEADLESS = self.root_matches.get_flag("headless");
         }
     }
 
@@ -238,6 +241,9 @@ impl Launcher
             },
             Some(("update", u_matches)) => {
                 self.task_update(u_matches).await;
+            },
+            Some(("gui", g_matches)) => {
+                self.task_gui(g_matches).await;
             },
             Some(("wizard", wz_matches)) => {
                 self.to_location = Launcher::find_arg_sourcemods_location(wz_matches);
@@ -300,6 +306,12 @@ impl Launcher
                 sentry::capture_error(&e);
                 panic!("{:#?}", e);
             } else {
+                unsafe {
+                    if !beans_rs::HEADLESS {
+                        beans_rs::gui::install_complete::run();
+                        beans_rs::HEADLESS = true;
+                    }
+                }
                 logic_done();
             }
         } else {
@@ -371,6 +383,34 @@ impl Launcher
         }
     }
 
+    /// Handler for the `gui` subcommand
+    pub async fn task_gui(&mut self, matches: &ArgMatches)
+    {
+        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        match self.try_get_smdp() {
+            SourceModDirectoryParam::AutoDetect => {
+                if let Err(e) = find_sourcemod_path() {
+                    info!("[Launcher::task_gui] Failed to find sourcemods directory {:}", e);
+                    beans_rs::gui::dialog_generic::run(
+                        "beans - Directory Not Found",
+                        "Could not find sourcemods directory. \nYou'll need to manually specify it's location.");
+                    if let Some(file) = fltk::dialog::dir_chooser("Select sourcemods Directory", "", true) {
+                        let fixed = helper::canonicalize(&file).unwrap();
+                        let fixed_str = fixed.to_str().unwrap_or("");
+                        self.to_location = Some(fixed_str.to_string());
+                    } else {
+                        info!("[btn_root_directory_click] operation aborted by user");
+                        logic_done();
+                        return;
+                    }
+                }
+            },
+            _ => {}
+        };
+        let mut ctx = self.try_create_context().await;
+        beans_rs::gui::wizard::run(&mut ctx).await;
+    }
+
     /// try and create an instance of `RunnerContext` via the `create_auto` method while setting
     /// the `sml_via` parameter to the output of `self.try_get_smdp()`
     ///
@@ -393,7 +433,7 @@ impl Launcher
 }
 fn show_msgbox_error(text: String) {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE {
+        if beans_rs::HEADLESS == false {
             std::thread::spawn(move || {
                 let d = native_dialog::MessageDialog::new()
                     .set_type(native_dialog::MessageType::Error)
