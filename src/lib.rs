@@ -1,5 +1,6 @@
 #![feature(error_generic_member_access)]
 #![feature(panic_info_message)]
+#![feature(async_closure)]
 
 use include_flate::flate;
 
