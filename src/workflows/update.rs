@@ -31,7 +31,6 @@ impl UpdateWorkflow
         };
 
         ctx.gameinfo_perms()?;
-        let gameinfo_backup = ctx.read_gameinfo_file()?;
 
         if helper::has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq)? == false {
             println!("[UpdateWorkflow::wizard] Not enough free space! Requires {}", helper::format_size(patch.tempreq));
@@ -50,6 +49,8 @@ impl UpdateWorkflow
 
         let mod_dir_location = ctx.get_mod_location();
         let staging_dir_location = ctx.get_staging_location();
+
+        helper::backup_gameinfo(ctx)?;
 
         ctx.gameinfo_perms()?;
         info!("[UpdateWorkflow] Verifying game");
@@ -72,9 +73,6 @@ impl UpdateWorkflow
         }
 
         ctx.gameinfo_perms()?;
-        if let Some(gi) = gameinfo_backup {
-            helper::restore_gameinfo(ctx, gi)?;
-        }
 
         println!("Game has been updated!");
         Ok(())
