@@ -1,4 +1,5 @@
 use std::backtrace::Backtrace;
+use std::fmt::{Display, Formatter};
 use std::num::ParseIntError;
 use thiserror::Error;
 use crate::appvar::AppVarData;
@@ -142,11 +143,17 @@ pub enum BeansError
         location: String,
         backtrace: Backtrace
     },
+
     #[error("Failed to set permissions on gameinfo.txt at {location} ({error:})")]
     GameInfoPermissionSetFail {
         error: std::io::Error,
         permissions: std::fs::Permissions,
         location: String
+    },
+
+    #[error("Failed to backup gameinfo.txt, {reason:}")]
+    GameinfoBackupFailure {
+        reason: GameinfoBackupFailureReason
     }
 }
 #[derive(Debug)]
@@ -159,6 +166,41 @@ pub enum DownloadFailureReason
     /// The downloaded file could not be found, perhaps it failed?
     FileNotFound {
         location: String
+    }
+}
+#[derive(Debug)]
+pub enum GameinfoBackupFailureReason
+{
+    ReadContentFail(GameinfoBackupReadContentFail),
+    BackupDirectoryCreateFailure(GameinfoBackupCreateDirectoryFail),
+    WriteFail(GameinfoBackupWriteFail)
+}
+#[derive(Debug)]
+pub struct GameinfoBackupReadContentFail {
+    pub error: std::io::Error,
+    pub proposed_location: String,
+    pub current_location: String
+}
+#[derive(Debug)]
+pub struct GameinfoBackupCreateDirectoryFail {
+    pub error: std::io::Error,
+    pub location: String
+}
+#[derive(Debug)]
+pub struct GameinfoBackupWriteFail {
+    pub error: std::io::Error,
+    pub location: String
+}
+impl Display for GameinfoBackupFailureReason {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        match self {
+            GameinfoBackupFailureReason::ReadContentFail(v)
+            => write!(f, "Couldn't read the content at {} ({:})", v.current_location, v.error),
+            GameinfoBackupFailureReason::BackupDirectoryCreateFailure(v)
+            => write!(f, "Couldn't create backups directory {} ({:})", v.location, v.error),
+            GameinfoBackupFailureReason::WriteFail(v)
+            => write!(f, "Failed to write content to {} ({:})", v.location, v.error)
+        }
     }
 }
 #[derive(Debug)]

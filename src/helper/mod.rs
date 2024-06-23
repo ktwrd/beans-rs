@@ -15,11 +15,11 @@ use std::io::Write;
 use std::path::PathBuf;
 use indicatif::{ProgressBar, ProgressStyle};
 use futures::StreamExt;
-use futures_util::SinkExt;
 use log::{debug, error, trace, warn};
-use crate::{BeansError, DownloadFailureReason, RunnerContext};
+use crate::{BeansError, DownloadFailureReason, GameinfoBackupCreateDirectoryFail, GameinfoBackupFailureReason, GameinfoBackupReadContentFail, GameinfoBackupWriteFail, RunnerContext};
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::header::USER_AGENT;
+use crate::appvar::AppVarData;
 
 #[derive(Clone, Debug)]
 pub enum InstallType
@@ -438,6 +438,72 @@ pub fn restore_gameinfo(ctx: &mut RunnerContext, data: Vec<u8>) -> Result<(), Be
     }
     return Ok(());
 }
+pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError> {
+    let av = AppVarData::get();
+    let gamedir = join_path(ctx.clone().sourcemod_path, av.mod_info.sourcemod_name);
+    let backupdir = join_path(gamedir.clone(), String::from(GAMEINFO_BACKUP_DIRNAME));
+
+    let current_time = chrono::Local::now();
+    let current_time_formatted = current_time.format("%Y%m%d-%H%M%S").to_string();
+
+    if file_exists(backupdir.clone()) == false {
+        if let Err(e) = std::fs::create_dir(&backupdir) {
+            debug!("backupdir: {}", backupdir);
+            debug!("error: {:#?}", e);
+            error!("[helper::backup_gameinfo] Failed to create backup directory {:}", e);
+            return Err(BeansError::GameinfoBackupFailure {reason: GameinfoBackupFailureReason::BackupDirectoryCreateFailure(GameinfoBackupCreateDirectoryFail {
+                error: e,
+                location: backupdir
+            })});
+        }
+    }
+    let output_location = join_path(
+        backupdir,
+        format!("{}-{}.txt", ctx.current_version.unwrap_or(0), current_time_formatted));
+    let current_location = join_path(
+        gamedir,
+        String::from("gameinfo.txt"));
+
+    if file_exists(current_location.clone()) == false {
+        debug!("[helper::backup_gameinfo] can't backup since {} doesn't exist", current_location);
+        return Ok(());
+    }
+
+    let content = match std::fs::read_to_string(&current_location) {
+        Ok(v) => v,
+        Err(e) => {
+            debug!("location: {}", current_location);
+            debug!("error: {:#?}", e);
+            error!("[helper::backup_gameinfo] Failed to read content of gameinfo.txt {:}", e);
+            return Err(BeansError::GameinfoBackupFailure { reason: GameinfoBackupFailureReason::ReadContentFail(GameinfoBackupReadContentFail{
+                error: e,
+                proposed_location: output_location,
+                current_location: current_location.clone()
+            })})
+        }
+    };
+
+    if file_exists(output_location.clone()) {
+        if let Err(e) = std::fs::remove_file(&output_location) {
+            warn!("[helper::backup_gameinfo] Failed to delete existing file, lets hope things don't break. {:} {}", e, output_location.clone());
+        }
+    }
+
+    if let Err(e) = std::fs::write(&output_location, content) {
+        debug!("location: {}", output_location);
+        debug!("error: {:#?}", e);
+        error!("[helper::backup_gameinfo] Failed to write backup to {} ({:})", output_location, e);
+        return Err(BeansError::GameinfoBackupFailure { reason: GameinfoBackupFailureReason::WriteFail(GameinfoBackupWriteFail{
+            error: e,
+            location: output_location
+        })});
+    }
+
+    println!("[backup_gameinfo] Created backup at {}", output_location);
+
+    Ok(())
+}
+const GAMEINFO_BACKUP_DIRNAME: &str = "gameinfo_backup";
 const GITHUB_RELEASES_URL: &str = "https://api.github.com/repositories/805393469/releases/latest";
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct GithubReleaseItem
