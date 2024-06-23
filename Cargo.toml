@@ -35,6 +35,7 @@ lazy_static = "1.4.0"
 thread-id = "4.2.1"
 colored = "2.1.0"
 sentry-log = "0.34.0"
+chrono = "0.4.38"
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winconsole = { version = "0.11.1", features = ["window"] }
