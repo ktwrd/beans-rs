@@ -10,6 +10,7 @@ Requirements
 - Rust Toolchain (nightly, only for building)
     - Recommended to use [rustup](https://rustup.rs/) to install.
 - x86-64/AMD64 Processor ([see notes](#notes-binaries))
+- OpenSSL v3 (also required on deployments)
 - **Following requirements are only required for testing**
 - Steam Installed
     - Source SDK Base 2013 Multiplayer ([install](steam://instal/243750))
