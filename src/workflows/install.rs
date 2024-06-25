@@ -73,9 +73,18 @@ impl InstallWorkflow {
         InstallWorkflow::install_with_remote_version(&mut ctx, version_id, target_version.clone()).await
     }
 
+    /// Install with a specific remote version.
+    ///
+    /// Note: Will call Self::prompt_confirm, so set `crate::PROMPT_DO_WHATEVER` to `true` before you call
+    ///       this function if you don't want to wait for a newline from stdin.
     pub async fn install_with_remote_version(ctx: &mut RunnerContext, version_id: usize, version: RemoteVersion)
         -> Result<(), BeansError>
     {
+        if Self::prompt_confirm(ctx.current_version) == false {
+            info!("[InstallWorkflow] Operation aborted by user");
+            return Ok(());
+        }
+
         println!("{:=>60}\nInstalling version {} to {}\n{0:=>60}", "=", version_id, &ctx.sourcemod_path);
         let presz_loc = RunnerContext::download_package(version).await?;
         Self::install_from(presz_loc.clone(), ctx.sourcemod_path.clone(), Some(version_id)).await?;
