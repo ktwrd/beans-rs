@@ -7,7 +7,7 @@ use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
 use beans_rs::flags::LaunchFlag;
 use beans_rs::helper::parse_location;
 use beans_rs::SourceModDirectoryParam;
-use beans_rs::workflows::{InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
+use beans_rs::workflows::{CleanWorkflow, InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
 
 pub const DEFAULT_LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Info;
 #[cfg(debug_assertions)]
@@ -156,6 +156,8 @@ impl Launcher
             .subcommand(Command::new("update")
                 .about("Update your installation")
                 .arg(Launcher::create_location_arg()))
+            .subcommand(Command::new("clean-tmp")
+                .about("Clean up temporary files used by beans"))
             .args([
                 Arg::new("debug")
                     .long("debug")
@@ -242,6 +244,9 @@ impl Launcher
             Some(("wizard", wz_matches)) => {
                 self.to_location = Launcher::find_arg_sourcemods_location(wz_matches);
                 self.task_wizard().await;
+            },
+            Some(("clean-tmp", _)) => {
+                self.task_clean_tmp().await;
             },
             _ => {
                 self.task_wizard().await;
@@ -366,6 +371,20 @@ impl Launcher
 
         if let Err(e) = UpdateWorkflow::wizard(&mut ctx).await {
             panic!("Failed to run UpdateWorkflow {:#?}", e);
+        } else {
+            logic_done();
+        }
+    }
+
+    /// Handler for the `clean-tmp` subcommand.
+    ///
+    /// NOTE this function uses `panic!` when `CleanWorkflow::wizard` fails. panics are handled
+    /// and are reported via sentry.
+    pub async fn task_clean_tmp(&mut self)
+    {
+        let mut ctx = self.try_create_context().await;
+        if let Err(e) = CleanWorkflow::wizard(&mut ctx) {
+            panic!("Failed to run CleanWorkflow {:#?}", e);
         } else {
             logic_done();
         }
