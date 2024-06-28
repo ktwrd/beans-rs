@@ -79,7 +79,7 @@ fn custom_panic_handle(msg: String)
             return;
         }
     }
-    let mut txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg).replace("\\n", "\n");
+    let txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg).replace("\\n", "\n");
     beans_rs::gui::dialog::run("beans - Fatal Error!", txt.as_str());
 }
 /// should called once the logic flow is done!
@@ -389,21 +389,8 @@ impl Launcher
     }
 }
 fn show_msgbox_error(text: String) {
-    unsafe {
-        if beans_rs::PAUSE_ONCE_DONE {
-            std::thread::spawn(move || {
-                let d = native_dialog::MessageDialog::new()
-                    .set_type(native_dialog::MessageType::Error)
-                    .set_title("beans - fatal error!")
-                    .set_text(&format!("{}", fix_msgbox_txt(text)))
-                    .show_alert();
-                if let Err(e) = d {
-                    sentry::capture_error(&e);
-                    eprintln!("Failed to show MessageDialog {:#?}", e);
-                }
-            });
-        }
-    }
+    let t = text.replace("\\n", "\n");
+    beans_rs::gui::dialog::run("beans - Fatal Error", t.as_str());
 }
 
 
