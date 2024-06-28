@@ -517,3 +517,20 @@ pub struct GithubReleaseItem
     pub draft: bool,
     pub prerelease: bool
 }
+
+pub fn has_env_var(target_key: String) -> bool
+{
+    if let Some(x) = try_get_env_var(target_key) {
+        return x.len() > 1;
+    }
+    return false;
+}
+pub fn try_get_env_var(target_key: String) -> Option<String>
+{
+    for (key, value) in std::env::vars().into_iter() {
+        if key == target_key {
+            return Some(value);
+        }
+    }
+    return None;
+}
