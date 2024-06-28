@@ -46,6 +46,35 @@ pub fn data_dir() -> String
     format!("{}{}{}", PATH_SEP, av.mod_info.sourcemod_name, PATH_SEP)
 }
 
+pub fn has_gui_support() -> bool
+{
+    unsafe {
+        if PAUSE_ONCE_DONE == false {
+            return false;
+        }
+    }
+
+    match std::env::consts::OS {
+        "windows" => true,
+        "macos" => true,
+        "linux" => {
+            if helper::has_env_var("DISPLAY".to_string()) {
+                return true;
+            }
+            if let Some(x) = helper::try_get_env_var("XDG_SESSION_DESKTOP".to_string()) {
+                if x.len() >= 3usize {
+                    return true;
+                }
+            }
+            return false;
+        },
+        _ => {
+            log::warn!("Unsupported platform for GUI {}", std::env::consts::OS);
+            false
+        }
+    }
+}
+
 #[cfg(not(target_os = "windows"))]
 pub const STAGING_DIR: &str = "/butler-staging";
 #[cfg(target_os = "windows")]
