@@ -62,7 +62,7 @@ fn init_panic_handle()
         if let Some(m) = info.message() {
             x = format!("{:#?}", m);
         }
-        log!("[panic] Fatal error!\n{:#?}", x);
+        info!("[panic] Fatal error!\n{:#?}", x);
         custom_panic_handle(x);
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
         sentry::integrations::panic::panic_handler(&info);
@@ -72,14 +72,6 @@ fn init_panic_handle()
         logic_done();
     }));
 }
-#[cfg(target_os = "windows")]
-fn fix_msgbox_txt(txt: String) -> String {
-    txt.replace("\\n", "\r\n")
-}
-#[cfg(not(target_os = "windows"))]
-fn fix_msgbox_txt(txt: String) -> String {
-    txt
-}
 fn custom_panic_handle(msg: String)
 {
     unsafe {
@@ -87,8 +79,7 @@ fn custom_panic_handle(msg: String)
             return;
         }
     }
-    let mut txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg);
-    txt = fix_msgbox_txt(txt);
+    let mut txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg).replace("\\n", "\n");
     beans_rs::gui::dialog::run("beans - Fatal Error!", txt.as_str());
 }
 /// should called once the logic flow is done!
