@@ -62,6 +62,7 @@ fn init_panic_handle()
         if let Some(m) = info.message() {
             x = format!("{:#?}", m);
         }
+        log!("[panic] Fatal error!\n{:#?}", x);
         custom_panic_handle(x);
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
         sentry::integrations::panic::panic_handler(&info);
@@ -82,27 +83,13 @@ fn fix_msgbox_txt(txt: String) -> String {
 fn custom_panic_handle(msg: String)
 {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE {
-            let mut txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg);
-            txt = fix_msgbox_txt(txt);
-            std::thread::spawn(move || {
-
-                let d = native_dialog::MessageDialog::new()
-                    .set_type(native_dialog::MessageType::Error)
-                    .set_title("beans - fatal error!")
-                    .set_text(&txt)
-                    .show_alert();
-                if let Err(e) = d {
-                    sentry::capture_error(&e);
-                    eprintln!("Failed to show MessageDialog {:#?}", e);
-                    eprintln!("[msgbox_panic] Come on, we failed to show a messagebox? Well, the error has been reported and we're on it.");
-                    eprintln!("[msgbox_panic] PLEASE report this to kate@dariox.club with as much info as possible <3");
-                }
-            });
-        } else {
-            info!("This error has been reported to the developers");
+        if beans_rs::PAUSE_ONCE_DONE == false {
+            return;
         }
     }
+    let mut txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg);
+    txt = fix_msgbox_txt(txt);
+    beans_rs::gui::dialog::run("beans - Fatal Error!", txt.as_str());
 }
 /// should called once the logic flow is done!
 /// will call `helper::get_input` when `PAUSE_ONCE_DONE` is `true`.
