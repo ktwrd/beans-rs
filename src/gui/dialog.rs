@@ -4,6 +4,12 @@ use crate::gui::GUIAppStatus;
 use crate::gui::shared_ui::GenericDialog;
 
 pub fn run(title: &str, label: &str) {
+    if crate::has_gui_support() == false {
+        println!("============ {} ============", title);
+        println!("{}", label);
+        return;
+    }
+    
     let app = app::App::default().with_scheme(app::AppScheme::Gtk);
     gui::apply_app_scheme();
     let (send_action, receive_action) = app::channel::<GUIAppStatus>();
