@@ -62,3 +62,17 @@ pub fn apply_app_scheme() {
     let theme = ColorTheme::new(color_themes::DARK_THEME);
     theme.apply();
 }
+
+pub fn wait_for_quit(app: &app::App, receive_action: &Receiver<GUIAppStatus>) {
+    while app.wait() {
+        if let Some(action) = receive_action.recv() {
+            match action {
+                GUIAppStatus::Quit => {
+                    unsafe { crate::PAUSE_ONCE_DONE = false; }
+                    app.quit();
+                },
+                _ => {}
+            }
+        }
+    }
+}
