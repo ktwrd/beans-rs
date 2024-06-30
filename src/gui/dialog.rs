@@ -60,6 +60,7 @@ impl DialogBuilder {
         apply_app_scheme();
         let (send_action, receive_action) = app::channel::<GUIAppStatus>();
         let mut ui = GenericDialog::make_window();
+        let initial_width = ui.win.width();
         ui.win.set_icon(self.icon.clone());
 
         ui.win.set_label(&self.title);
@@ -75,20 +76,24 @@ impl DialogBuilder {
 
         ui.btn_ok.set_pos(25, ui.win.height() - 24 - 5);
         window_centre_screen(&mut ui.win);
-        ui.win.handle(move |w, ev| match ev {
-            fltk::enums::Event::Resize => {
-                let height = w.height();
-                ui.btn_ok.set_pos(25, height - 24 - 5);
-                ui.btn_ok.set_size(70, 24);
-                let (lw, lh) = ui.label.measure_label();
-                if w.width() > lw+50 {
-                    w.set_size(lw+50, 10+lh+5+ ui.btn_ok.height() + 5);
-                }
-                true
-            },
-            _ => false
-        });
-        ui.win.make_resizable(true);
+        ui.win.handle(move |w, ev|
+            match ev {
+                fltk::enums::Event::Resize => {
+                    let height = w.height();
+                    ui.btn_ok.set_pos(25, height - 24 - 5);
+                    ui.btn_ok.set_size(70, 24);
+                    let (lw, lh) = ui.label.measure_label();
+                    let cw = w.width();
+                    if cw != initial_width {
+                        if cw > lw+50 {
+                            w.set_size(lw+50, 10+lh+5+ ui.btn_ok.height() + 5);
+                        }
+                    }
+                    false
+                },
+                _ => false
+            });
+        ui.win.make_resizable(false);
         ui.win.show();
         wait_for_quit(&app, &receive_action);
     }
