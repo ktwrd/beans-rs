@@ -29,7 +29,6 @@ simple-home-dir = "0.3.4"
 clap = { version = "4.5.4", features = ["cargo"] }
 bitflags = "2.5.0"
 log = "0.4.21"
-native-dialog = "0.7.0"
 sentry = "0.34.0"
 lazy_static = "1.4.0"
 thread-id = "4.2.1"
