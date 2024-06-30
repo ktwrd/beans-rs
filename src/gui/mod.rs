@@ -6,6 +6,7 @@ use log::debug;
 
 pub(crate) mod shared_ui;
 pub mod dialog;
+pub mod icon;
 
 #[allow(dead_code)]
 #[derive(Copy, Clone, Debug)]
