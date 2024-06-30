@@ -39,6 +39,7 @@ chrono = "0.4.38"
 
 fltk = { version = "1.4.30", features = ["fltk-bundled"] }
 fltk-theme = "0.7.2"
+dark-light = "1.1.1"
 
 [build-dependencies]
 fl2rust = "0.5.19"
