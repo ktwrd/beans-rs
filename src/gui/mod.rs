@@ -2,6 +2,7 @@
 use fltk::app::Receiver;
 use fltk::window::Window;
 use fltk_theme::{color_themes, ColorTheme};
+use log::debug;
 
 pub(crate) mod shared_ui;
 pub mod dialog;
@@ -59,7 +60,12 @@ pub fn window_ensure(win: &mut Window, width: i32, height: i32) {
     win.show();
 }
 pub fn apply_app_scheme() {
-    let theme = ColorTheme::new(color_themes::DARK_THEME);
+    let theme_content = match dark_light::detect() {
+        dark_light::Mode::Light => color_themes::GRAY_THEME,
+        _ => color_themes::DARK_THEME
+    };
+    debug!("[apply_app_scheme] using color theme: {:#?}", dark_light::detect());
+    let theme = ColorTheme::new(theme_content);
     theme.apply();
 }
 
