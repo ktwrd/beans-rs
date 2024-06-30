@@ -5,7 +5,8 @@ use fltk_theme::{color_themes, ColorTheme};
 use log::debug;
 
 pub(crate) mod shared_ui;
-pub mod dialog;
+mod dialog;
+pub use dialog::*;
 pub mod icon;
 
 #[allow(dead_code)]

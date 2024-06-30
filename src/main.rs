@@ -5,6 +5,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use log::{debug, error, info, LevelFilter, trace};
 use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
 use beans_rs::flags::LaunchFlag;
+use beans_rs::gui::DialogIconKind;
 use beans_rs::helper::parse_location;
 use beans_rs::SourceModDirectoryParam;
 use beans_rs::workflows::{CleanWorkflow, InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
@@ -80,7 +81,11 @@ fn custom_panic_handle(msg: String)
         }
     }
     let txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg).replace("\\n", "\n");
-    beans_rs::gui::dialog::run("beans - Fatal Error!", txt.as_str());
+    beans_rs::gui::DialogBuilder::new()
+        .with_title(String::from("beans - Fatal Error!"))
+        .with_icon(DialogIconKind::Error)
+        .with_content(txt)
+        .run();
 }
 /// should called once the logic flow is done!
 /// will call `helper::get_input` when `PAUSE_ONCE_DONE` is `true`.
@@ -389,8 +394,11 @@ impl Launcher
     }
 }
 fn show_msgbox_error(text: String) {
-    let t = text.replace("\\n", "\n");
-    beans_rs::gui::dialog::run("beans - Fatal Error", t.as_str());
+    beans_rs::gui::DialogBuilder::new()
+        .with_title(String::from("beans - Fatal Error!"))
+        .with_icon(DialogIconKind::Error)
+        .with_content(text.replace("\\n", "\n"))
+        .run();
 }
 
 
