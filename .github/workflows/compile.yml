@@ -22,5 +22,29 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Install Build Dependencies (ubuntu)
+        if: ${{ matrix.os == 'ubuntu-latest' }}
+        run: |
+          sudo apt-get update;
+          sudo apt-get install -y \
+              g++ \
+              gdb \
+              git \
+              make \
+              cmake \
+              autoconf \
+              libx11-dev \
+              libglu1-mesa-dev \
+              libxft-dev \
+              libxcursor-dev \
+              libasound2-dev \
+              freeglut3-dev \
+              libcairo2-dev \
+              libfontconfig1-dev \
+              libglew-dev \
+              libjpeg-dev \
+              libpng-dev \
+              libpango1.0-dev \
+              libxinerama-dev;
       - name: Build
         run: cargo build --verbose
