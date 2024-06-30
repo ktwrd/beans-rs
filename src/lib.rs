@@ -46,6 +46,12 @@ pub fn data_dir() -> String
     format!("{}{}{}", PATH_SEP, av.mod_info.sourcemod_name, PATH_SEP)
 }
 
+/// Check if we have GUI support enabled. Will always return `false` when `PAUSE_ONCE_DONE` is `false`.
+/// 
+/// Will return `true` when
+/// - Running on Windows
+/// - Running on macOS
+/// - Running on Linux AND the `DISPLAY` or `XDG_SESSION_DESKTOP` environment variables are set.
 pub fn has_gui_support() -> bool
 {
     unsafe {
