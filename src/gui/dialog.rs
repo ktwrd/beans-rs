@@ -26,6 +26,7 @@ pub fn run(title: &str, label: &str) {
         10 + label_h + 5 + ui.btn_ok.height() + 5
     );
 
+    ui.btn_ok.set_pos(25, ui.win.height() - 24 - 5);
     gui::window_centre_screen(&mut ui.win);
     ui.win.handle(move |w, ev| match ev {
         fltk::enums::Event::Resize => {
