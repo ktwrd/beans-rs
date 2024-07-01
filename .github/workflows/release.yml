@@ -47,7 +47,7 @@ jobs:
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
         with:
-          files: target/release/${{ matrix.filename }}
+          files: target/${{ matrix.target }}/release/${{ matrix.filename }}
           tag_name: ${{ github.event.inputs.tag }}
           draft: false
           prerelease: true
