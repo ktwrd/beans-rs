@@ -1,5 +1,6 @@
-use log::{debug, error, warn};
+use log::{debug, error, info, warn};
 use crate::{DownloadFailureReason, helper, RunnerContext};
+use crate::appvar::AppVarData;
 use crate::BeansError;
 use crate::version::{AdastralVersionFile, RemoteVersion};
 
@@ -18,6 +19,44 @@ impl InstallWorkflow {
         Self::install_with_remote_version(ctx, latest_remote_id, latest_remote).await
     }
 
+    /// Prompt the user to confirm if they want to reinstall (when parameter `current_version` is Some)
+    ///
+    /// Will always return `true` when `crate::PROMPT_DO_WHATEVER` is `true`.
+    ///
+    /// Returns: `true` when the installation should continue, `false` when we should silently abort.
+    pub fn prompt_confirm(current_version: Option<usize>) -> bool
+    {
+        unsafe {
+            if crate::PROMPT_DO_WHATEVER {
+                info!("[InstallWorkflow::prompt_confirm] skipping since PROMPT_DO_WHATEVER is true");
+                return  true;
+            }
+        }
+        let av = AppVarData::get();
+        if let Some(v) = current_version {
+            println!("[InstallWorkflow::prompt_confirm] Seems like {} is already installed (v{})", v, av.mod_info.name_stylized);
+
+            println!("Are you sure that you want to reinstall?");
+            println!("Yes/Y (default)");
+            println!("No/N");
+            let user_input = helper::get_input("-- Enter option below --");
+            match user_input.to_lowercase().as_str() {
+                "y" | "yes" | "" => {
+                    true
+                },
+                "n" | "no" => {
+                    false
+                },
+                _ => {
+                    println!("Unknown option \"{}\"", user_input.to_lowercase());
+                    Self::prompt_confirm(current_version)
+                }
+            }
+        } else {
+            true
+        }
+    }
+
     /// Install the specified version by its ID to the output directory.
     pub async fn install_version(&mut self, version_id: usize) -> Result<(), BeansError>
     {
@@ -34,9 +73,18 @@ impl InstallWorkflow {
         InstallWorkflow::install_with_remote_version(&mut ctx, version_id, target_version.clone()).await
     }
 
+    /// Install with a specific remote version.
+    ///
+    /// Note: Will call Self::prompt_confirm, so set `crate::PROMPT_DO_WHATEVER` to `true` before you call
+    ///       this function if you don't want to wait for a newline from stdin.
     pub async fn install_with_remote_version(ctx: &mut RunnerContext, version_id: usize, version: RemoteVersion)
         -> Result<(), BeansError>
     {
+        if Self::prompt_confirm(ctx.current_version) == false {
+            info!("[InstallWorkflow] Operation aborted by user");
+            return Ok(());
+        }
+
         println!("{:=>60}\nInstalling version {} to {}\n{0:=>60}", "=", version_id, &ctx.sourcemod_path);
         let presz_loc = RunnerContext::download_package(version).await?;
         Self::install_from(presz_loc.clone(), ctx.sourcemod_path.clone(), Some(version_id)).await?;

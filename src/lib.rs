@@ -27,6 +27,8 @@ pub const PANIC_MSG_CONTENT: &str = include_str!("text/msgbox_panic_text.txt");
 ///
 /// just like the `pause` thing in batch.
 pub static mut PAUSE_ONCE_DONE: bool = false;
+/// When `true`, everything that prompts the user for Y/N should use the default option.
+pub static mut PROMPT_DO_WHATEVER: bool = false;
 
 
 // ------------------------------------------------------------------------

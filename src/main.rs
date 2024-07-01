@@ -130,6 +130,14 @@ impl Launcher
             .help("Manually specify sourcemods directory. When not provided, beans-rs will automatically detect the sourcemods directory.")
             .required(false)
     }
+    fn create_confirm_arg() -> Arg
+    {
+        Arg::new("confirm")
+            .long("confirm")
+            .help("When prompted to do something (as a multi-choice option), the default option will be automatically chosen when this switch is provided, and there is a default multi-choice option available.")
+            .required(false)
+            .action(ArgAction::SetTrue)
+    }
     pub async fn run()
     {
         let cmd = Command::new("beans-rs")
@@ -149,7 +157,8 @@ impl Launcher
                     Arg::new("target-version")
                         .long("target-version")
                         .help("Specify the version to install. Ignored when [--from] is used.")
-                        .required(false)]))
+                        .required(false),
+                    Self::create_confirm_arg()]))
             .subcommand(Command::new("verify")
                 .about("Verify your current installation")
                 .arg(Launcher::create_location_arg()))
@@ -171,7 +180,8 @@ impl Launcher
                     .long("no-pause")
                     .help("When provided, beans-rs will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts.")
                     .action(ArgAction::SetTrue),
-                Launcher::create_location_arg()
+                Self::create_location_arg(),
+                Self::create_confirm_arg()
             ]);
 
         let mut i = Self::new(&cmd.get_matches());
@@ -190,6 +200,7 @@ impl Launcher
         };
         i.set_debug();
         i.set_no_pause();
+        i.set_prompt_do_whatever();
         i.to_location = Launcher::find_arg_sourcemods_location(&i.root_matches);
 
         return i;
@@ -254,6 +265,15 @@ impl Launcher
         }
     }
 
+    pub fn set_prompt_do_whatever(&mut self)
+    {
+        if self.root_matches.get_flag("confirm") {
+            unsafe {
+                beans_rs::PROMPT_DO_WHATEVER = true;
+            }
+        }
+    }
+
     /// Try and get `SourceModDirectoryParam`.
     /// Returns SourceModDirectoryParam::default() when `to_location` is `None`.
     fn try_get_smdp(&mut self) -> SourceModDirectoryParam
@@ -284,6 +304,12 @@ impl Launcher
     pub async fn task_install(&mut self, matches: &ArgMatches)
     {
         self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        if matches.get_flag("confirm") {
+            unsafe {
+                beans_rs::PROMPT_DO_WHATEVER = true;
+            }
+        }
+
         let mut ctx = self.try_create_context().await;
 
         // call install_version when target-version is found.
