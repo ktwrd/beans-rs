@@ -25,6 +25,16 @@ jobs:
 
     steps:
       - uses: actions/checkout@master
+
+      - name: Install Build Dependencies (ubuntu)
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
+        run: |
+          sudo apt-get update;
+          sudo apt-get install -y \
+            libssl-dev \
+            musl-tools \
+            linux-musl-dev
+            
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: nightly-2024-05-24
