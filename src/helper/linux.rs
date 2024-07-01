@@ -1,5 +1,5 @@
 ﻿use std::fs::read_to_string;
-use log::{debug, error};
+use log::{debug, error, warn, trace};
 use crate::BeansError;
 use crate::helper::format_directory_path;
 use keyvalues_parser::Vdf;
@@ -67,7 +67,10 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
                 break;
             }
         },
-        Err(_) => {},
+        Err(e) => {
+            trace!("{:#?}", e);
+            warn!("[find_sourcemod_path] failed to parse vdf content {:}", e);
+        },
     };
 
     return Err(BeansError::SourceModLocationNotFound);
