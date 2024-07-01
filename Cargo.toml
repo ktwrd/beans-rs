@@ -35,7 +35,7 @@ colored = "2.1.0"
 sentry-log = "0.34.0"
 chrono = "0.4.38"
 
-fltk = { version = "1.4.30", features = ["fltk-bundled"] }
+fltk = { version = "1.4.32" }
 fltk-theme = "0.7.2"
 dark-light = "1.1.1"
 image = { version = "0.25.1", features = ["png"] }
