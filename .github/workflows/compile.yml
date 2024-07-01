@@ -42,8 +42,8 @@ jobs:
         with:
           command: build
           args: --verbose --all-features --target ${{ matrix.target }}
-      - name: Archive code coverage results
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: binary-${{ matrix.os }}-${{ matrix.target }}
-          path: target/debug/${{ matrix.filename }}
+          path: target/${{ matrix.target }}/debug/${{ matrix.filename }}
