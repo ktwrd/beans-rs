@@ -15,15 +15,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             filename: 'beans-rs'
+            target: x86_64-unknown-linux-musl
           - os: windows-latest
+            target: x86_64-pc-windows-msvc
             filename: 'beans-rs.exe'
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
       - name: Install Build Dependencies (ubuntu)
-        if: ${{ matrix.os == 'ubuntu-latest' }}
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
         run: |
           sudo apt-get update;
           sudo apt-get install -y \
@@ -45,6 +47,21 @@ jobs:
               libjpeg-dev \
               libpng-dev \
               libpango1.0-dev \
-              libxinerama-dev;
-      - name: Build
-        run: cargo build --verbose
+              libxinerama-dev \
+              libssl-dev \
+              musl-tools
+
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: nightly-2024-05-24
+          target: ${{ matrix.target }}
+
+      - uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --verbose --all-features --target ${{ matrix.target }}
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: binary-${{ matrix.os }}-${{ matrix.target }}
+          path: target/${{ matrix.target }}/debug/${{ matrix.filename }}
