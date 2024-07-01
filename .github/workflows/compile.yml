@@ -59,7 +59,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --verbose --all-features --target ${{ matrix.target }}
+          args: --verbose --target ${{ matrix.target }}
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

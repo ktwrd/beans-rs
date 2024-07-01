@@ -60,7 +60,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --all-features --target ${{ matrix.target }}
+          args: --release --target ${{ matrix.target }}
 
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
