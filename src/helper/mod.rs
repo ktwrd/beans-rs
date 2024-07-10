@@ -364,7 +364,25 @@ pub fn format_size(i: usize) -> String {
 pub fn get_tmp_dir() -> String
 {
     let mut dir = std::env::temp_dir().to_str().unwrap_or("").to_string();
-    if cfg!(target_os = "android") {
+    if is_steamdeck() {
+        trace!("[helper::get_tmp_dir] Detected that we are running on a steam deck. Using ~/.tmp/beans-rs");
+        match simple_home_dir::home_dir() {
+            Some(v) => {
+                match v.to_str() {
+                    Some(k) => {
+                        dir = format_directory_path(k.to_string());
+                        dir = join_path(dir, String::from(".tmp"));
+                    },
+                    None => {
+                        trace!("[helper::get_tmp_dir] Failed to convert PathBuf to &str");
+                    }
+                }
+            },
+            None => {
+                trace!("[helper::get_tmp_dir] Failed to get home directory.");
+            }
+        };
+    } else if cfg!(target_os = "android") {
         dir = String::from("/data/var/tmp");
     } else if cfg!(not(target_os = "windows")) {
         dir = String::from("/var/tmp");
