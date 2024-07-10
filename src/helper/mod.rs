@@ -1,4 +1,4 @@
-﻿#[cfg(not(target_os = "windows"))]
+#[cfg(not(target_os = "windows"))]
 mod linux;
 
 use std::backtrace::Backtrace;
@@ -171,6 +171,16 @@ pub fn join_path(tail: String, head: String) -> String
     }
 
     format!("{}{}", format_directory_path(tail), h)
+}
+pub fn remove_path_head(location: String) -> String
+{
+    let p = std::path::Path::new(&location);
+    if let Some(x) = p.parent() {
+        if let Some(m) = x.to_str() {
+            return m.to_string();
+        }
+    }
+    return String::new();
 }
 /// Make sure that the location provided is formatted as a directory (ends with `crate::PATH_SEP`).
 pub fn format_directory_path(location: String) -> String
