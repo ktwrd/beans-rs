@@ -20,6 +20,7 @@ use crate::{BeansError, DownloadFailureReason, GameinfoBackupCreateDirectoryFail
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::header::USER_AGENT;
 use crate::appvar::AppVarData;
+use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
 pub enum InstallType
@@ -127,6 +128,14 @@ pub fn file_exists(location: String) -> bool
 {
     std::path::Path::new(&location).exists()
 }
+/// Check if the location provided exists and it's a directory.
+pub fn dir_exists(location: String) -> bool
+{
+    if file_exists(location.clone()) {
+        return is_directory(location.clone());
+    }
+    return false;
+}
 pub fn is_directory(location: String) -> bool
 {
     let x = PathBuf::from(&location);
@@ -163,6 +172,16 @@ pub fn join_path(tail: String, head: String) -> String
     }
 
     format!("{}{}", format_directory_path(tail), h)
+}
+pub fn remove_path_head(location: String) -> String
+{
+    let p = std::path::Path::new(&location);
+    if let Some(x) = p.parent() {
+        if let Some(m) = x.to_str() {
+            return m.to_string();
+        }
+    }
+    return String::new();
 }
 /// Make sure that the location provided is formatted as a directory (ends with `crate::PATH_SEP`).
 pub fn format_directory_path(location: String) -> String
@@ -226,17 +245,25 @@ pub fn parse_location(location: String) -> String
 /// Get the amount of free space on the drive in the location provided.
 pub fn get_free_space(location: String) -> Result<u64, BeansError>
 {
-    let real_location = parse_location(location);
+    let mut data: HashMap<String, u64> = HashMap::new();
     for disk in sysinfo::Disks::new_with_refreshed_list().list() {
         if let Some(mp) = disk.mount_point().to_str() {
-            if real_location.clone().starts_with(&mp) {
-                return Ok(disk.available_space())
-            }
+            debug!("[get_free_space] space: {} {}", mp, disk.available_space());
+            data.insert(mp.to_string(), disk.available_space());
         }
     }
 
+    let mut l = parse_location(location.clone());
+    while l.len() >= 2 {
+        debug!("[get_free_space] Checking if {} is in data", l);
+        if let Some(x) = data.get(&l) {
+            return Ok(x.clone());
+        }
+        l = remove_path_head(l.clone());
+    }
+
     Err(BeansError::FreeSpaceCheckFailure {
-        location: real_location
+        location: parse_location(location.clone())
     })
 }
 /// Check if the location provided has enough free space.
@@ -356,7 +383,25 @@ pub fn format_size(i: usize) -> String {
 pub fn get_tmp_dir() -> String
 {
     let mut dir = std::env::temp_dir().to_str().unwrap_or("").to_string();
-    if cfg!(target_os = "android") {
+    if is_steamdeck() {
+        trace!("[helper::get_tmp_dir] Detected that we are running on a steam deck. Using ~/.tmp/beans-rs");
+        match simple_home_dir::home_dir() {
+            Some(v) => {
+                match v.to_str() {
+                    Some(k) => {
+                        dir = format_directory_path(k.to_string());
+                        dir = join_path(dir, String::from(".tmp"));
+                    },
+                    None => {
+                        trace!("[helper::get_tmp_dir] Failed to convert PathBuf to &str");
+                    }
+                }
+            },
+            None => {
+                trace!("[helper::get_tmp_dir] Failed to get home directory.");
+            }
+        };
+    } else if cfg!(target_os = "android") {
         dir = String::from("/data/var/tmp");
     } else if cfg!(not(target_os = "windows")) {
         dir = String::from("/var/tmp");
@@ -365,8 +410,9 @@ pub fn get_tmp_dir() -> String
     dir = join_path(dir, String::from("beans-rs"));
     dir = format_directory_path(dir);
 
-    if !file_exists(dir.clone()) {
+    if !dir_exists(dir.clone()) {
         if let Err(e) = std::fs::create_dir(&dir) {
+            trace!("[helper::get_tmp_dir] {:#?}", e);
             warn!("[helper::get_tmp_dir] failed to make tmp directory at {} ({:})", dir, e);
             sentry::capture_error(&e);
         } else {
@@ -375,6 +421,52 @@ pub fn get_tmp_dir() -> String
     }
 
     return dir;
+}
+/// Check if the content of `uname -r` contains `valve` (Linux Only)
+/// 
+/// ## Returns
+/// - `true` when;
+///   - The output of `uname -r` contains `valve`
+/// - `false` when;
+///   - `target_os` is not `linux`
+///   - Failed to run `uname -r`
+///   - Failed to parse the stdout of `uname -r` as a String.
+/// 
+/// ## Note
+/// Will always return `false` when `cfg!(not(target_os = "linux"))`.
+/// 
+/// This function will write to `log::trace` with the full error details before writing it to `log::warn` or `log::error`. Since errors from this
+/// aren't significant, `sentry::capture_error` will not be called.
+pub fn is_steamdeck() -> bool {
+    if cfg!(not(target_os = "linux")) {
+        return false;
+    }
+
+    match std::process::Command::new("uname").arg("-r").output() {
+        Ok(cmd) => {
+            trace!("[helper::is_steamdeck] exit status: {}", &cmd.status);
+            let stdout = &cmd.stdout.to_vec();
+            let stderr = &cmd.stderr.to_vec();
+            if let Ok(x) = String::from_utf8(stderr.clone()) {
+                trace!("[helper::is_steamdeck] stderr: {}", x);
+            }
+            match String::from_utf8(stdout.clone()) {
+                Ok(x) => {
+                    trace!("[helper::is_steamdeck] stdout: {}", x);
+                    x.contains("valve")
+                },
+                Err(e) => {
+                    trace!("[helper::is_steamdeck] Failed to parse as utf8 {:#?}", e);
+                    false
+                }
+            }
+        },
+        Err(e) => {
+            trace!("[helper::is_steamdeck] {:#?}", e);
+            warn!("[helper::is_steamdeck] Failed to detect {:}", e);
+            return false;
+        }
+    }
 }
 /// Generate a full file location for a temporary file.
 pub fn get_tmp_file(filename: String) -> String
