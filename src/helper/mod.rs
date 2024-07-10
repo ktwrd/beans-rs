@@ -384,6 +384,52 @@ pub fn get_tmp_dir() -> String
 
     return dir;
 }
+/// Check if the content of `uname -r` contains `valve` (Linux Only)
+/// 
+/// ## Returns
+/// - `true` when;
+///   - The output of `uname -r` contains `valve`
+/// - `false` when;
+///   - `target_os` is not `linux`
+///   - Failed to run `uname -r`
+///   - Failed to parse the stdout of `uname -r` as a String.
+/// 
+/// ## Note
+/// Will always return `false` when `cfg!(not(target_os = "linux"))`.
+/// 
+/// This function will write to `log::trace` with the full error details before writing it to `log::warn` or `log::error`. Since errors from this
+/// aren't significant, `sentry::capture_error` will not be called.
+pub fn is_steamdeck() -> bool {
+    if cfg!(not(target_os = "linux")) {
+        return false;
+    }
+
+    match std::process::Command::new("uname").arg("-r").output() {
+        Ok(cmd) => {
+            trace!("[helper::is_steamdeck] exit status: {}", &cmd.status);
+            let stdout = &cmd.stdout.to_vec();
+            let stderr = &cmd.stderr.to_vec();
+            if let Ok(x) = String::from_utf8(stderr.clone()) {
+                trace!("[helper::is_steamdeck] stderr: {}", x);
+            }
+            match String::from_utf8(stdout.clone()) {
+                Ok(x) => {
+                    trace!("[helper::is_steamdeck] stdout: {}", x);
+                    x.contains("valve")
+                },
+                Err(e) => {
+                    trace!("[helper::is_steamdeck] Failed to parse as utf8 {:#?}", e);
+                    false
+                }
+            }
+        },
+        Err(e) => {
+            trace!("[helper::is_steamdeck] {:#?}", e);
+            warn!("[helper::is_steamdeck] Failed to detect {:}", e);
+            return false;
+        }
+    }
+}
 /// Generate a full file location for a temporary file.
 pub fn get_tmp_file(filename: String) -> String
 {
