@@ -373,8 +373,9 @@ pub fn get_tmp_dir() -> String
     dir = join_path(dir, String::from("beans-rs"));
     dir = format_directory_path(dir);
 
-    if !file_exists(dir.clone()) {
+    if !dir_exists(dir.clone()) {
         if let Err(e) = std::fs::create_dir(&dir) {
+            trace!("[helper::get_tmp_dir] {:#?}", e);
             warn!("[helper::get_tmp_dir] failed to make tmp directory at {} ({:})", dir, e);
             sentry::capture_error(&e);
         } else {
