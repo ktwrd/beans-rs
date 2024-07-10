@@ -50,9 +50,7 @@ jobs:
             libxinerama-dev \
             libfltk1.3 \
             libfltk1.3-dev \
-            libssl-dev \
-            musl-tools;
-          sudo ln -s "/usr/bin/g++" "/usr/bin/musl-g++"
+            libssl-dev
 
       - uses: actions-rs/toolchain@v1
         with:
