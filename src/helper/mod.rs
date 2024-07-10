@@ -1,4 +1,4 @@
-#[cfg(not(target_os = "windows"))]
+﻿#[cfg(not(target_os = "windows"))]
 mod linux;
 
 use std::backtrace::Backtrace;
@@ -20,6 +20,7 @@ use crate::{BeansError, DownloadFailureReason, GameinfoBackupCreateDirectoryFail
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::header::USER_AGENT;
 use crate::appvar::AppVarData;
+use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
 pub enum InstallType
@@ -244,17 +245,25 @@ pub fn parse_location(location: String) -> String
 /// Get the amount of free space on the drive in the location provided.
 pub fn get_free_space(location: String) -> Result<u64, BeansError>
 {
-    let real_location = parse_location(location);
+    let mut data: HashMap<String, u64> = HashMap::new();
     for disk in sysinfo::Disks::new_with_refreshed_list().list() {
         if let Some(mp) = disk.mount_point().to_str() {
-            if real_location.clone().starts_with(&mp) {
-                return Ok(disk.available_space())
-            }
+            debug!("[get_free_space] space: {} {}", mp, disk.available_space());
+            data.insert(mp.to_string(), disk.available_space());
         }
     }
 
+    let mut l = parse_location(location.clone());
+    while l.len() >= 2 {
+        debug!("[get_free_space] Checking if {} is in data", l);
+        if let Some(x) = data.get(&l) {
+            return Ok(x.clone());
+        }
+        l = remove_path_head(l.clone());
+    }
+
     Err(BeansError::FreeSpaceCheckFailure {
-        location: real_location
+        location: parse_location(location.clone())
     })
 }
 /// Check if the location provided has enough free space.
