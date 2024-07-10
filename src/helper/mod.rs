@@ -127,6 +127,14 @@ pub fn file_exists(location: String) -> bool
 {
     std::path::Path::new(&location).exists()
 }
+/// Check if the location provided exists and it's a directory.
+pub fn dir_exists(location: String) -> bool
+{
+    if file_exists(location.clone()) {
+        return is_directory(location.clone());
+    }
+    return false;
+}
 pub fn is_directory(location: String) -> bool
 {
     let x = PathBuf::from(&location);
