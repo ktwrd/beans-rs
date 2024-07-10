@@ -131,10 +131,7 @@ pub fn file_exists(location: String) -> bool
 /// Check if the location provided exists and it's a directory.
 pub fn dir_exists(location: String) -> bool
 {
-    if file_exists(location.clone()) {
-        return is_directory(location.clone());
-    }
-    return false;
+    file_exists(location.clone()) && is_directory(location.clone())
 }
 pub fn is_directory(location: String) -> bool
 {
@@ -407,6 +404,13 @@ pub fn get_tmp_dir() -> String
         dir = String::from("/var/tmp");
     }
     dir = format_directory_path(dir);
+    if !dir_exists(dir.clone()) {
+        if let Err(e) = std::fs::create_dir(&dir) {
+            trace!("[helper::get_tmp_dir] {:#?}", e);
+            warn!("[helper::get_tmp_dir] failed to make tmp directory at {} ({:})", dir, e);
+            return;
+        }
+    }
     dir = join_path(dir, String::from("beans-rs"));
     dir = format_directory_path(dir);
 
