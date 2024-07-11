@@ -1,6 +1,6 @@
 [package]
 name = "beans-rs"
-version = "1.4.5"
+version = "1.5.1"
 edition = "2021"
 authors = [
     "Kate Ward <kate@dariox.club>"
@@ -30,7 +30,6 @@ clap = { version = "4.5.4", features = ["cargo"] }
 bitflags = "2.5.0"
 log = "0.4.21"
 native-dialog = "0.7.0"
-sentry = "0.34.0"
 lazy_static = "1.4.0"
 thread-id = "4.2.1"
 colored = "2.1.0"
@@ -41,6 +40,20 @@ chrono = "0.4.38"
 winconsole = { version = "0.11.1", features = ["window"] }
 winreg = "0.52.0"
 dunce = "1.0.4"
+
+[dependencies.sentry]
+version = "0.34.0"
+default-features = false
+features = [
+    "backtrace",
+    "contexts",
+    "debug-images",
+    "panic",
+    
+    "reqwest",
+    "rustls"
+]
+
 
 [dependencies.tokio]
 version = "1.37.0"
@@ -54,8 +67,14 @@ version = "0.12.4"
 features = [
     "multipart",
     "stream",
-    "json"
+    "json",
+
+    "rustls-tls",
+    "charset",
+    "http2",
+    "macos-system-configuration"
 ]
+default-features = false
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 winres = "0.1.12"

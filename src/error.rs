@@ -26,6 +26,11 @@ pub enum BeansError
         location: String,
         error: std::io::Error
     },
+    #[error("Failed to create directory {location} ({error:})")]
+    DirectoryCreateFailure {
+        location: String,
+        error: std::io::Error
+    },
     #[error("Failed to extract {src_file} to directory {target_dir} ({error:})")]
     TarExtractFailure {
         src_file: String,
@@ -154,6 +159,12 @@ pub enum BeansError
     #[error("Failed to backup gameinfo.txt, {reason:}")]
     GameinfoBackupFailure {
         reason: GameinfoBackupFailureReason
+    },
+
+    #[error("Failed to remove files in {location} ({error:})")]
+    CleanTempFailure {
+        location: String,
+        error: std::io::Error
     }
 }
 #[derive(Debug)]

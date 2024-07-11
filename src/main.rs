@@ -7,7 +7,7 @@ use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
 use beans_rs::flags::LaunchFlag;
 use beans_rs::helper::parse_location;
 use beans_rs::SourceModDirectoryParam;
-use beans_rs::workflows::{InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
+use beans_rs::workflows::{CleanWorkflow, InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
 
 pub const DEFAULT_LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Info;
 #[cfg(debug_assertions)]
@@ -130,6 +130,14 @@ impl Launcher
             .help("Manually specify sourcemods directory. When not provided, beans-rs will automatically detect the sourcemods directory.")
             .required(false)
     }
+    fn create_confirm_arg() -> Arg
+    {
+        Arg::new("confirm")
+            .long("confirm")
+            .help("When prompted to do something (as a multi-choice option), the default option will be automatically chosen when this switch is provided, and there is a default multi-choice option available.")
+            .required(false)
+            .action(ArgAction::SetTrue)
+    }
     pub async fn run()
     {
         let cmd = Command::new("beans-rs")
@@ -149,13 +157,16 @@ impl Launcher
                     Arg::new("target-version")
                         .long("target-version")
                         .help("Specify the version to install. Ignored when [--from] is used.")
-                        .required(false)]))
+                        .required(false),
+                    Self::create_confirm_arg()]))
             .subcommand(Command::new("verify")
                 .about("Verify your current installation")
                 .arg(Launcher::create_location_arg()))
             .subcommand(Command::new("update")
                 .about("Update your installation")
                 .arg(Launcher::create_location_arg()))
+            .subcommand(Command::new("clean-tmp")
+                .about("Clean up temporary files used by beans"))
             .args([
                 Arg::new("debug")
                     .long("debug")
@@ -169,7 +180,8 @@ impl Launcher
                     .long("no-pause")
                     .help("When provided, beans-rs will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts.")
                     .action(ArgAction::SetTrue),
-                Launcher::create_location_arg()
+                Self::create_location_arg(),
+                Self::create_confirm_arg()
             ]);
 
         let mut i = Self::new(&cmd.get_matches());
@@ -188,6 +200,7 @@ impl Launcher
         };
         i.set_debug();
         i.set_no_pause();
+        i.set_prompt_do_whatever();
         i.to_location = Launcher::find_arg_sourcemods_location(&i.root_matches);
 
         return i;
@@ -243,8 +256,20 @@ impl Launcher
                 self.to_location = Launcher::find_arg_sourcemods_location(wz_matches);
                 self.task_wizard().await;
             },
+            Some(("clean-tmp", _)) => {
+                self.task_clean_tmp().await;
+            },
             _ => {
                 self.task_wizard().await;
+            }
+        }
+    }
+
+    pub fn set_prompt_do_whatever(&mut self)
+    {
+        if self.root_matches.get_flag("confirm") {
+            unsafe {
+                beans_rs::PROMPT_DO_WHATEVER = true;
             }
         }
     }
@@ -279,6 +304,12 @@ impl Launcher
     pub async fn task_install(&mut self, matches: &ArgMatches)
     {
         self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        if matches.get_flag("confirm") {
+            unsafe {
+                beans_rs::PROMPT_DO_WHATEVER = true;
+            }
+        }
+
         let mut ctx = self.try_create_context().await;
 
         // call install_version when target-version is found.
@@ -366,6 +397,20 @@ impl Launcher
 
         if let Err(e) = UpdateWorkflow::wizard(&mut ctx).await {
             panic!("Failed to run UpdateWorkflow {:#?}", e);
+        } else {
+            logic_done();
+        }
+    }
+
+    /// Handler for the `clean-tmp` subcommand.
+    ///
+    /// NOTE this function uses `panic!` when `CleanWorkflow::wizard` fails. panics are handled
+    /// and are reported via sentry.
+    pub async fn task_clean_tmp(&mut self)
+    {
+        let mut ctx = self.try_create_context().await;
+        if let Err(e) = CleanWorkflow::wizard(&mut ctx) {
+            panic!("Failed to run CleanWorkflow {:#?}", e);
         } else {
             logic_done();
         }

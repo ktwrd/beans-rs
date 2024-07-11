@@ -4,7 +4,7 @@ use async_recursion::async_recursion;
 use log::{debug, error, info, trace};
 use std::backtrace::Backtrace;
 use crate::flags::LaunchFlag;
-use crate::workflows::{InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
+use crate::workflows::{CleanWorkflow, InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
 
 #[derive(Debug, Clone)]
 pub struct WizardContext
@@ -82,14 +82,18 @@ impl WizardContext
         println!("1 - Install or reinstall the game");
         println!("2 - Check for and apply any available updates");
         println!("3 - Verify and repair game files");
+        println!("c - Clean up temporary files used by beans.");
         println!();
         println!("q - Quit");
         let user_input = helper::get_input("-- Enter option below --");
         match user_input.to_lowercase().as_str() {
-            "1" => WizardContext::menu_error_catch(self.task_install().await),
-            "2" => WizardContext::menu_error_catch(self.task_update().await),
-            "3" => WizardContext::menu_error_catch(self.task_verify().await),
-            "d" => {
+            "1" | "install" => WizardContext::menu_error_catch(self.task_install().await),
+            "2" | "update" => WizardContext::menu_error_catch(self.task_update().await),
+            "3" | "verify" => WizardContext::menu_error_catch(self.task_verify().await),
+            "c" | "clean" => {
+                Self::menu_error_catch(CleanWorkflow::wizard(&mut self.context))
+            },
+            "d" | "debug" => {
                 flags::add_flag(LaunchFlag::DEBUG_MODE);
                 info!("Debug mode enabled!");
                 self.menu().await;

@@ -15,23 +15,39 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-20.04
             filename: 'beans-rs'
+            target: x86_64-unknown-linux-musl
+
           - os: windows-latest
+            target: x86_64-pc-windows-msvc
             filename: 'beans-rs.exe'
+
     steps:
       - uses: actions/checkout@master
+
+      - name: Install Build Dependencies (ubuntu)
+        if: ${{ matrix.os == 'ubuntu-20.04' }}
+        run: |
+          sudo apt-get update;
+          sudo apt-get install -y \
+            libssl-dev \
+            musl-tools
+
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: stable
+          toolchain: nightly-2024-05-24
+          target: ${{ matrix.target }}
+
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --all-features
+          args: --release --all-features --target ${{ matrix.target }}
+
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
         with:
-          files: target/release/${{ matrix.filename }}
+          files: target/${{ matrix.target }}/release/${{ matrix.filename }}
           tag_name: ${{ github.event.inputs.tag }}
           draft: false
           prerelease: true
