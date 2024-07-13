@@ -256,7 +256,7 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
         if let Some(x) = data.get(&l) {
             return Ok(x.clone());
         }
-        l = remove_path_head(l.clone());
+        l = remove_path_head(l);
     }
 
     Err(BeansError::FreeSpaceCheckFailure {
