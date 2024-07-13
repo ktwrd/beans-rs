@@ -77,6 +77,14 @@ impl RunnerContext
         helper::join_path(self.sourcemod_path.clone(), crate::STAGING_DIR.to_string())
     }
 
+    /// Get temporary location on the same drive as sourcemods.
+    /// {sourcemod_dir}{crate::TEMP_SOURCEMOD_DIR}
+    /// e.g; /home/kate/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/sourcemods/.tmp-butler
+    ///      C:\Games\Steam\steamapps\sourcemods\.tmp-butler
+    pub fn get_temp_sourcemod_location(&mut self) -> String {
+        helper::join_path(self.sourcemod_path.clone(), crate::TEMP_SOURCEMOD_DIR.to_string())
+    }
+
     /// Get the latest item in `remote_version_list`
     pub fn latest_remote_version(&mut self) -> (usize, RemoteVersion)
     {
@@ -185,10 +193,21 @@ impl RunnerContext
 
     /// Download package with Progress Bar.
     /// Ok is the location to where it was downloaded to.
-    pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
+    pub async fn download_package(&mut self, version: RemoteVersion) -> Result<String, BeansError>
     {
         let av = crate::appvar::parse();
-        let mut out_loc = helper::get_tmp_dir();
+        let mut out_loc = self.get_temp_sourcemod_location();
+
+        // Remove leftovers from partial installations
+        // We don't really care if this succeeds so we discard the result
+        let _ = std::fs::remove_dir_all(&out_loc);
+
+        if !helper::dir_exists(out_loc.clone()) {
+            if let Err(e) = std::fs::create_dir(&out_loc) {
+                trace!("[RunnerContext::download_package] {:#?}", e);
+                panic!("failed to make tmp directory at {} ({:})", out_loc, e);
+            }
+        }
 
         if let Some(size) = version.pre_sz {
             if helper::has_free_space(out_loc.clone(), size)? == false {

@@ -52,6 +52,11 @@ pub const STAGING_DIR: &str = "/butler-staging";
 #[cfg(target_os = "windows")]
 pub const STAGING_DIR: &str = "\\butler-staging";
 
+#[cfg(not(target_os = "windows"))]
+pub const TEMP_SOURCEMOD_DIR: &str = "/.tmp-butler";
+#[cfg(target_os = "windows")]
+pub const TEMP_SOURCEMOD_DIR: &str = "\\.tmp-butler";
+
 #[cfg(target_os = "windows")]
 flate!(pub static BUTLER_BINARY: [u8] from "Binaries/butler.exe");
 #[cfg(not(target_os = "windows"))]
