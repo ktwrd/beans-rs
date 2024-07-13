@@ -251,7 +251,7 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
     }
 
     let mut l = parse_location(location.clone());
-    while l.len() >= 2 {
+    while !l.is_empty() {
         debug!("[get_free_space] Checking if {} is in data", l);
         if let Some(x) = data.get(&l) {
             return Ok(x.clone());
