@@ -251,12 +251,12 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
     }
 
     let mut l = parse_location(location.clone());
-    while l.len() >= 2 {
+    while !l.is_empty() {
         debug!("[get_free_space] Checking if {} is in data", l);
         if let Some(x) = data.get(&l) {
             return Ok(x.clone());
         }
-        l = remove_path_head(l.clone());
+        l = remove_path_head(l);
     }
 
     Err(BeansError::FreeSpaceCheckFailure {
@@ -376,11 +376,32 @@ pub fn format_size(i: usize) -> String {
     }
     return format!("{}{}", whole, dec_x);
 }
+/// Check if we should use the custom temporary directory, which is stored in the environment variable
+/// defined in `CUSTOM_TMPDIR_NAME`.
+/// 
+/// ## Return
+/// `Some` when the environment variable is set, and the directory exist. 
+/// Otherwise `None` is returned.
+pub fn use_custom_tmpdir() -> Option<String>
+{
+    if let Ok(x) = std::env::var(CUSTOM_TMPDIR_NAME) {
+        let s = x.to_string();
+        if dir_exists(s.clone()) {
+            return Some(s);
+        } else {
+            warn!("[use_custom_tmp_dir] Custom temporary directory \"{}\" doesn't exist", s);
+        }
+    }
+    return None;
+}
+pub const CUSTOM_TMPDIR_NAME: &str = "ADASTRAL_TMPDIR";
 /// Create directory in temp directory with name of "beans-rs"
 pub fn get_tmp_dir() -> String
 {
     let mut dir = std::env::temp_dir().to_str().unwrap_or("").to_string();
-    if is_steamdeck() {
+    if let Some(x) = use_custom_tmpdir() {
+        dir = x;
+    } else if is_steamdeck() {
         trace!("[helper::get_tmp_dir] Detected that we are running on a steam deck. Using ~/.tmp/beans-rs");
         match simple_home_dir::home_dir() {
             Some(v) => {
