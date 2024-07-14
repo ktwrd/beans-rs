@@ -399,7 +399,9 @@ pub const CUSTOM_TMPDIR_NAME: &str = "ADASTRAL_TMPDIR";
 pub fn get_tmp_dir() -> String
 {
     let mut dir = std::env::temp_dir().to_str().unwrap_or("").to_string();
-    if is_steamdeck() {
+    if let Some(x) = use_custom_tmpdir() {
+        dir = x;
+    } else if is_steamdeck() {
         trace!("[helper::get_tmp_dir] Detected that we are running on a steam deck. Using ~/.tmp/beans-rs");
         match simple_home_dir::home_dir() {
             Some(v) => {
