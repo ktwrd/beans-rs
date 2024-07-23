@@ -7,7 +7,7 @@ use beans_rs::{BeansError, flags, helper, PANIC_MSG_CONTENT, RunnerContext, wiza
 use beans_rs::flags::LaunchFlag;
 use beans_rs::helper::parse_location;
 use beans_rs::SourceModDirectoryParam;
-use beans_rs::workflows::{CleanWorkflow, InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
+use beans_rs::workflows::{CleanWorkflow, InstallWorkflow, UninstallWorkflow, UpdateWorkflow, VerifyWorkflow};
 
 pub const DEFAULT_LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Info;
 #[cfg(debug_assertions)]
@@ -167,6 +167,9 @@ impl Launcher
                 .arg(Launcher::create_location_arg()))
             .subcommand(Command::new("clean-tmp")
                 .about("Clean up temporary files used by beans"))
+            .subcommand(Command::new("uninstall")
+                .about("Uninstall the target Source Mod.")
+                .args([Launcher::create_location_arg()]))
             .args([
                 Arg::new("debug")
                     .long("debug")
@@ -251,6 +254,9 @@ impl Launcher
             },
             Some(("update", u_matches)) => {
                 self.task_update(u_matches).await;
+            },
+            Some(("uninstall", ui_matches)) => {
+                self.task_uninstall(ui_matches).await;
             },
             Some(("wizard", wz_matches)) => {
                 self.to_location = Launcher::find_arg_sourcemods_location(wz_matches);
@@ -411,6 +417,22 @@ impl Launcher
         let mut ctx = self.try_create_context().await;
         if let Err(e) = CleanWorkflow::wizard(&mut ctx) {
             panic!("Failed to run CleanWorkflow {:#?}", e);
+        } else {
+            logic_done();
+        }
+    }
+
+    /// handler for the `uninstall` subcommand
+    ///
+    /// NOTE this function uses `panic!` when `UninstallWorkflow::wizard` fails. panics are handled
+    /// and are reported via sentry.
+    pub async fn task_uninstall(&mut self, matches: &ArgMatches)
+    {
+        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        let mut ctx = self.try_create_context().await;
+
+        if let Err(e) = UninstallWorkflow::wizard(&mut ctx).await {
+            panic!("Failed to run UninstallWorkflow {:#?}", e);
         } else {
             logic_done();
         }
