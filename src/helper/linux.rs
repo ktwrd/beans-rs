@@ -5,7 +5,7 @@ use std::fs::read_to_string;
 
 /// all possible known directory where steam *might* be
 /// only is used on linux, since windows will use the registry.
-pub const STEAM_POSSIBLE_DIR: &'static [&'static str] = &[
+pub const STEAM_POSSIBLE_DIR: &[&str] = &[
     "~/.steam/registry.vdf",
     "~/.var/app/com.valvesoftware.Steam/.steam/registry.vdf",
 ];
@@ -40,11 +40,11 @@ pub fn find_sourcemod_path() -> Result<String, BeansError> {
         }
     }
 
-    return Err(BeansError::SourceModLocationNotFound);
+    Err(BeansError::SourceModLocationNotFound)
 }
 /// returns the first item in STEAM_POSSIBLE_DIR that exists. otherwise None
 fn find_steam_reg_path() -> Result<String, BeansError> {
-    for x in STEAM_POSSIBLE_DIR.into_iter() {
+    for x in STEAM_POSSIBLE_DIR.iter() {
         match simple_home_dir::home_dir() {
             Some(v) => match v.to_str() {
                 Some(k) => {
@@ -66,5 +66,5 @@ fn find_steam_reg_path() -> Result<String, BeansError> {
         }
     }
     error!("Couldn't find any of the locations in STEAM_POSSIBLE_DIR");
-    return Err(BeansError::SteamNotFound);
+    Err(BeansError::SteamNotFound)
 }

@@ -9,27 +9,35 @@ pub struct DialogBuilder {
     pub content: String,
     pub icon: Option<PngImage>,
 }
+
 pub enum DialogIconKind {
     Default,
     Warn,
     Error,
 }
-impl DialogBuilder {
-    pub fn new() -> Self {
+
+impl Default for DialogBuilder {
+    fn default() -> Self {
         Self {
             title: format!("beans v{}", crate::VERSION),
             content: String::new(),
             icon: None,
         }
     }
-    pub fn with_png_data(mut self, data: &Vec<u8>) -> Self {
+}
+
+impl DialogBuilder {
+    pub fn new() -> Self {
+        Self::default()
+    }
+    pub fn with_png_data(mut self, data: &[u8]) -> Self {
         match PngImage::from_data(data) {
             Ok(img) => self.icon = Some(img),
             Err(e) => {
                 warn!("[DialogBuilder::with_png] Failed to set icon! {:#?}", e);
             }
         }
-        return self;
+        self
     }
     pub fn with_icon(self, kind: DialogIconKind) -> Self {
         let data: &Vec<u8> = match kind {
@@ -41,14 +49,14 @@ impl DialogBuilder {
     }
     pub fn with_title(mut self, content: String) -> Self {
         self.title = content.clone();
-        return self;
+        self
     }
     pub fn with_content(mut self, content: String) -> Self {
         self.content = content.clone();
         self
     }
     pub fn run(&self) {
-        if crate::has_gui_support() == false {
+        if !crate::has_gui_support() {
             println!("============ {} ============", self.title);
             println!("{}", self.content);
             return;
@@ -79,10 +87,8 @@ impl DialogBuilder {
                 ui.btn_ok.set_size(70, 24);
                 let (lw, lh) = ui.label.measure_label();
                 let cw = w.width();
-                if cw != initial_width {
-                    if cw > lw + 50 {
-                        w.set_size(lw + 50, 10 + lh + 5 + ui.btn_ok.height() + 5);
-                    }
+                if cw != initial_width && cw > lw + 50 {
+                    w.set_size(lw + 50, 10 + lh + 5 + ui.btn_ok.height() + 5);
                 }
                 false
             }

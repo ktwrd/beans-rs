@@ -9,9 +9,13 @@ pub mod helper;
 pub mod version;
 pub mod wizard;
 pub mod workflows;
+
 pub use ctx::*;
+
 mod error;
+
 pub use error::*;
+
 pub mod appvar;
 pub mod butler;
 pub mod flags;
@@ -54,14 +58,13 @@ pub fn data_dir() -> String {
 /// - Running on Linux AND the `DISPLAY` or `XDG_SESSION_DESKTOP` environment variables are set.
 pub fn has_gui_support() -> bool {
     unsafe {
-        if PAUSE_ONCE_DONE == false {
+        if !PAUSE_ONCE_DONE {
             return false;
         }
     }
 
     match std::env::consts::OS {
-        "windows" => true,
-        "macos" => true,
+        "windows" | "macos" => true,
         "linux" => {
             if helper::has_env_var("DISPLAY".to_string()) {
                 return true;
@@ -71,7 +74,7 @@ pub fn has_gui_support() -> bool {
                     return true;
                 }
             }
-            return false;
+            false
         }
         _ => {
             log::warn!("Unsupported platform for GUI {}", std::env::consts::OS);

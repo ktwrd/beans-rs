@@ -38,8 +38,7 @@ fn fltk() -> Result<(), BuildError> {
 /// check if a location exists
 #[allow(dead_code)]
 fn path_exists(path: String) -> bool {
-    let p = std::path::Path::new(path.as_str());
-    return p.exists();
+    std::path::Path::new(path.as_str()).exists()
 }
 
 /// set the icon to `icon.ico` when building for windows

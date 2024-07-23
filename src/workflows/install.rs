@@ -81,7 +81,7 @@ impl InstallWorkflow {
         version_id: usize,
         version: RemoteVersion,
     ) -> Result<(), BeansError> {
-        if Self::prompt_confirm(ctx.current_version) == false {
+        if !Self::prompt_confirm(ctx.current_version) {
             info!("[InstallWorkflow] Operation aborted by user");
             return Ok(());
         }
@@ -113,7 +113,7 @@ impl InstallWorkflow {
         out_dir: String,
         version_id: Option<usize>,
     ) -> Result<(), BeansError> {
-        if helper::file_exists(package_loc.clone()) == false {
+        if !helper::file_exists(package_loc.clone()) {
             error!("[InstallWorkflow::Wizard] Failed to find package! (location: {package_loc})");
             return Err(BeansError::DownloadFailure {
                 reason: DownloadFailureReason::FileNotFound {

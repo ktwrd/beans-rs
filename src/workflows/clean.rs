@@ -5,12 +5,13 @@ use log::{info, warn};
 pub struct CleanWorkflow {
     pub context: RunnerContext,
 }
+
 impl CleanWorkflow {
     pub fn wizard(_ctx: &mut RunnerContext) -> Result<(), BeansError> {
         let target_directory = helper::get_tmp_dir();
 
         info!("[CleanWorkflow] Cleaning up {}", target_directory);
-        if helper::file_exists(target_directory.clone()) == false {
+        if !helper::file_exists(target_directory.clone()) {
             warn!("[CleanWorkflow] Temporary directory not found, nothing to clean.")
         }
 
@@ -31,6 +32,6 @@ impl CleanWorkflow {
         }
 
         info!("[CleanWorkflow] Done!");
-        return Ok(());
+        Ok(())
     }
 }

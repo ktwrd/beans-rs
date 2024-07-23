@@ -74,7 +74,7 @@ impl CustomLoggerInner {
             let hours = seconds / 3600;
             let minutes = (seconds / 60) % 60;
             let seconds = seconds % 60;
-            let milliseconds = now.subsec_nanos() / 1_000_000;
+            let milliseconds = now.subsec_millis();
 
             #[allow(unused_assignments)]
             let mut data = String::new();
@@ -103,9 +103,9 @@ impl CustomLoggerInner {
                 }
             }
 
-            let _ = write!(self.sink, "{}\n", data);
+            let _ = writeln!(self.sink, "{}", data);
         }
-        self.sentry.log(&record);
+        self.sentry.log(record);
     }
 }
 pub fn set_filter(filter: LevelFilter) {

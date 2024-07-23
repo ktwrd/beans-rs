@@ -46,6 +46,7 @@ fn main() {
             Launcher::run().await;
         });
 }
+
 fn init_flags() {
     flags::remove_flag(LaunchFlag::DEBUG_MODE);
     #[cfg(debug_assertions)]
@@ -57,26 +58,28 @@ fn init_flags() {
     beans_rs::logger::set_filter(DEFAULT_LOG_LEVEL);
     beans_rs::logger::log_to_stdout();
 }
+
 fn init_panic_handle() {
     std::panic::set_hook(Box::new(move |info| {
         debug!("[panic::set_hook] showing msgbox to notify user");
         let mut x = String::new();
         if let Some(m) = info.message() {
-            x = format!("{:#?}", m);
+            x = format!("{}", m);
         }
         info!("[panic] Fatal error!\n{:#?}", x);
         custom_panic_handle(x);
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
-        sentry::integrations::panic::panic_handler(&info);
+        sentry::integrations::panic::panic_handler(info);
         if flags::has_flag(LaunchFlag::DEBUG_MODE) {
             eprintln!("{:#?}", info);
         }
         logic_done();
     }));
 }
+
 fn custom_panic_handle(msg: String) {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE == false {
+        if !beans_rs::PAUSE_ONCE_DONE {
             return;
         }
     }
@@ -90,6 +93,7 @@ fn custom_panic_handle(msg: String) {
         .with_content(txt)
         .run();
 }
+
 /// should called once the logic flow is done!
 /// will call `helper::get_input` when `PAUSE_ONCE_DONE` is `true`.
 fn logic_done() {
@@ -99,12 +103,14 @@ fn logic_done() {
         }
     }
 }
+
 pub struct Launcher {
     /// Output location. When none, `SourceModDirectoryParam::default()` will be used.
     pub to_location: Option<String>,
     /// Output of `Command.matches()`
     pub root_matches: ArgMatches,
 }
+
 impl Launcher {
     /// Create argument for specifying the location where the sourcemods directory is.
     fn create_location_arg() -> Arg {
@@ -166,11 +172,9 @@ impl Launcher {
             ]);
 
         let mut i = Self::new(&cmd.get_matches());
-        if let Ok(r) = helper::beans_has_update().await {
-            if let Some(v) = r {
-                info!("A new version of beans-rs is available!");
-                info!("{}", v.html_url);
-            }
+        if let Ok(Some(v)) = helper::beans_has_update().await {
+            info!("A new version of beans-rs is available!");
+            info!("{}", v.html_url);
         }
         i.subcommand_processor().await;
     }
@@ -184,7 +188,7 @@ impl Launcher {
         i.set_prompt_do_whatever();
         i.to_location = Launcher::find_arg_sourcemods_location(&i.root_matches);
 
-        return i;
+        i
     }
 
     /// add `LaunchFlag::DEBUG_MODE` to `flags` when the `--debug` parameter flag is used.
@@ -202,7 +206,7 @@ impl Launcher {
     /// Set `PAUSE_ONCE_DONE` to `false` when `--no-pause` is provided. Otherwise, set it to `true`.
     pub fn set_no_pause(&mut self) {
         unsafe {
-            beans_rs::PAUSE_ONCE_DONE = self.root_matches.get_flag("no-pause") == false;
+            beans_rs::PAUSE_ONCE_DONE = !self.root_matches.get_flag("no-pause");
         }
     }
 
@@ -273,7 +277,7 @@ impl Launcher {
     /// NOTE this function uses `panic!` when `InstallWorkflow::wizard` fails. panics are handled
     /// and are reported via sentry.
     pub async fn task_install(&mut self, matches: &ArgMatches) {
-        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        self.to_location = Launcher::find_arg_sourcemods_location(matches);
         if matches.get_flag("confirm") {
             unsafe {
                 beans_rs::PROMPT_DO_WHATEVER = true;
@@ -308,12 +312,10 @@ impl Launcher {
             } else {
                 logic_done();
             }
+        } else if let Err(e) = InstallWorkflow::wizard(&mut ctx).await {
+            panic!("Failed to run InstallWorkflow {:#?}", e);
         } else {
-            if let Err(e) = InstallWorkflow::wizard(&mut ctx).await {
-                panic!("Failed to run InstallWorkflow {:#?}", e);
-            } else {
-                logic_done();
-            }
+            logic_done();
         }
     }
     /// handler for the `install` subcommand where the `--target-version`
@@ -349,7 +351,7 @@ impl Launcher {
     /// NOTE this function uses `panic!` when `VerifyWorkflow::wizard` fails. panics are handled
     /// and are reported via sentry.
     pub async fn task_verify(&mut self, matches: &ArgMatches) {
-        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        self.to_location = Launcher::find_arg_sourcemods_location(matches);
         let mut ctx = self.try_create_context().await;
 
         if let Err(e) = VerifyWorkflow::wizard(&mut ctx).await {
@@ -364,7 +366,7 @@ impl Launcher {
     /// NOTE this function uses `panic!` when `UpdateWorkflow::wizard` fails. panics are handled
     /// and are reported via sentry.
     pub async fn task_update(&mut self, matches: &ArgMatches) {
-        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        self.to_location = Launcher::find_arg_sourcemods_location(matches);
         let mut ctx = self.try_create_context().await;
 
         if let Err(e) = UpdateWorkflow::wizard(&mut ctx).await {
@@ -407,6 +409,7 @@ impl Launcher {
         }
     }
 }
+
 fn show_msgbox_error(text: String) {
     beans_rs::gui::DialogBuilder::new()
         .with_title(String::from("beans - Fatal Error!"))

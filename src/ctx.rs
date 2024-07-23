@@ -13,6 +13,7 @@ pub struct RunnerContext {
     pub current_version: Option<usize>,
     pub appvar: crate::appvar::AppVarData,
 }
+
 impl RunnerContext {
     pub async fn create_auto(sml_via: SourceModDirectoryParam) -> Result<Self, BeansError> {
         depends::try_write_deps();
@@ -50,12 +51,12 @@ impl RunnerContext {
             version::update_version_file(Some(sourcemod_path.clone()))?;
         }
 
-        return Ok(Self {
+        Ok(Self {
             sourcemod_path: parse_location(sourcemod_path.clone()),
             remote_version_list: version_list,
             current_version: crate::version::get_current_version(Some(sourcemod_path.clone())),
             appvar: crate::appvar::parse(),
-        });
+        })
     }
     /// Sets `remote_version_list` from `version::get_version_list()`
     pub async fn set_remote_version_list(&mut self) -> Result<(), BeansError> {
@@ -100,9 +101,9 @@ impl RunnerContext {
                         return Ok(i.clone());
                     }
                 }
-                return Err(BeansError::RemoteVersionNotFound {
+                Err(BeansError::RemoteVersionNotFound {
                     version: self.current_version,
-                });
+                })
             }
             None => Err(BeansError::RemoteVersionNotFound {
                 version: self.current_version,
@@ -113,7 +114,7 @@ impl RunnerContext {
     /// When self.current_version is some, iterate through patches and fetch the patch that is available
     /// to bring the current version in-line with the latest version.
     pub fn has_patch_available(&mut self) -> Option<RemotePatch> {
-        let current_version = self.current_version.clone();
+        let current_version = self.current_version;
         let (remote_version, _) = self.latest_remote_version();
         match current_version {
             Some(cv) => {
@@ -127,7 +128,7 @@ impl RunnerContext {
                         return Some(patch);
                     }
                 }
-                return None;
+                None
             }
             _ => None,
         }
@@ -137,15 +138,15 @@ impl RunnerContext {
     pub fn read_gameinfo_file(&mut self) -> Result<Option<Vec<u8>>, BeansError> {
         self.gameinfo_perms()?;
         let location = self.gameinfo_location();
-        if helper::file_exists(location.clone()) == false {
+        if !helper::file_exists(location.clone()) {
             return Ok(None);
         }
         let file = match std::fs::read(&location) {
             Ok(v) => v,
-            Err(e) => {
+            Err(error) => {
                 let ex = BeansError::GameInfoFileReadFail {
-                    error: e,
-                    location: location,
+                    error,
+                    location,
                     backtrace: Backtrace::capture(),
                 };
                 sentry::capture_error(&ex);
@@ -196,7 +197,7 @@ impl RunnerContext {
         let mut out_loc = helper::get_tmp_dir();
 
         if let Some(size) = version.pre_sz {
-            if helper::has_free_space(out_loc.clone(), size)? == false {
+            if !helper::has_free_space(out_loc.clone(), size)? {
                 panic!("Not enough free space to install latest version!");
             }
         }
@@ -253,7 +254,7 @@ impl RunnerContext {
                 };
                 trace!("[RunnerContext::extract_package] {:}\n{:#?}", xe, xe);
                 sentry::capture_error(&xe);
-                return Err(xe);
+                Err(xe)
             }
             Ok(_) => Ok(()),
         }
@@ -261,12 +262,11 @@ impl RunnerContext {
 
     #[cfg(target_os = "linux")]
     pub fn prepare_symlink(&mut self) -> Result<(), BeansError> {
-        for pair in SYMLINK_FILES.into_iter() {
+        for pair in SYMLINK_FILES.iter() {
             let target: &str = pair[1];
             let mod_location = self.get_mod_location();
             let ln_location = format!("{}{}", mod_location, target);
-            if helper::file_exists(ln_location.clone())
-                && helper::is_symlink(ln_location.clone()) == false
+            if helper::file_exists(ln_location.clone()) && !helper::is_symlink(ln_location.clone())
             {
                 if let Err(e) = std::fs::remove_file(&ln_location) {
                     trace!(
@@ -288,18 +288,13 @@ impl RunnerContext {
     }
 }
 
-pub const SYMLINK_FILES: &'static [&'static [&'static str; 2]] =
-    &[&["bin/server.so", "bin/server_srv.so"]];
+pub const SYMLINK_FILES: &[&[&str; 2]] = &[&["bin/server.so", "bin/server_srv.so"]];
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, Default)]
 pub enum SourceModDirectoryParam {
     /// Default value. Will autodetect location.
+    #[default]
     AutoDetect,
     /// Use from the specified sourcemod location.
     WithLocation(String),
-}
-impl Default for SourceModDirectoryParam {
-    fn default() -> Self {
-        SourceModDirectoryParam::AutoDetect
-    }
 }
