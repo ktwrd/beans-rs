@@ -3,7 +3,7 @@
 use std::str::FromStr;
 use clap::{Arg, ArgAction, ArgMatches, Command};
 use log::{debug, error, info, LevelFilter, trace};
-use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
+use beans_rs::{BeansError, flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
 use beans_rs::flags::LaunchFlag;
 use beans_rs::helper::parse_location;
 use beans_rs::SourceModDirectoryParam;
@@ -429,7 +429,15 @@ impl Launcher
                 trace!("======== Full Error ========");
                 trace!("{:#?}", &e);
                 show_msgbox_error(format!("{:}", &e));
-                sentry::capture_error(&e);
+                let do_report = match e {
+                    BeansError::GameStillRunning { .. } => false,
+                    BeansError::LatestVersionAlreadyInstalled { .. } => false,
+                    BeansError::FreeSpaceCheckFailure { .. } => false,
+                    _ => true
+                };
+                if do_report {
+                    sentry::capture_error(&e);
+                }
                 logic_done();
                 std::process::exit(1);
             }
