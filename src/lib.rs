@@ -16,6 +16,7 @@ pub mod butler;
 pub mod flags;
 pub mod appvar;
 pub mod logger;
+pub mod gui;
 
 /// NOTE do not change, fetches from the version of beans-rs on build
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -45,6 +46,41 @@ pub fn data_dir() -> String
 {
     let av = appvar::parse();
     format!("{}{}{}", PATH_SEP, av.mod_info.sourcemod_name, PATH_SEP)
+}
+
+/// Check if we have GUI support enabled. Will always return `false` when `PAUSE_ONCE_DONE` is `false`.
+/// 
+/// Will return `true` when
+/// - Running on Windows
+/// - Running on macOS
+/// - Running on Linux AND the `DISPLAY` or `XDG_SESSION_DESKTOP` environment variables are set.
+pub fn has_gui_support() -> bool
+{
+    unsafe {
+        if PAUSE_ONCE_DONE == false {
+            return false;
+        }
+    }
+
+    match std::env::consts::OS {
+        "windows" => true,
+        "macos" => true,
+        "linux" => {
+            if helper::has_env_var("DISPLAY".to_string()) {
+                return true;
+            }
+            if let Some(x) = helper::try_get_env_var("XDG_SESSION_DESKTOP".to_string()) {
+                if x.len() >= 3usize {
+                    return true;
+                }
+            }
+            return false;
+        },
+        _ => {
+            log::warn!("Unsupported platform for GUI {}", std::env::consts::OS);
+            false
+        }
+    }
 }
 
 #[cfg(not(target_os = "windows"))]

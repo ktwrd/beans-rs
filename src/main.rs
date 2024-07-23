@@ -5,6 +5,7 @@ use clap::{Arg, ArgAction, ArgMatches, Command};
 use log::{debug, error, info, LevelFilter, trace};
 use beans_rs::{flags, helper, PANIC_MSG_CONTENT, RunnerContext, wizard};
 use beans_rs::flags::LaunchFlag;
+use beans_rs::gui::DialogIconKind;
 use beans_rs::helper::parse_location;
 use beans_rs::SourceModDirectoryParam;
 use beans_rs::workflows::{CleanWorkflow, InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
@@ -62,6 +63,7 @@ fn init_panic_handle()
         if let Some(m) = info.message() {
             x = format!("{:#?}", m);
         }
+        info!("[panic] Fatal error!\n{:#?}", x);
         custom_panic_handle(x);
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
         sentry::integrations::panic::panic_handler(&info);
@@ -71,38 +73,19 @@ fn init_panic_handle()
         logic_done();
     }));
 }
-#[cfg(target_os = "windows")]
-fn fix_msgbox_txt(txt: String) -> String {
-    txt.replace("\\n", "\r\n")
-}
-#[cfg(not(target_os = "windows"))]
-fn fix_msgbox_txt(txt: String) -> String {
-    txt
-}
 fn custom_panic_handle(msg: String)
 {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE {
-            let mut txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg);
-            txt = fix_msgbox_txt(txt);
-            std::thread::spawn(move || {
-
-                let d = native_dialog::MessageDialog::new()
-                    .set_type(native_dialog::MessageType::Error)
-                    .set_title("beans - fatal error!")
-                    .set_text(&txt)
-                    .show_alert();
-                if let Err(e) = d {
-                    sentry::capture_error(&e);
-                    eprintln!("Failed to show MessageDialog {:#?}", e);
-                    eprintln!("[msgbox_panic] Come on, we failed to show a messagebox? Well, the error has been reported and we're on it.");
-                    eprintln!("[msgbox_panic] PLEASE report this to kate@dariox.club with as much info as possible <3");
-                }
-            });
-        } else {
-            info!("This error has been reported to the developers");
+        if beans_rs::PAUSE_ONCE_DONE == false {
+            return;
         }
     }
+    let txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg).replace("\\n", "\n");
+    beans_rs::gui::DialogBuilder::new()
+        .with_title(String::from("beans - Fatal Error!"))
+        .with_icon(DialogIconKind::Error)
+        .with_content(txt)
+        .run();
 }
 /// should called once the logic flow is done!
 /// will call `helper::get_input` when `PAUSE_ONCE_DONE` is `true`.
@@ -437,21 +420,11 @@ impl Launcher
     }
 }
 fn show_msgbox_error(text: String) {
-    unsafe {
-        if beans_rs::PAUSE_ONCE_DONE {
-            std::thread::spawn(move || {
-                let d = native_dialog::MessageDialog::new()
-                    .set_type(native_dialog::MessageType::Error)
-                    .set_title("beans - fatal error!")
-                    .set_text(&format!("{}", fix_msgbox_txt(text)))
-                    .show_alert();
-                if let Err(e) = d {
-                    sentry::capture_error(&e);
-                    eprintln!("Failed to show MessageDialog {:#?}", e);
-                }
-            });
-        }
-    }
+    beans_rs::gui::DialogBuilder::new()
+        .with_title(String::from("beans - Fatal Error!"))
+        .with_icon(DialogIconKind::Error)
+        .with_content(text.replace("\\n", "\n"))
+        .run();
 }
 
 

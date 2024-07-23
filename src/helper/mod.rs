@@ -633,3 +633,23 @@ pub struct GithubReleaseItem
     pub draft: bool,
     pub prerelease: bool
 }
+
+/// Return `true` when `try_get_env_var` returns Some with a length greater than `1`.
+pub fn has_env_var(target_key: String) -> bool
+{
+    if let Some(x) = try_get_env_var(target_key) {
+        return x.len() > 1;
+    }
+    return false;
+}
+/// Try and get a value from `std::env::vars()`
+/// Will return `None` when not found
+pub fn try_get_env_var(target_key: String) -> Option<String>
+{
+    for (key, value) in std::env::vars().into_iter() {
+        if key == target_key {
+            return Some(value);
+        }
+    }
+    return None;
+}

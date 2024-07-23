@@ -17,7 +17,7 @@ jobs:
         include:
           - os: ubuntu-20.04
             filename: 'beans-rs'
-            target: x86_64-unknown-linux-musl
+            target: x86_64-unknown-linux-gnu
 
           - os: windows-latest
             target: x86_64-pc-windows-msvc
@@ -25,14 +25,33 @@ jobs:
 
     steps:
       - uses: actions/checkout@master
-
       - name: Install Build Dependencies (ubuntu)
         if: ${{ matrix.os == 'ubuntu-20.04' }}
         run: |
           sudo apt-get update;
           sudo apt-get install -y \
-            libssl-dev \
-            musl-tools
+            g++ \
+            gdb \
+            git \
+            make \
+            cmake \
+            autoconf \
+            libx11-dev \
+            libglu1-mesa-dev \
+            libxft-dev \
+            libxcursor-dev \
+            libasound2-dev \
+            freeglut3-dev \
+            libcairo2-dev \
+            libfontconfig1-dev \
+            libglew-dev \
+            libjpeg-dev \
+            libpng-dev \
+            libpango1.0-dev \
+            libxinerama-dev \
+            libfltk1.3 \
+            libfltk1.3-dev \
+            libssl-dev
 
       - uses: actions-rs/toolchain@v1
         with:
@@ -42,7 +61,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --release --all-features --target ${{ matrix.target }}
+          args: --release --target ${{ matrix.target }}
 
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
