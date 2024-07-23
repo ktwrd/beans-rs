@@ -1,11 +1,11 @@
-﻿use fltk::{*, prelude::*};
 use fltk::app::Receiver;
 use fltk::window::Window;
+use fltk::{prelude::*, *};
 use fltk_theme::{color_themes, ColorTheme};
 use log::debug;
 
-pub(crate) mod shared_ui;
 mod dialog;
+pub(crate) mod shared_ui;
 pub use dialog::*;
 pub mod icon;
 
@@ -25,7 +25,7 @@ pub enum GUIAppStatus {
     BtnYes,
     BtnNo,
     BtnTryAgain,
-    BtnContinue
+    BtnContinue,
 }
 
 /// Make the `window` provided the in be the center of the current screen.
@@ -36,7 +36,12 @@ pub fn window_centre_screen(window: &mut Window) {
     let (mut x, mut y) = app::screen_size().clone();
     x -= width.clone() as f64;
     y -= height.clone() as f64;
-    window.resize(((x / 2.0) as i32) + sx, ((y / 2.0) as i32) + sy, width, height);
+    window.resize(
+        ((x / 2.0) as i32) + sx,
+        ((y / 2.0) as i32) + sy,
+        width,
+        height,
+    );
 }
 /// Get the X and Y position of the center of the current screen.
 pub fn get_center_screen() -> (i32, i32) {
@@ -55,8 +60,8 @@ pub fn window_ensure(win: &mut Window, width: i32, height: i32) {
                 w.set_size(width, height);
             }
             true
-        },
-        _ => false
+        }
+        _ => false,
     });
     win.make_resizable(false);
     win.show();
@@ -64,9 +69,12 @@ pub fn window_ensure(win: &mut Window, width: i32, height: i32) {
 pub fn apply_app_scheme() {
     let theme_content = match dark_light::detect() {
         dark_light::Mode::Light => color_themes::GRAY_THEME,
-        _ => color_themes::DARK_THEME
+        _ => color_themes::DARK_THEME,
     };
-    debug!("[apply_app_scheme] using color theme: {:#?}", dark_light::detect());
+    debug!(
+        "[apply_app_scheme] using color theme: {:#?}",
+        dark_light::detect()
+    );
     let theme = ColorTheme::new(theme_content);
     theme.apply();
 }
@@ -76,9 +84,11 @@ pub fn wait_for_quit(app: &app::App, receive_action: &Receiver<GUIAppStatus>) {
         if let Some(action) = receive_action.recv() {
             match action {
                 GUIAppStatus::Quit => {
-                    unsafe { crate::PAUSE_ONCE_DONE = false; }
+                    unsafe {
+                        crate::PAUSE_ONCE_DONE = false;
+                    }
                     app.quit();
-                },
+                }
                 _ => {}
             }
         }

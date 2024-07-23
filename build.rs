@@ -1,8 +1,6 @@
-﻿#[allow(dead_code, unused_macros, unused_imports)]
-
-
-use std::{env, io};
 use std::path::PathBuf;
+#[allow(dead_code, unused_macros, unused_imports)]
+use std::{env, io};
 #[cfg(target_os = "windows")]
 use winres::WindowsResource;
 #[allow(unused_macros)]
@@ -24,8 +22,14 @@ fn fltk() -> Result<(), BuildError> {
     println!("cargo:rerun-if-changed=src/gui/shared_ui.fl");
     let g = fl2rust::Generator::default();
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
-    if let Err(e) = g.in_out("src/gui/shared_ui.fl", out_path.join("shared_ui.rs").to_str().unwrap()) {
-        return Err(BuildError::FLTK(format!("Failed to build shared_ui.fl {:#?}", e)));
+    if let Err(e) = g.in_out(
+        "src/gui/shared_ui.fl",
+        out_path.join("shared_ui.rs").to_str().unwrap(),
+    ) {
+        return Err(BuildError::FLTK(format!(
+            "Failed to build shared_ui.fl {:#?}",
+            e
+        )));
     }
 
     Ok(())
@@ -33,8 +37,7 @@ fn fltk() -> Result<(), BuildError> {
 
 /// check if a location exists
 #[allow(dead_code)]
-fn path_exists(path: String) -> bool
-{
+fn path_exists(path: String) -> bool {
     let p = std::path::Path::new(path.as_str());
     return p.exists();
 }
@@ -44,8 +47,7 @@ fn path_exists(path: String) -> bool
 fn windows_icon() -> Result<(), BuildError> {
     let icon_location = OVERRIDE_ICON_LOCATION.unwrap_or("icon.ico");
     if env::var_os("CARGO_CFG_WINDOWS").is_some() {
-        if !path_exists(icon_location.to_string())
-        {
+        if !path_exists(icon_location.to_string()) {
             print!("icon.ico not found. Not embedding icon");
             return Ok(());
         }
@@ -54,9 +56,7 @@ fn windows_icon() -> Result<(), BuildError> {
             .set_icon(icon_location)
             .compile()?;
         print!("successfully set icon");
-    }
-    else
-    {
+    } else {
         print!("not on windows, can't embed icon");
     }
     Ok(())
@@ -70,10 +70,10 @@ fn windows_icon() -> Result<(), BuildError> {
 #[derive(Debug)]
 pub enum BuildError {
     IO(io::Error),
-    FLTK(String)
+    FLTK(String),
 }
 impl From<io::Error> for BuildError {
-    fn from (e: io::Error) -> Self {
+    fn from(e: io::Error) -> Self {
         BuildError::IO(e)
     }
 }

@@ -1,32 +1,30 @@
-use fltk::{*, prelude::*};
-use fltk::image::PngImage;
-use log::warn;
-use crate::gui::{apply_app_scheme, window_centre_screen, wait_for_quit, GUIAppStatus, icon};
 use crate::gui::shared_ui::GenericDialog;
+use crate::gui::{apply_app_scheme, icon, wait_for_quit, window_centre_screen, GUIAppStatus};
+use fltk::image::PngImage;
+use fltk::{prelude::*, *};
+use log::warn;
 
 pub struct DialogBuilder {
     pub title: String,
     pub content: String,
-    pub icon: Option<PngImage>
+    pub icon: Option<PngImage>,
 }
 pub enum DialogIconKind {
     Default,
     Warn,
-    Error
+    Error,
 }
 impl DialogBuilder {
     pub fn new() -> Self {
         Self {
             title: format!("beans v{}", crate::VERSION),
             content: String::new(),
-            icon: None
+            icon: None,
         }
     }
     pub fn with_png_data(mut self, data: &Vec<u8>) -> Self {
         match PngImage::from_data(data) {
-            Ok(img) => {
-                self.icon = Some(img)
-            },
+            Ok(img) => self.icon = Some(img),
             Err(e) => {
                 warn!("[DialogBuilder::with_png] Failed to set icon! {:#?}", e);
             }
@@ -37,7 +35,7 @@ impl DialogBuilder {
         let data: &Vec<u8> = match kind {
             DialogIconKind::Default => &icon::DEFAULT_RAW_X32,
             DialogIconKind::Warn => &icon::DEFAULT_WARN_RAW_X32,
-            DialogIconKind::Error => &icon::DEFAULT_ERROR_RAW_X32
+            DialogIconKind::Error => &icon::DEFAULT_ERROR_RAW_X32,
         };
         self.with_png_data(data)
     }
@@ -69,30 +67,27 @@ impl DialogBuilder {
         ui.btn_ok.emit(send_action, GUIAppStatus::Quit);
 
         let (label_w, label_h) = ui.label.measure_label();
-        ui.win.set_size(
-            25 + label_w + 25,
-            10 + label_h + 5 + ui.btn_ok.height() + 5
-        );
+        ui.win
+            .set_size(25 + label_w + 25, 10 + label_h + 5 + ui.btn_ok.height() + 5);
 
         ui.btn_ok.set_pos(25, ui.win.height() - 24 - 5);
         window_centre_screen(&mut ui.win);
-        ui.win.handle(move |w, ev|
-            match ev {
-                fltk::enums::Event::Resize => {
-                    let height = w.height();
-                    ui.btn_ok.set_pos(25, height - 24 - 5);
-                    ui.btn_ok.set_size(70, 24);
-                    let (lw, lh) = ui.label.measure_label();
-                    let cw = w.width();
-                    if cw != initial_width {
-                        if cw > lw+50 {
-                            w.set_size(lw+50, 10+lh+5+ ui.btn_ok.height() + 5);
-                        }
+        ui.win.handle(move |w, ev| match ev {
+            fltk::enums::Event::Resize => {
+                let height = w.height();
+                ui.btn_ok.set_pos(25, height - 24 - 5);
+                ui.btn_ok.set_size(70, 24);
+                let (lw, lh) = ui.label.measure_label();
+                let cw = w.width();
+                if cw != initial_width {
+                    if cw > lw + 50 {
+                        w.set_size(lw + 50, 10 + lh + 5 + ui.btn_ok.height() + 5);
                     }
-                    false
-                },
-                _ => false
-            });
+                }
+                false
+            }
+            _ => false,
+        });
         ui.win.make_resizable(false);
         ui.win.show();
         wait_for_quit(&app, &receive_action);

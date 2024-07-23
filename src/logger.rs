@@ -1,9 +1,9 @@
+use lazy_static::lazy_static;
+use log::{LevelFilter, Log, Metadata, Record};
 use std::io;
 use std::io::Write;
 use std::sync::Mutex;
 use std::time::Instant;
-use lazy_static::lazy_static;
-use log::{LevelFilter, Log, Metadata, Record};
 
 lazy_static! {
     static ref LOGGER: CustomLogger = CustomLogger {
@@ -25,7 +25,7 @@ impl CustomLogger {
                 log::Level::Error => LogFilter::Exception,
                 log::Level::Warn => LogFilter::Event,
                 log::Level::Info | log::Level::Debug | log::Level::Trace => LogFilter::Breadcrumb,
-            })
+            }),
         });
     }
 }
@@ -55,7 +55,7 @@ impl Log for CustomLogger {
 struct CustomLoggerInner {
     start: Instant,
     sink: Box<dyn Write + Send>,
-    sentry: sentry_log::SentryLogger<NoopLogger>
+    sentry: sentry_log::SentryLogger<NoopLogger>,
 }
 use colored::Colorize;
 use sentry_log::{LogFilter, NoopLogger};
@@ -68,8 +68,7 @@ impl CustomLoggerInner {
                 do_print = false;
             }
         }
-        if do_print
-        {
+        if do_print {
             let now = self.start.elapsed();
             let seconds = now.as_secs();
             let hours = seconds / 3600;
@@ -82,7 +81,8 @@ impl CustomLoggerInner {
             unsafe {
                 data = LOG_FORMAT.to_string();
             }
-            data = data.replace("#HOURS", &format!("{:02}", hours))
+            data = data
+                .replace("#HOURS", &format!("{:02}", hours))
                 .replace("#MINUTES", &format!("{:02}", minutes))
                 .replace("#SECONDS", &format!("{:02}", seconds))
                 .replace("#MILLISECONDS", &format!("{:03}", milliseconds))
@@ -98,21 +98,17 @@ impl CustomLoggerInner {
                         log::Level::Info => data.normal(),
                         log::Level::Debug => data.green(),
                         log::Level::Trace => data.blue(),
-                    }.to_string()
+                    }
+                    .to_string()
                 }
             }
 
-            let _ = write!(
-                self.sink,
-                "{}\n",
-                data
-            );
+            let _ = write!(self.sink, "{}\n", data);
         }
         self.sentry.log(&record);
     }
 }
-pub fn set_filter(filter: LevelFilter)
-{
+pub fn set_filter(filter: LevelFilter) {
     unsafe {
         LOG_FILTER = filter;
     }
@@ -120,7 +116,8 @@ pub fn set_filter(filter: LevelFilter)
 static mut LOG_FILTER: LevelFilter = LevelFilter::Trace;
 pub static mut LOG_FORMAT: &str = LOG_FORMAT_DEFAULT;
 pub static mut LOG_COLOR: bool = true;
-pub const LOG_FORMAT_DEFAULT: &str = "[#HOURS:#MINUTES:#SECONDS.#MILLISECONDS] (#THREAD) #LEVEL #CONTENT";
+pub const LOG_FORMAT_DEFAULT: &str =
+    "[#HOURS:#MINUTES:#SECONDS.#MILLISECONDS] (#THREAD) #LEVEL #CONTENT";
 pub const LOG_FORMAT_MINIMAL: &str = "#LEVEL #CONTENT";
 pub fn log_to<T: Write + Send + 'static>(sink: T) {
     LOGGER.renew(sink);

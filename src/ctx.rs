@@ -1,41 +1,46 @@
-use std::backtrace::Backtrace;
-use crate::{BeansError, depends, helper, version};
-use crate::helper::{find_sourcemod_path, InstallType, parse_location};
+use crate::helper::{find_sourcemod_path, parse_location, InstallType};
 use crate::version::{RemotePatch, RemoteVersion, RemoteVersionResponse};
+use crate::{depends, helper, version, BeansError};
+use log::{debug, error, info, trace};
+use std::backtrace::Backtrace;
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
-use log::{debug, error, info, trace};
 
 #[derive(Debug, Clone)]
-pub struct RunnerContext
-{
+pub struct RunnerContext {
     pub sourcemod_path: String,
     pub remote_version_list: RemoteVersionResponse,
     pub current_version: Option<usize>,
-    pub appvar: crate::appvar::AppVarData
+    pub appvar: crate::appvar::AppVarData,
 }
-impl RunnerContext
-{
-    pub async fn create_auto(sml_via: SourceModDirectoryParam) -> Result<Self, BeansError>
-    {
+impl RunnerContext {
+    pub async fn create_auto(sml_via: SourceModDirectoryParam) -> Result<Self, BeansError> {
         depends::try_write_deps();
         if let Err(e) = depends::try_install_vcredist().await {
             sentry::capture_error(&e);
             println!("Failed to install vcredist! {:}", e);
-            debug!("[RunnerContext::create_auto] Failed to install vcredist! {:#?}", e);
+            debug!(
+                "[RunnerContext::create_auto] Failed to install vcredist! {:#?}",
+                e
+            );
         }
-        let sourcemod_path = parse_location(match sml_via
-        {
+        let sourcemod_path = parse_location(match sml_via {
             SourceModDirectoryParam::AutoDetect => match find_sourcemod_path() {
                 Ok(v) => v,
                 Err(e) => {
                     sentry::capture_error(&e);
-                    debug!("[RunnerContext::create_auto] Failed to find sourcemods folder. {:#?}", e);
+                    debug!(
+                        "[RunnerContext::create_auto] Failed to find sourcemods folder. {:#?}",
+                        e
+                    );
                     return Err(BeansError::SourceModLocationNotFound);
                 }
             },
             SourceModDirectoryParam::WithLocation(l) => {
-                debug!("[RunnerContext::create_auto] Using specified location {}", l);
+                debug!(
+                    "[RunnerContext::create_auto] Using specified location {}",
+                    l
+                );
                 l
             }
         });
@@ -45,17 +50,15 @@ impl RunnerContext
             version::update_version_file(Some(sourcemod_path.clone()))?;
         }
 
-        return Ok(Self
-        {
+        return Ok(Self {
             sourcemod_path: parse_location(sourcemod_path.clone()),
             remote_version_list: version_list,
             current_version: crate::version::get_current_version(Some(sourcemod_path.clone())),
-            appvar: crate::appvar::parse()
+            appvar: crate::appvar::parse(),
         });
     }
     /// Sets `remote_version_list` from `version::get_version_list()`
-    pub async fn set_remote_version_list(&mut self) -> Result<(), BeansError>
-    {
+    pub async fn set_remote_version_list(&mut self) -> Result<(), BeansError> {
         self.remote_version_list = version::get_version_list().await?;
         Ok(())
     }
@@ -64,8 +67,7 @@ impl RunnerContext
     /// {sourcemod_dir}{crate::DATA_DIR}
     /// e.g; /home/kate/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/sourcemods/open_fortress/
     ///      C:\Games\Steam\steamapps\sourcemods\open_fortress\
-    pub fn get_mod_location(&mut self) -> String
-    {
+    pub fn get_mod_location(&mut self) -> String {
         helper::join_path(self.sourcemod_path.clone(), crate::data_dir())
     }
 
@@ -78,8 +80,7 @@ impl RunnerContext
     }
 
     /// Get the latest item in `remote_version_list`
-    pub fn latest_remote_version(&mut self) -> (usize, RemoteVersion)
-    {
+    pub fn latest_remote_version(&mut self) -> (usize, RemoteVersion) {
         let mut highest = usize::MIN;
         for (key, _) in self.remote_version_list.clone().versions.into_iter() {
             if key > highest {
@@ -100,33 +101,35 @@ impl RunnerContext
                     }
                 }
                 return Err(BeansError::RemoteVersionNotFound {
-                    version: self.current_version
+                    version: self.current_version,
                 });
-            },
-            None => {
-                Err(BeansError::RemoteVersionNotFound {
-                    version: self.current_version
-                })
             }
+            None => Err(BeansError::RemoteVersionNotFound {
+                version: self.current_version,
+            }),
         }
     }
 
     /// When self.current_version is some, iterate through patches and fetch the patch that is available
     /// to bring the current version in-line with the latest version.
-    pub fn has_patch_available(&mut self) -> Option<RemotePatch>
-    {
+    pub fn has_patch_available(&mut self) -> Option<RemotePatch> {
         let current_version = self.current_version.clone();
         let (remote_version, _) = self.latest_remote_version();
         match current_version {
             Some(cv) => {
                 for (_, patch) in self.remote_version_list.clone().patches.into_iter() {
-                    if patch.file == format!("{}-{}to{}.pwr", &self.appvar.mod_info.short_name, cv, remote_version) {
+                    if patch.file
+                        == format!(
+                            "{}-{}to{}.pwr",
+                            &self.appvar.mod_info.short_name, cv, remote_version
+                        )
+                    {
                         return Some(patch);
                     }
                 }
                 return None;
-            },
-            _ => None
+            }
+            _ => None,
         }
     }
 
@@ -143,7 +146,7 @@ impl RunnerContext
                 let ex = BeansError::GameInfoFileReadFail {
                     error: e,
                     location: location,
-                    backtrace: Backtrace::capture()
+                    backtrace: Backtrace::capture(),
                 };
                 sentry::capture_error(&ex);
                 return Err(ex);
@@ -154,7 +157,7 @@ impl RunnerContext
 
     /// Get the location of `gameinfo.txt` inside of the folder returned by `self.get_mod_location()`
     pub fn gameinfo_location(&mut self) -> String {
-        let mut location =  self.get_mod_location();
+        let mut location = self.get_mod_location();
         location.push_str("gameinfo.txt");
         location
     }
@@ -169,12 +172,15 @@ impl RunnerContext
                 let xe = BeansError::GameInfoPermissionSetFail {
                     error: e,
                     permissions: perm.clone(),
-                    location
+                    location,
                 };
                 sentry::capture_error(&xe);
                 return Err(xe);
             }
-            debug!("[RunnerContext::gameinfo_perms] set permissions on {location} to {:#?}", perm);
+            debug!(
+                "[RunnerContext::gameinfo_perms] set permissions on {location} to {:#?}",
+                perm
+            );
         }
         Ok(())
     }
@@ -185,8 +191,7 @@ impl RunnerContext
 
     /// Download package with Progress Bar.
     /// Ok is the location to where it was downloaded to.
-    pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
-    {
+    pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError> {
         let av = crate::appvar::parse();
         let mut out_loc = helper::get_tmp_dir();
 
@@ -201,16 +206,21 @@ impl RunnerContext
 
         info!("[RunnerContext::download_package] writing to {}", out_loc);
         helper::download_with_progress(
-            format!("{}{}", &av.remote_info.base_url, version.file.expect("No URL for latest package!")),
-            out_loc.clone()).await?;
+            format!(
+                "{}{}",
+                &av.remote_info.base_url,
+                version.file.expect("No URL for latest package!")
+            ),
+            out_loc.clone(),
+        )
+        .await?;
 
         Ok(out_loc)
     }
 
     /// Extract zstd_location to the detected sourcemods directory.
     /// TODO replace unwrap/expect with match error handling
-    pub fn extract_package(zstd_location: String, out_dir: String) -> Result<(), BeansError>
-    {
+    pub fn extract_package(zstd_location: String, out_dir: String) -> Result<(), BeansError> {
         let tar_tmp_location = helper::get_tmp_file("data.tar".to_string());
 
         let zstd_file = std::fs::File::open(&zstd_location)?;
@@ -223,8 +233,14 @@ impl RunnerContext
         if helper::file_exists(tar_tmp_location.clone()) {
             if let Err(e) = std::fs::remove_file(tar_tmp_location.clone()) {
                 sentry::capture_error(&e);
-                error!("[RunnerContext::extract_package] Failed to delete temporary file: {:}", e);
-                debug!("[RunnerContext::extract_package] Failed to delete {}\n{:#?}", tar_tmp_location, e);
+                error!(
+                    "[RunnerContext::extract_package] Failed to delete temporary file: {:}",
+                    e
+                );
+                debug!(
+                    "[RunnerContext::extract_package] Failed to delete {}\n{:#?}",
+                    tar_tmp_location, e
+                );
             }
         }
         match x {
@@ -233,27 +249,31 @@ impl RunnerContext
                     src_file: tar_tmp_location,
                     target_dir: out_dir,
                     error: e,
-                    backtrace: Backtrace::capture()
+                    backtrace: Backtrace::capture(),
                 };
                 trace!("[RunnerContext::extract_package] {:}\n{:#?}", xe, xe);
                 sentry::capture_error(&xe);
                 return Err(xe);
-            },
-            Ok(_) => Ok(())
+            }
+            Ok(_) => Ok(()),
         }
     }
 
     #[cfg(target_os = "linux")]
-    pub fn prepare_symlink(&mut self) -> Result<(), BeansError>
-    {
+    pub fn prepare_symlink(&mut self) -> Result<(), BeansError> {
         for pair in SYMLINK_FILES.into_iter() {
             let target: &str = pair[1];
             let mod_location = self.get_mod_location();
             let ln_location = format!("{}{}", mod_location, target);
             if helper::file_exists(ln_location.clone())
-            && helper::is_symlink(ln_location.clone()) == false {
+                && helper::is_symlink(ln_location.clone()) == false
+            {
                 if let Err(e) = std::fs::remove_file(&ln_location) {
-                    trace!("[RunnerContext::prepare_symlink] failed to remove {}\n{:#?}", ln_location, e);
+                    trace!(
+                        "[RunnerContext::prepare_symlink] failed to remove {}\n{:#?}",
+                        ln_location,
+                        e
+                    );
                     return Err(e.into());
                 }
             }
@@ -262,28 +282,23 @@ impl RunnerContext
         Ok(())
     }
     #[cfg(not(target_os = "linux"))]
-    pub fn prepare_symlink(&mut self) -> Result<(), BeansError>
-    {
+    pub fn prepare_symlink(&mut self) -> Result<(), BeansError> {
         // ignored since this symlink stuff is for linux only
         Ok(())
     }
 }
 
-pub const SYMLINK_FILES: &'static [&'static [&'static str; 2]] = &[
-    &["bin/server.so", "bin/server_srv.so"]
-];
-
+pub const SYMLINK_FILES: &'static [&'static [&'static str; 2]] =
+    &[&["bin/server.so", "bin/server_srv.so"]];
 
 #[derive(Clone, Debug)]
-pub enum SourceModDirectoryParam
-{
+pub enum SourceModDirectoryParam {
     /// Default value. Will autodetect location.
     AutoDetect,
     /// Use from the specified sourcemod location.
-    WithLocation(String)
+    WithLocation(String),
 }
-impl Default for SourceModDirectoryParam
-{
+impl Default for SourceModDirectoryParam {
     fn default() -> Self {
         SourceModDirectoryParam::AutoDetect
     }

@@ -3,20 +3,20 @@
 
 use include_flate::flate;
 
+mod ctx;
 pub mod depends;
 pub mod helper;
-pub mod wizard;
 pub mod version;
+pub mod wizard;
 pub mod workflows;
-mod ctx;
 pub use ctx::*;
 mod error;
 pub use error::*;
+pub mod appvar;
 pub mod butler;
 pub mod flags;
-pub mod appvar;
-pub mod logger;
 pub mod gui;
+pub mod logger;
 
 /// NOTE do not change, fetches from the version of beans-rs on build
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -31,7 +31,6 @@ pub static mut PAUSE_ONCE_DONE: bool = false;
 /// When `true`, everything that prompts the user for Y/N should use the default option.
 pub static mut PROMPT_DO_WHATEVER: bool = false;
 
-
 // ------------------------------------------------------------------------
 // please dont change consts below unless you know what you're doing <3
 //
@@ -42,20 +41,18 @@ pub const PATH_SEP: &str = "/";
 #[cfg(target_os = "windows")]
 pub const PATH_SEP: &str = "\\";
 
-pub fn data_dir() -> String
-{
+pub fn data_dir() -> String {
     let av = appvar::parse();
     format!("{}{}{}", PATH_SEP, av.mod_info.sourcemod_name, PATH_SEP)
 }
 
 /// Check if we have GUI support enabled. Will always return `false` when `PAUSE_ONCE_DONE` is `false`.
-/// 
+///
 /// Will return `true` when
 /// - Running on Windows
 /// - Running on macOS
 /// - Running on Linux AND the `DISPLAY` or `XDG_SESSION_DESKTOP` environment variables are set.
-pub fn has_gui_support() -> bool
-{
+pub fn has_gui_support() -> bool {
     unsafe {
         if PAUSE_ONCE_DONE == false {
             return false;
@@ -75,7 +72,7 @@ pub fn has_gui_support() -> bool
                 }
             }
             return false;
-        },
+        }
         _ => {
             log::warn!("Unsupported platform for GUI {}", std::env::consts::OS);
             false

@@ -1,30 +1,32 @@
-﻿#[cfg(not(target_os = "windows"))]
+#[cfg(not(target_os = "windows"))]
 mod linux;
 
-use std::backtrace::Backtrace;
 #[cfg(not(target_os = "windows"))]
 pub use linux::*;
+use std::backtrace::Backtrace;
 
 #[cfg(target_os = "windows")]
 mod windows;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
-
-use std::io::Write;
-use std::path::PathBuf;
-use indicatif::{ProgressBar, ProgressStyle};
+use crate::appvar::AppVarData;
+use crate::{
+    BeansError, DownloadFailureReason, GameinfoBackupCreateDirectoryFail,
+    GameinfoBackupFailureReason, GameinfoBackupReadContentFail, GameinfoBackupWriteFail,
+    RunnerContext,
+};
 use futures::StreamExt;
+use indicatif::{ProgressBar, ProgressStyle};
 use log::{debug, error, trace, warn};
-use crate::{BeansError, DownloadFailureReason, GameinfoBackupCreateDirectoryFail, GameinfoBackupFailureReason, GameinfoBackupReadContentFail, GameinfoBackupWriteFail, RunnerContext};
 use rand::{distributions::Alphanumeric, Rng};
 use reqwest::header::USER_AGENT;
-use crate::appvar::AppVarData;
 use std::collections::HashMap;
+use std::io::Write;
+use std::path::PathBuf;
 
 #[derive(Clone, Debug)]
-pub enum InstallType
-{
+pub enum InstallType {
     /// when steam/sourcemods/open_fortress/ doesn't exist
     NotInstalled,
     /// when steam/sourcemods/open_fortress/.adastral exists
@@ -37,61 +39,56 @@ pub enum InstallType
     /// OtherSourceManual, then it will return true
     ///
     /// set when only steam/sourcemods/open_fortress/gameinfo.txt exists
-    OtherSourceManual
+    OtherSourceManual,
 }
 
 impl PartialEq for InstallType {
     fn eq(&self, other: &Self) -> bool {
         match self {
-            InstallType::NotInstalled => {
-                match other {
-                    InstallType::NotInstalled => true,
-                    InstallType::Adastral => false,
-                    InstallType::OtherSource => false,
-                    InstallType::OtherSourceManual => false
-                }
+            InstallType::NotInstalled => match other {
+                InstallType::NotInstalled => true,
+                InstallType::Adastral => false,
+                InstallType::OtherSource => false,
+                InstallType::OtherSourceManual => false,
             },
-            InstallType::Adastral => {
-                match other {
-                    InstallType::NotInstalled => false,
-                    InstallType::Adastral => true,
-                    InstallType::OtherSource => false,
-                    InstallType::OtherSourceManual => false
-                }
+            InstallType::Adastral => match other {
+                InstallType::NotInstalled => false,
+                InstallType::Adastral => true,
+                InstallType::OtherSource => false,
+                InstallType::OtherSourceManual => false,
             },
-            InstallType::OtherSource => {
-                match other {
-                    InstallType::NotInstalled => false,
-                    InstallType::Adastral => false,
-                    InstallType::OtherSource => true,
-                    InstallType::OtherSourceManual => true
-                }
+            InstallType::OtherSource => match other {
+                InstallType::NotInstalled => false,
+                InstallType::Adastral => false,
+                InstallType::OtherSource => true,
+                InstallType::OtherSourceManual => true,
             },
-            InstallType::OtherSourceManual => {
-                match other {
-                    InstallType::NotInstalled => false,
-                    InstallType::Adastral => false,
-                    InstallType::OtherSource => false,
-                    InstallType::OtherSourceManual => true
-                }
-            }
+            InstallType::OtherSourceManual => match other {
+                InstallType::NotInstalled => false,
+                InstallType::Adastral => false,
+                InstallType::OtherSource => false,
+                InstallType::OtherSourceManual => true,
+            },
         }
     }
 }
 
 /// get the current type of installation.
-pub fn install_state(sourcemods_location: Option<String>) -> InstallType
-{
+pub fn install_state(sourcemods_location: Option<String>) -> InstallType {
     let mut smp_x = match sourcemods_location {
         Some(v) => v,
         None => match find_sourcemod_path() {
             Ok(v) => v,
             Err(e) => {
                 sentry::capture_error(&e);
-                debug!("[helper::install_state] {} {:#?}", BeansError::SourceModLocationNotFound, e);
+                debug!(
+                    "[helper::install_state] {} {:#?}",
+                    BeansError::SourceModLocationNotFound,
+                    e
+                );
                 return InstallType::NotInstalled;
             }
-        }
+        },
     };
     if smp_x.ends_with("/") || smp_x.ends_with("\\") {
         smp_x.pop();
@@ -101,40 +98,34 @@ pub fn install_state(sourcemods_location: Option<String>) -> InstallType
 
     if file_exists(format!("{}.adastral", data_dir)) {
         return InstallType::Adastral;
-    }
-    else if file_exists(format!("{}.revision", data_dir)) {
+    } else if file_exists(format!("{}.revision", data_dir)) {
         return InstallType::OtherSource;
-    }
-    else if file_exists(format!("{}gameinfo.txt", data_dir)) {
+    } else if file_exists(format!("{}gameinfo.txt", data_dir)) {
         return InstallType::OtherSourceManual;
     }
     return InstallType::NotInstalled;
 }
 
 /// get user input from terminal. prompt is displayed on the line above where the user does input.
-pub fn get_input(prompt: &str) -> String{
-    println!("{}",prompt);
+pub fn get_input(prompt: &str) -> String {
+    println!("{}", prompt);
     let mut input = String::new();
     match std::io::stdin().read_line(&mut input) {
-        Ok(_goes_into_input_above) => {},
-        Err(_no_updates_is_fine) => {},
+        Ok(_goes_into_input_above) => {}
+        Err(_no_updates_is_fine) => {}
     }
     input.trim().to_string()
 }
 
-
 /// check if a file exists
-pub fn file_exists(location: String) -> bool
-{
+pub fn file_exists(location: String) -> bool {
     std::path::Path::new(&location).exists()
 }
 /// Check if the location provided exists and it's a directory.
-pub fn dir_exists(location: String) -> bool
-{
+pub fn dir_exists(location: String) -> bool {
     file_exists(location.clone()) && is_directory(location.clone())
 }
-pub fn is_directory(location: String) -> bool
-{
+pub fn is_directory(location: String) -> bool {
     let x = PathBuf::from(&location);
     x.is_dir()
 }
@@ -143,12 +134,11 @@ pub fn is_directory(location: String) -> bool
 pub fn is_symlink(location: String) -> bool {
     match std::fs::symlink_metadata(&location) {
         Ok(meta) => meta.file_type().is_symlink(),
-        Err(_) => false
+        Err(_) => false,
     }
 }
 
-pub fn generate_rand_str(length: usize) -> String
-{
+pub fn generate_rand_str(length: usize) -> String {
     let s: String = rand::thread_rng()
         .sample_iter(Alphanumeric)
         .take(length)
@@ -159,9 +149,9 @@ pub fn generate_rand_str(length: usize) -> String
 /// Join the path, using `tail` as the base, and `head` as the thing to add on top of it.
 ///
 /// This will also convert backslashes/forwardslashes to the compiled separator in `crate::PATH_SEP`
-pub fn join_path(tail: String, head: String) -> String
-{
-    let mut h = head.to_string()
+pub fn join_path(tail: String, head: String) -> String {
+    let mut h = head
+        .to_string()
         .replace("/", crate::PATH_SEP)
         .replace("\\", crate::PATH_SEP);
     while h.starts_with(crate::PATH_SEP) {
@@ -170,8 +160,7 @@ pub fn join_path(tail: String, head: String) -> String
 
     format!("{}{}", format_directory_path(tail), h)
 }
-pub fn remove_path_head(location: String) -> String
-{
+pub fn remove_path_head(location: String) -> String {
     let p = std::path::Path::new(&location);
     if let Some(x) = p.parent() {
         if let Some(m) = x.to_str() {
@@ -181,9 +170,9 @@ pub fn remove_path_head(location: String) -> String
     return String::new();
 }
 /// Make sure that the location provided is formatted as a directory (ends with `crate::PATH_SEP`).
-pub fn format_directory_path(location: String) -> String
-{
-    let mut x = location.to_string()
+pub fn format_directory_path(location: String) -> String {
+    let mut x = location
+        .to_string()
         .replace("/", crate::PATH_SEP)
         .replace("\\", crate::PATH_SEP);
     while x.ends_with(crate::PATH_SEP) {
@@ -203,20 +192,20 @@ pub fn canonicalize(location: &str) -> Result<PathBuf, std::io::Error> {
 pub fn canonicalize(location: &str) -> Result<PathBuf, std::io::Error> {
     dunce::canonicalize(location)
 }
-pub fn parse_location(location: String) -> String
-{
+pub fn parse_location(location: String) -> String {
     let path = std::path::Path::new(&location);
     let real_location = match path.to_str() {
         Some(v) => {
             let p = canonicalize(v);
             match p {
-                Ok(x) => {
-                    match x.clone().to_str() {
-                        Some(m) => m.to_string(),
-                        None => {
-                            debug!("[helper::parse_location] Failed to parse location to string {}", location);
-                            return location;
-                        }
+                Ok(x) => match x.clone().to_str() {
+                    Some(m) => m.to_string(),
+                    None => {
+                        debug!(
+                            "[helper::parse_location] Failed to parse location to string {}",
+                            location
+                        );
+                        return location;
                     }
                 },
                 Err(e) => {
@@ -224,15 +213,21 @@ pub fn parse_location(location: String) -> String
                         return location;
                     }
                     sentry::capture_error(&e);
-                    eprintln!("[helper::parse_location] Failed to canonicalize location {}", location);
+                    eprintln!(
+                        "[helper::parse_location] Failed to canonicalize location {}",
+                        location
+                    );
                     eprintln!("[helper::parse_location] {:}", e);
                     debug!("{:#?}", e);
                     return location;
                 }
             }
-        },
+        }
         None => {
-            debug!("[helper::parse_location] Failed to parse location {}", location);
+            debug!(
+                "[helper::parse_location] Failed to parse location {}",
+                location
+            );
             return location;
         }
     };
@@ -240,8 +235,7 @@ pub fn parse_location(location: String) -> String
 }
 
 /// Get the amount of free space on the drive in the location provided.
-pub fn get_free_space(location: String) -> Result<u64, BeansError>
-{
+pub fn get_free_space(location: String) -> Result<u64, BeansError> {
     let mut data: HashMap<String, u64> = HashMap::new();
     for disk in sysinfo::Disks::new_with_refreshed_list().list() {
         if let Some(mp) = disk.mount_point().to_str() {
@@ -260,32 +254,27 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
     }
 
     Err(BeansError::FreeSpaceCheckFailure {
-        location: parse_location(location.clone())
+        location: parse_location(location.clone()),
     })
 }
 /// Check if the location provided has enough free space.
-pub fn has_free_space(location: String, size: usize) -> Result<bool, BeansError>
-{
+pub fn has_free_space(location: String, size: usize) -> Result<bool, BeansError> {
     let space = get_free_space(location)?;
     return Ok((size as u64) < space);
 }
 
 /// Download file at the URL provided to the output location provided
 /// This function will also show a progress bar with indicatif.
-pub async fn download_with_progress(url: String, out_location: String) -> Result<(), BeansError>
-{
-    let res = match reqwest::Client::new()
-        .get(&url)
-        .send()
-        .await {
+pub async fn download_with_progress(url: String, out_location: String) -> Result<(), BeansError> {
+    let res = match reqwest::Client::new().get(&url).send().await {
         Ok(v) => v,
         Err(e) => {
             sentry::capture_error(&e);
             return Err(BeansError::DownloadFailure {
                 reason: DownloadFailureReason::Reqwest {
                     url: url.clone(),
-                    error: e
-                }
+                    error: e,
+                },
             });
         }
     };
@@ -308,7 +297,7 @@ pub async fn download_with_progress(url: String, out_location: String) -> Result
             sentry::capture_error(&e);
             return Err(BeansError::FileOpenFailure {
                 location: out_location,
-                error: e
+                error: e,
             });
         }
     };
@@ -348,7 +337,8 @@ pub fn format_size(i: usize) -> String {
         dec_l = decimal_points * 5;
     }
 
-    let dec: String = value.chars()
+    let dec: String = value
+        .chars()
         .into_iter()
         .rev()
         .take(dec_l as usize)
@@ -368,7 +358,8 @@ pub fn format_size(i: usize) -> String {
         (1_000_000, "kb"),
         (1_000_000_000, "mb"),
         (1_000_000_000_000, "gb"),
-        (1_000_000_000_000_000, "tb")];
+        (1_000_000_000_000_000, "tb"),
+    ];
     for (s, c) in pfx_data.into_iter() {
         if i < s {
             return format!("{}{}{}", whole, dec_x, c);
@@ -378,41 +369,40 @@ pub fn format_size(i: usize) -> String {
 }
 /// Check if we should use the custom temporary directory, which is stored in the environment variable
 /// defined in `CUSTOM_TMPDIR_NAME`.
-/// 
+///
 /// ## Return
-/// `Some` when the environment variable is set, and the directory exist. 
+/// `Some` when the environment variable is set, and the directory exist.
 /// Otherwise `None` is returned.
-pub fn use_custom_tmpdir() -> Option<String>
-{
+pub fn use_custom_tmpdir() -> Option<String> {
     if let Ok(x) = std::env::var(CUSTOM_TMPDIR_NAME) {
         let s = x.to_string();
         if dir_exists(s.clone()) {
             return Some(s);
         } else {
-            warn!("[use_custom_tmp_dir] Custom temporary directory \"{}\" doesn't exist", s);
+            warn!(
+                "[use_custom_tmp_dir] Custom temporary directory \"{}\" doesn't exist",
+                s
+            );
         }
     }
     return None;
 }
 pub const CUSTOM_TMPDIR_NAME: &str = "ADASTRAL_TMPDIR";
 /// Create directory in temp directory with name of "beans-rs"
-pub fn get_tmp_dir() -> String
-{
+pub fn get_tmp_dir() -> String {
     let mut dir = std::env::temp_dir().to_str().unwrap_or("").to_string();
     if let Some(x) = use_custom_tmpdir() {
         dir = x;
     } else if is_steamdeck() {
         trace!("[helper::get_tmp_dir] Detected that we are running on a steam deck. Using ~/.tmp/beans-rs");
         match simple_home_dir::home_dir() {
-            Some(v) => {
-                match v.to_str() {
-                    Some(k) => {
-                        dir = format_directory_path(k.to_string());
-                        dir = join_path(dir, String::from(".tmp"));
-                    },
-                    None => {
-                        trace!("[helper::get_tmp_dir] Failed to convert PathBuf to &str");
-                    }
+            Some(v) => match v.to_str() {
+                Some(k) => {
+                    dir = format_directory_path(k.to_string());
+                    dir = join_path(dir, String::from(".tmp"));
+                }
+                None => {
+                    trace!("[helper::get_tmp_dir] Failed to convert PathBuf to &str");
                 }
             },
             None => {
@@ -428,7 +418,10 @@ pub fn get_tmp_dir() -> String
     if !dir_exists(dir.clone()) {
         if let Err(e) = std::fs::create_dir(&dir) {
             trace!("[helper::get_tmp_dir] {:#?}", e);
-            warn!("[helper::get_tmp_dir] failed to make tmp directory at {} ({:})", dir, e);
+            warn!(
+                "[helper::get_tmp_dir] failed to make tmp directory at {} ({:})",
+                dir, e
+            );
         }
     }
     dir = join_path(dir, String::from("beans-rs"));
@@ -437,7 +430,10 @@ pub fn get_tmp_dir() -> String
     if !dir_exists(dir.clone()) {
         if let Err(e) = std::fs::create_dir(&dir) {
             trace!("[helper::get_tmp_dir] {:#?}", e);
-            warn!("[helper::get_tmp_dir] failed to make tmp directory at {} ({:})", dir, e);
+            warn!(
+                "[helper::get_tmp_dir] failed to make tmp directory at {} ({:})",
+                dir, e
+            );
             sentry::capture_error(&e);
         } else {
             trace!("[helper::get_tmp_dir] created directory {}", dir);
@@ -447,7 +443,7 @@ pub fn get_tmp_dir() -> String
     return dir;
 }
 /// Check if the content of `uname -r` contains `valve` (Linux Only)
-/// 
+///
 /// ## Returns
 /// - `true` when;
 ///   - The output of `uname -r` contains `valve`
@@ -455,10 +451,10 @@ pub fn get_tmp_dir() -> String
 ///   - `target_os` is not `linux`
 ///   - Failed to run `uname -r`
 ///   - Failed to parse the stdout of `uname -r` as a String.
-/// 
+///
 /// ## Note
 /// Will always return `false` when `cfg!(not(target_os = "linux"))`.
-/// 
+///
 /// This function will write to `log::trace` with the full error details before writing it to `log::warn` or `log::error`. Since errors from this
 /// aren't significant, `sentry::capture_error` will not be called.
 pub fn is_steamdeck() -> bool {
@@ -478,13 +474,13 @@ pub fn is_steamdeck() -> bool {
                 Ok(x) => {
                     trace!("[helper::is_steamdeck] stdout: {}", x);
                     x.contains("valve")
-                },
+                }
                 Err(e) => {
                     trace!("[helper::is_steamdeck] Failed to parse as utf8 {:#?}", e);
                     false
                 }
             }
-        },
+        }
         Err(e) => {
             trace!("[helper::is_steamdeck] {:#?}", e);
             warn!("[helper::is_steamdeck] Failed to detect {:}", e);
@@ -493,25 +489,24 @@ pub fn is_steamdeck() -> bool {
     }
 }
 /// Generate a full file location for a temporary file.
-pub fn get_tmp_file(filename: String) -> String
-{
+pub fn get_tmp_file(filename: String) -> String {
     let head = format!("{}_{}", generate_rand_str(8), filename);
     join_path(get_tmp_dir(), head)
 }
 /// Check if there is an update available. When the latest release doesn't match the current release.
-pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
-{
+pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError> {
     let rs = reqwest::Client::new()
         .get(GITHUB_RELEASES_URL)
         .header(USER_AGENT, &format!("beans-rs/{}", crate::VERSION))
-        .send().await;
+        .send()
+        .await;
     let response = match rs {
         Ok(v) => v,
         Err(e) => {
             trace!("Failed get latest release from github \nerror: {:#?}", e);
-            return Err(BeansError::Reqwest{
+            return Err(BeansError::Reqwest {
                 error: e,
-                backtrace: Backtrace::capture()
+                backtrace: Backtrace::capture(),
             });
         }
     };
@@ -519,15 +514,22 @@ pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
     let data: GithubReleaseItem = match serde_json::from_str(&response_text) {
         Ok(v) => v,
         Err(e) => {
-            trace!("Failed to deserialize GithubReleaseItem\nerror: {:#?}\ncontent: {:#?}", e, response_text);
+            trace!(
+                "Failed to deserialize GithubReleaseItem\nerror: {:#?}\ncontent: {:#?}",
+                e,
+                response_text
+            );
             return Err(BeansError::SerdeJson {
                 error: e,
-                backtrace: Backtrace::capture()
+                backtrace: Backtrace::capture(),
             });
         }
     };
     trace!("{:#?}", data);
-    if data.draft == false && data.prerelease == false && data.tag_name != format!("v{}", crate::VERSION) {
+    if data.draft == false
+        && data.prerelease == false
+        && data.tag_name != format!("v{}", crate::VERSION)
+    {
         return Ok(Some(data.clone()));
     }
     return Ok(None);
@@ -539,16 +541,25 @@ pub fn restore_gameinfo(ctx: &mut RunnerContext, data: Vec<u8>) -> Result<(), Be
         trace!("gameinfo metadata: {:#?}", m);
     }
     if let Err(e) = ctx.gameinfo_perms() {
-        error!("[helper::restore_gameinfo] Failed to update permissions on gameinfo.txt {:}", e);
+        error!(
+            "[helper::restore_gameinfo] Failed to update permissions on gameinfo.txt {:}",
+            e
+        );
         sentry::capture_error(&e);
         return Err(e);
     }
     if let Err(e) = std::fs::write(&loc, data) {
         trace!("error: {:#?}", e);
-        error!("[helper::restore_gameinfo] Failed to write gameinfo.txt backup {:}", e);
+        error!(
+            "[helper::restore_gameinfo] Failed to write gameinfo.txt backup {:}",
+            e
+        );
     }
     if let Err(e) = ctx.gameinfo_perms() {
-        error!("[helper::restore_gameinfo] Failed to update permissions on gameinfo.txt {:}", e);
+        error!(
+            "[helper::restore_gameinfo] Failed to update permissions on gameinfo.txt {:}",
+            e
+        );
         sentry::capture_error(&e);
         return Err(e);
     }
@@ -566,22 +577,35 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError> {
         if let Err(e) = std::fs::create_dir(&backupdir) {
             debug!("backupdir: {}", backupdir);
             debug!("error: {:#?}", e);
-            error!("[helper::backup_gameinfo] Failed to create backup directory {:}", e);
-            return Err(BeansError::GameinfoBackupFailure {reason: GameinfoBackupFailureReason::BackupDirectoryCreateFailure(GameinfoBackupCreateDirectoryFail {
-                error: e,
-                location: backupdir
-            })});
+            error!(
+                "[helper::backup_gameinfo] Failed to create backup directory {:}",
+                e
+            );
+            return Err(BeansError::GameinfoBackupFailure {
+                reason: GameinfoBackupFailureReason::BackupDirectoryCreateFailure(
+                    GameinfoBackupCreateDirectoryFail {
+                        error: e,
+                        location: backupdir,
+                    },
+                ),
+            });
         }
     }
     let output_location = join_path(
         backupdir,
-        format!("{}-{}.txt", ctx.current_version.unwrap_or(0), current_time_formatted));
-    let current_location = join_path(
-        gamedir,
-        String::from("gameinfo.txt"));
+        format!(
+            "{}-{}.txt",
+            ctx.current_version.unwrap_or(0),
+            current_time_formatted
+        ),
+    );
+    let current_location = join_path(gamedir, String::from("gameinfo.txt"));
 
     if file_exists(current_location.clone()) == false {
-        debug!("[helper::backup_gameinfo] can't backup since {} doesn't exist", current_location);
+        debug!(
+            "[helper::backup_gameinfo] can't backup since {} doesn't exist",
+            current_location
+        );
         return Ok(());
     }
 
@@ -590,12 +614,19 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError> {
         Err(e) => {
             debug!("location: {}", current_location);
             debug!("error: {:#?}", e);
-            error!("[helper::backup_gameinfo] Failed to read content of gameinfo.txt {:}", e);
-            return Err(BeansError::GameinfoBackupFailure { reason: GameinfoBackupFailureReason::ReadContentFail(GameinfoBackupReadContentFail{
-                error: e,
-                proposed_location: output_location,
-                current_location: current_location.clone()
-            })})
+            error!(
+                "[helper::backup_gameinfo] Failed to read content of gameinfo.txt {:}",
+                e
+            );
+            return Err(BeansError::GameinfoBackupFailure {
+                reason: GameinfoBackupFailureReason::ReadContentFail(
+                    GameinfoBackupReadContentFail {
+                        error: e,
+                        proposed_location: output_location,
+                        current_location: current_location.clone(),
+                    },
+                ),
+            });
         }
     };
 
@@ -608,11 +639,16 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError> {
     if let Err(e) = std::fs::write(&output_location, content) {
         debug!("location: {}", output_location);
         debug!("error: {:#?}", e);
-        error!("[helper::backup_gameinfo] Failed to write backup to {} ({:})", output_location, e);
-        return Err(BeansError::GameinfoBackupFailure { reason: GameinfoBackupFailureReason::WriteFail(GameinfoBackupWriteFail{
-            error: e,
-            location: output_location
-        })});
+        error!(
+            "[helper::backup_gameinfo] Failed to write backup to {} ({:})",
+            output_location, e
+        );
+        return Err(BeansError::GameinfoBackupFailure {
+            reason: GameinfoBackupFailureReason::WriteFail(GameinfoBackupWriteFail {
+                error: e,
+                location: output_location,
+            }),
+        });
     }
 
     println!("[backup_gameinfo] Created backup at {}", output_location);
@@ -622,8 +658,7 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError> {
 const GAMEINFO_BACKUP_DIRNAME: &str = "gameinfo_backup";
 const GITHUB_RELEASES_URL: &str = "https://api.github.com/repositories/805393469/releases/latest";
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
-pub struct GithubReleaseItem
-{
+pub struct GithubReleaseItem {
     #[serde(rename = "id")]
     pub _id: u64,
     pub created_at: String,
@@ -631,12 +666,11 @@ pub struct GithubReleaseItem
     pub url: String,
     pub html_url: String,
     pub draft: bool,
-    pub prerelease: bool
+    pub prerelease: bool,
 }
 
 /// Return `true` when `try_get_env_var` returns Some with a length greater than `1`.
-pub fn has_env_var(target_key: String) -> bool
-{
+pub fn has_env_var(target_key: String) -> bool {
     if let Some(x) = try_get_env_var(target_key) {
         return x.len() > 1;
     }
@@ -644,8 +678,7 @@ pub fn has_env_var(target_key: String) -> bool
 }
 /// Try and get a value from `std::env::vars()`
 /// Will return `None` when not found
-pub fn try_get_env_var(target_key: String) -> Option<String>
-{
+pub fn try_get_env_var(target_key: String) -> Option<String> {
     for (key, value) in std::env::vars().into_iter() {
         if key == target_key {
             return Some(value);

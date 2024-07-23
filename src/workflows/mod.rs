@@ -1,9 +1,9 @@
+mod clean;
 mod install;
 mod update;
 mod verify;
-mod clean;
 
+pub use clean::*;
 pub use install::*;
 pub use update::*;
 pub use verify::*;
-pub use clean::*;

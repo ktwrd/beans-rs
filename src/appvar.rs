@@ -1,7 +1,7 @@
-use std::sync::RwLock;
-use log::{debug, error, trace};
 use crate::BeansError;
 use lazy_static::lazy_static;
+use log::{debug, error, trace};
+use std::sync::RwLock;
 
 /// Default `appvar.json` to use.
 pub const JSON_DATA_DEFAULT: &str = include_str!("appvar.json");
@@ -11,21 +11,18 @@ lazy_static! {
 }
 
 /// Going to be deprecated, use `get_appvar()` instead.
-pub fn parse() -> AppVarData
-{
+pub fn parse() -> AppVarData {
     trace!("======== IMPORTANT NOTICE ========\ncrate::appvar::parse() is going to be deprecated, use crate::appvar::get_appvar() instead!");
     AppVarData::get()
 }
 
-
 /// Configuration for the compiled application.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct AppVarData
-{
+pub struct AppVarData {
     #[serde(rename = "mod")]
     pub mod_info: AppVarMod,
     #[serde(rename = "remote")]
-    pub remote_info: AppVarRemote
+    pub remote_info: AppVarRemote,
 }
 impl AppVarData {
     /// Parse `JSON_DATA` to AppVarData. Should only be called by `reset_appvar()`.
@@ -47,9 +44,9 @@ impl AppVarData {
     }
 
     /// Substitute values in the `source` string for what is defined in here.
-    pub fn sub(&self, source: String) -> String
-    {
-        source.clone()
+    pub fn sub(&self, source: String) -> String {
+        source
+            .clone()
             .replace("$MOD_NAME_STYLIZED", &self.mod_info.name_stylized)
             .replace("$MOD_NAME_SHORT", &self.mod_info.short_name)
             .replace("$MOD_NAME", &self.mod_info.sourcemod_name)
@@ -69,8 +66,7 @@ impl AppVarData {
                 debug!("[AppVarData::get] Instance exists in AVD_INSTANCE, so lets return that.");
                 return x;
             }
-        }
-        else if let Err(e) = avd_read {
+        } else if let Err(e) = avd_read {
             panic!("[AppVarData::get] Failed to read AVD_INSTANCE {:#?}", e);
         }
 
@@ -86,8 +82,11 @@ impl AppVarData {
         match AVD_INSTANCE.write() {
             Ok(mut data) => {
                 *data = Some(instance.clone());
-                debug!("[reset_appvar] set content of AVD_INSTANCE to {:#?}", instance);
-            },
+                debug!(
+                    "[reset_appvar] set content of AVD_INSTANCE to {:#?}",
+                    instance
+                );
+            }
             Err(e) => {
                 panic!("[reset_appvar] Failed to set AVD_INSTANCE! {:#?}", e);
             }
@@ -96,15 +95,12 @@ impl AppVarData {
         instance
     }
 
-
     /// Serialize `data` into JSON, then set the content of `JSON_DATA` to the serialize content.
     /// Once that is done, `AppVarData::reset()` will be called.
     ///
     /// If `serde_json::to_string` fails, an error is printed in console and `sentry::capture_error`
     /// is called.
-    pub fn set_json_data(data: AppVarData)
-        -> Result<(), BeansError>
-    {
+    pub fn set_json_data(data: AppVarData) -> Result<(), BeansError> {
         debug!("[set_json_data] {:#?}", data);
         match serde_json::to_string(&data) {
             Ok(v) => {
@@ -114,23 +110,25 @@ impl AppVarData {
                 }
                 Self::reset();
                 Ok(())
-            },
+            }
             Err(e) => {
-                error!("[appvar::set_json_data] Failed to serialize data to string! {:}", e);
+                error!(
+                    "[appvar::set_json_data] Failed to serialize data to string! {:}",
+                    e
+                );
                 debug!("{:#?}", e);
                 sentry::capture_error(&e);
 
                 Err(BeansError::AppVarDataSerializeFailure {
                     error: e,
-                    data: data.clone()
+                    data: data.clone(),
                 })
             }
         }
     }
 }
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct AppVarMod
-{
+pub struct AppVarMod {
     /// name of the mod to use.
     /// e.g; `open_fortress`
     #[serde(rename = "sm_name")]
@@ -140,15 +138,14 @@ pub struct AppVarMod
     pub short_name: String,
     /// stylized name of the sourcemod.
     /// e.g; `Open Fortress`
-    pub name_stylized: String
+    pub name_stylized: String,
 }
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct AppVarRemote
-{
+pub struct AppVarRemote {
     /// base URL for the versioning.
     /// e.g; `https://beans.adastral.net/`
     pub base_url: String,
     /// url where the version details are stored.
     /// e.g; `https://beans.adastral.net/versions.json`
-    pub versions_url: String
+    pub versions_url: String,
 }

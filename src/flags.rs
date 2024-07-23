@@ -1,6 +1,5 @@
 use bitflags::bitflags;
-bitflags!
-{
+bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
     pub struct LaunchFlag: u32
     {
@@ -18,16 +17,14 @@ bitflags!
 }
 pub static mut LAUNCH_FLAGS: u32 = 0x00;
 /// check if the `flag` provided is in `LAUNCH_FLAGS`
-pub fn has_flag(flag: LaunchFlag) -> bool
-{
+pub fn has_flag(flag: LaunchFlag) -> bool {
     unsafe {
         let data = LaunchFlag::from_bits(LAUNCH_FLAGS).unwrap_or(LaunchFlag::empty());
         data.contains(flag)
     }
 }
 /// Add a flag to `LAUNCH_FLAGS`
-pub fn add_flag(flag: LaunchFlag)
-{
+pub fn add_flag(flag: LaunchFlag) {
     unsafe {
         match flag {
             LaunchFlag::DEBUG_MODE => {
@@ -42,8 +39,7 @@ pub fn add_flag(flag: LaunchFlag)
     }
 }
 /// remove a flag from `LAUNCH_FLAGS`
-pub fn remove_flag(flag: LaunchFlag)
-{
+pub fn remove_flag(flag: LaunchFlag) {
     unsafe {
         match flag {
             LaunchFlag::DEBUG_MODE => {
@@ -57,7 +53,6 @@ pub fn remove_flag(flag: LaunchFlag)
     }
 }
 
-pub fn debug_mode() -> bool
-{
+pub fn debug_mode() -> bool {
     has_flag(LaunchFlag::DEBUG_MODE)
 }
