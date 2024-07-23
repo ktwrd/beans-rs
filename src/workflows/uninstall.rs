@@ -11,7 +11,7 @@ impl UninstallWorkflow {
     {
         let av = AppVarData::get();
         if ctx.current_version.is_none() {
-            info!("No version is currently installed.");
+            info!("{} is not installed.", av.mod_info.name_stylized);
             return Ok(());
         }
 
