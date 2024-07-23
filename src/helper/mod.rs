@@ -238,6 +238,71 @@ pub fn parse_location(location: String) -> String
     };
     real_location
 }
+/// Check if a process is running
+///
+/// name: Executable name (from `Process.name(&self)`)
+/// argument_contains: Check if the arguments of the process has an item that starts with this value (when some).
+fn is_process_running(name: String, arguments_contains: Option<String>) -> Option<sysinfo::Pid> {
+    return find_process(move |proc: &sysinfo::Process | {
+        if proc.name().to_string() == name {
+            if let Some(x) = arguments_contains.clone() {
+                for item in proc.cmd().iter() {
+                    if item.to_string().starts_with(&x) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
+    });
+}
+/// Find a process with a selector filter.
+///
+/// Will return Some when a process is found, otherwise None.
+pub fn find_process<TFilterSelector>(selector: TFilterSelector) -> Option<sysinfo::Pid>
+    where TFilterSelector : Fn(&sysinfo::Process) -> bool
+{
+    let mut sys = sysinfo::System::new_all();
+    sys.refresh_all();
+    for (_, process) in sys.processes() {
+        if selector(process) {
+            return Some(process.pid());
+        }
+    }
+    return None;
+}
+
+/// Check if there are any processes running
+///
+/// Will return `true` if any of the cases are matched;
+/// - If there are any processes called `hl2.exe` that contain the `mod_directory` provided
+/// - If there are any processes that contain the `mod_directory` in the arguments  *that aren't* beans-rs.
+///
+/// Otherwise, `false` is returned.
+pub fn is_game_running(mod_directory: String) -> Option<sysinfo::Pid> {
+    // check if running with the windows things
+    if let Some(proc) = is_process_running(String::from("hl2.exe"), Some(mod_directory.clone())) {
+        return Some(proc);
+    }
+    if let Some(proc) = is_process_running(String::from("hl2.exe"), Some(format!("\"{}\"", mod_directory.clone()))) {
+        return Some(proc);
+    }
+    // check if any process has it in the arguments
+    if let Some(proc) = find_process(move |proc| {
+        for item in proc.cmd().iter() {
+            if item.to_string().starts_with(&mod_directory) {
+                let proc_name = proc.name().to_string().to_lowercase();
+                if proc_name != String::from("beans") && proc_name != String::from("beans-rs") {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }) {
+        return Some(proc);
+    }
+    return None;
+}
 
 /// Get the amount of free space on the drive in the location provided.
 pub fn get_free_space(location: String) -> Result<u64, BeansError>
