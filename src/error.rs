@@ -31,6 +31,11 @@ pub enum BeansError
         location: String,
         error: std::io::Error
     },
+    #[error("Failed to delete directory {location} ({error:})")]
+    DirectoryDeleteFailure {
+        location: String,
+        error: std::io::Error
+    },
     #[error("Failed to extract {src_file} to directory {target_dir} ({error:})")]
     TarExtractFailure {
         src_file: String,
@@ -165,6 +170,12 @@ pub enum BeansError
     CleanTempFailure {
         location: String,
         error: std::io::Error
+    },
+
+    #[error("{name:} ({pid:}) is still running. Please close it and restart beans.")]
+    GameStillRunning {
+        name: String,
+        pid: String
     }
 }
 #[derive(Debug)]
