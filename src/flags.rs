@@ -28,7 +28,8 @@ pub fn has_flag(flag: LaunchFlag) -> bool {
 /// Add a flag to `LAUNCH_FLAGS`
 pub fn add_flag(flag: LaunchFlag) {
     unsafe {
-        if let LaunchFlag::DEBUG_MODE = flag {
+        if let LaunchFlag::DEBUG_MODE = flag
+        {
             crate::logger::LOG_FORMAT = crate::logger::LOG_FORMAT_DEFAULT;
         };
 
@@ -41,7 +42,8 @@ pub fn add_flag(flag: LaunchFlag) {
 /// remove a flag from `LAUNCH_FLAGS`
 pub fn remove_flag(flag: LaunchFlag) {
     unsafe {
-        if flag == LaunchFlag::DEBUG_MODE {
+        if flag == LaunchFlag::DEBUG_MODE
+        {
             crate::logger::LOG_FORMAT = crate::logger::LOG_FORMAT_MINIMAL;
         };
         let mut data = LaunchFlag::from_bits(LAUNCH_FLAGS).unwrap_or(LaunchFlag::empty());

@@ -31,16 +31,19 @@ impl DialogBuilder {
         Self::default()
     }
     pub fn with_png_data(mut self, data: &[u8]) -> Self {
-        match PngImage::from_data(data) {
+        match PngImage::from_data(data)
+        {
             Ok(img) => self.icon = Some(img),
-            Err(e) => {
+            Err(e) =>
+            {
                 warn!("[DialogBuilder::with_png] Failed to set icon! {:#?}", e);
             }
         }
         self
     }
     pub fn with_icon(self, kind: DialogIconKind) -> Self {
-        let data: &Vec<u8> = match kind {
+        let data: &Vec<u8> = match kind
+        {
             DialogIconKind::Default => &icon::DEFAULT_RAW_X32,
             DialogIconKind::Warn => &icon::DEFAULT_WARN_RAW_X32,
             DialogIconKind::Error => &icon::DEFAULT_ERROR_RAW_X32,
@@ -56,7 +59,8 @@ impl DialogBuilder {
         self
     }
     pub fn run(&self) {
-        if !crate::has_gui_support() {
+        if !crate::has_gui_support()
+        {
             println!("============ {} ============", self.title);
             println!("{}", self.content);
             return;
@@ -80,14 +84,17 @@ impl DialogBuilder {
 
         ui.btn_ok.set_pos(25, ui.win.height() - 24 - 5);
         window_centre_screen(&mut ui.win);
-        ui.win.handle(move |w, ev| match ev {
-            fltk::enums::Event::Resize => {
+        ui.win.handle(move |w, ev| match ev
+        {
+            fltk::enums::Event::Resize =>
+            {
                 let height = w.height();
                 ui.btn_ok.set_pos(25, height - 24 - 5);
                 ui.btn_ok.set_size(70, 24);
                 let (lw, lh) = ui.label.measure_label();
                 let cw = w.width();
-                if cw != initial_width && cw > lw + 50 {
+                if cw != initial_width && cw > lw + 50
+                {
                     w.set_size(lw + 50, 10 + lh + 5 + ui.btn_ok.height() + 5);
                 }
                 false

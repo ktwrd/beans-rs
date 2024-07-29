@@ -21,7 +21,8 @@ impl CustomLogger {
         *self.inner.lock().unwrap() = Some(CustomLoggerInner {
             start: Instant::now(),
             sink: Box::new(sink),
-            sentry: sentry_log::SentryLogger::new().filter(|md| match md.level() {
+            sentry: sentry_log::SentryLogger::new().filter(|md| match md.level()
+            {
                 log::Level::Error => LogFilter::Exception,
                 log::Level::Warn => LogFilter::Event,
                 log::Level::Info | log::Level::Debug | log::Level::Trace => LogFilter::Breadcrumb,
@@ -36,17 +37,20 @@ impl Log for CustomLogger {
     }
 
     fn log(&self, record: &Record) {
-        if !self.enabled(record.metadata()) {
+        if !self.enabled(record.metadata())
+        {
             return;
         }
 
-        if let Some(ref mut inner) = *self.inner.lock().unwrap() {
+        if let Some(ref mut inner) = *self.inner.lock().unwrap()
+        {
             inner.log(record);
         }
     }
 
     fn flush(&self) {
-        if let Some(ref mut inner) = *self.inner.lock().unwrap() {
+        if let Some(ref mut inner) = *self.inner.lock().unwrap()
+        {
             inner.sentry.flush();
         }
     }
@@ -64,11 +68,13 @@ impl CustomLoggerInner {
     fn log(&mut self, record: &Record) {
         let mut do_print = true;
         unsafe {
-            if LOG_FILTER < record.level() {
+            if LOG_FILTER < record.level()
+            {
                 do_print = false;
             }
         }
-        if do_print {
+        if do_print
+        {
             let now = self.start.elapsed();
             let seconds = now.as_secs();
             let hours = seconds / 3600;
@@ -91,8 +97,10 @@ impl CustomLoggerInner {
                 .replace("#CONTENT", &format!("{}", record.args()));
 
             unsafe {
-                if LOG_COLOR {
-                    data = match record.level() {
+                if LOG_COLOR
+                {
+                    data = match record.level()
+                    {
                         log::Level::Error => data.red(),
                         log::Level::Warn => data.yellow(),
                         log::Level::Info => data.normal(),

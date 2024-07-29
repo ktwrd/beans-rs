@@ -8,12 +8,16 @@ use winreg::RegKey;
 /// HKEY_CURRENT_USER\Software\Value\Steam
 /// Key: SourceModInstallPath
 pub fn find_sourcemod_path() -> Result<String, BeansError> {
-    match RegKey::predef(HKEY_CURRENT_USER).open_subkey(String::from("Software\\Valve\\Steam")) {
-        Ok(rkey) => {
+    match RegKey::predef(HKEY_CURRENT_USER).open_subkey(String::from("Software\\Valve\\Steam"))
+    {
+        Ok(rkey) =>
+        {
             let x: std::io::Result<String> = rkey.get_value("SourceModInstallPath");
-            match x {
+            match x
+            {
                 Ok(val) => Ok(format_directory_path(val)),
-                Err(e) => {
+                Err(e) =>
+                {
                     return Err(BeansError::RegistryKeyFailure {
                         msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed"
                             .to_string(),
@@ -23,7 +27,8 @@ pub fn find_sourcemod_path() -> Result<String, BeansError> {
                 }
             }
         }
-        Err(e) => {
+        Err(e) =>
+        {
             return Err(BeansError::RegistryKeyFailure {
                 msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed"
                     .to_string(),

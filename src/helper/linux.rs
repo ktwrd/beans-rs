@@ -16,9 +16,11 @@ pub const STEAM_POSSIBLE_DIR: &[&str] = &[
 pub fn find_sourcemod_path() -> Result<String, BeansError> {
     let reg_path = find_steam_reg_path()?;
 
-    let reg_content = match read_to_string(reg_path.as_str()) {
+    let reg_content = match read_to_string(reg_path.as_str())
+    {
         Ok(v) => v,
-        Err(e) => {
+        Err(e) =>
+        {
             sentry::capture_error(&e);
             return Err(BeansError::FileOpenFailure {
                 location: reg_path,
@@ -27,8 +29,10 @@ pub fn find_sourcemod_path() -> Result<String, BeansError> {
         }
     };
 
-    for line in reg_content.lines() {
-        if line.contains("SourceModInstallPath") {
+    for line in reg_content.lines()
+    {
+        if line.contains("SourceModInstallPath")
+        {
             let split = &line.split("\"SourceModInstallPath\"");
             let last = split
                 .clone()
@@ -44,22 +48,29 @@ pub fn find_sourcemod_path() -> Result<String, BeansError> {
 }
 /// returns the first item in STEAM_POSSIBLE_DIR that exists. otherwise None
 fn find_steam_reg_path() -> Result<String, BeansError> {
-    for x in STEAM_POSSIBLE_DIR.iter() {
-        match simple_home_dir::home_dir() {
-            Some(v) => match v.to_str() {
-                Some(k) => {
+    for x in STEAM_POSSIBLE_DIR.iter()
+    {
+        match simple_home_dir::home_dir()
+        {
+            Some(v) => match v.to_str()
+            {
+                Some(k) =>
+                {
                     let h = format_directory_path(k.to_string());
                     let reg_loc = x.replace("~", h.as_str());
-                    if crate::helper::file_exists(reg_loc.clone()) {
+                    if crate::helper::file_exists(reg_loc.clone())
+                    {
                         return Ok(reg_loc.clone());
                     }
                 }
-                None => {
+                None =>
+                {
                     debug!("[helper::find_steam_reg_path] simple_home_dir::home_dir().to_str() returned None!");
                     return Err(BeansError::SteamNotFound);
                 }
             },
-            None => {
+            None =>
+            {
                 debug!("[helper::find_steam_reg_path] simple_home_dir::home_dir() returned None!");
                 return Err(BeansError::SteamNotFound);
             }

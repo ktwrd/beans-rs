@@ -25,7 +25,8 @@ fn fltk() -> Result<(), BuildError> {
     if let Err(e) = g.in_out(
         "src/gui/shared_ui.fl",
         out_path.join("shared_ui.rs").to_str().unwrap(),
-    ) {
+    )
+    {
         return Err(BuildError::FLTK(format!(
             "Failed to build shared_ui.fl {:#?}",
             e
@@ -45,8 +46,10 @@ fn path_exists(path: String) -> bool {
 #[cfg(target_os = "windows")]
 fn windows_icon() -> Result<(), BuildError> {
     let icon_location = OVERRIDE_ICON_LOCATION.unwrap_or("icon.ico");
-    if env::var_os("CARGO_CFG_WINDOWS").is_some() {
-        if !path_exists(icon_location.to_string()) {
+    if env::var_os("CARGO_CFG_WINDOWS").is_some()
+    {
+        if !path_exists(icon_location.to_string())
+        {
             print!("icon.ico not found. Not embedding icon");
             return Ok(());
         }
@@ -55,7 +58,9 @@ fn windows_icon() -> Result<(), BuildError> {
             .set_icon(icon_location)
             .compile()?;
         print!("successfully set icon");
-    } else {
+    }
+    else
+    {
         print!("not on windows, can't embed icon");
     }
     Ok(())

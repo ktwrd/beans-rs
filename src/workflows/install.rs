@@ -11,7 +11,8 @@ pub struct InstallWorkflow {
 impl InstallWorkflow {
     pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError> {
         let (latest_remote_id, latest_remote) = ctx.latest_remote_version();
-        if let Some(_cv) = ctx.current_version {
+        if let Some(_cv) = ctx.current_version
+        {
             println!("[InstallWorkflow::wizard] re-installing! game files will not be touched until extraction");
         }
 
@@ -25,7 +26,8 @@ impl InstallWorkflow {
     /// Returns: `true` when the installation should continue, `false` when we should silently abort.
     pub fn prompt_confirm(current_version: Option<usize>) -> bool {
         unsafe {
-            if crate::PROMPT_DO_WHATEVER {
+            if crate::PROMPT_DO_WHATEVER
+            {
                 info!(
                     "[InstallWorkflow::prompt_confirm] skipping since PROMPT_DO_WHATEVER is true"
                 );
@@ -33,7 +35,8 @@ impl InstallWorkflow {
             }
         }
         let av = AppVarData::get();
-        if let Some(v) = current_version {
+        if let Some(v) = current_version
+        {
             println!(
                 "[InstallWorkflow::prompt_confirm] Seems like {} is already installed (v{})",
                 v, av.mod_info.name_stylized
@@ -43,24 +46,30 @@ impl InstallWorkflow {
             println!("Yes/Y (default)");
             println!("No/N");
             let user_input = helper::get_input("-- Enter option below --");
-            match user_input.to_lowercase().as_str() {
+            match user_input.to_lowercase().as_str()
+            {
                 "y" | "yes" | "" => true,
                 "n" | "no" => false,
-                _ => {
+                _ =>
+                {
                     println!("Unknown option \"{}\"", user_input.to_lowercase());
                     Self::prompt_confirm(current_version)
                 }
             }
-        } else {
+        }
+        else
+        {
             true
         }
     }
 
     /// Install the specified version by its ID to the output directory.
     pub async fn install_version(&mut self, version_id: usize) -> Result<(), BeansError> {
-        let target_version = match self.context.remote_version_list.versions.get(&version_id) {
+        let target_version = match self.context.remote_version_list.versions.get(&version_id)
+        {
             Some(v) => v,
-            None => {
+            None =>
+            {
                 error!("Could not find remote version {version_id}");
                 return Err(BeansError::RemoteVersionNotFound {
                     version: Some(version_id),
@@ -81,7 +90,8 @@ impl InstallWorkflow {
         version_id: usize,
         version: RemoteVersion,
     ) -> Result<(), BeansError> {
-        if !Self::prompt_confirm(ctx.current_version) {
+        if !Self::prompt_confirm(ctx.current_version)
+        {
             info!("[InstallWorkflow] Operation aborted by user");
             return Ok(());
         }
@@ -97,7 +107,8 @@ impl InstallWorkflow {
             Some(version_id),
         )
         .await?;
-        if helper::file_exists(presz_loc.clone()) {
+        if helper::file_exists(presz_loc.clone())
+        {
             std::fs::remove_file(presz_loc)?;
         }
         Ok(())
@@ -113,7 +124,8 @@ impl InstallWorkflow {
         out_dir: String,
         version_id: Option<usize>,
     ) -> Result<(), BeansError> {
-        if !helper::file_exists(package_loc.clone()) {
+        if !helper::file_exists(package_loc.clone())
+        {
             error!("[InstallWorkflow::Wizard] Failed to find package! (location: {package_loc})");
             return Err(BeansError::DownloadFailure {
                 reason: DownloadFailureReason::FileNotFound {
@@ -124,19 +136,23 @@ impl InstallWorkflow {
 
         println!("[InstallWorkflow::Wizard] Extracting to {out_dir}");
         RunnerContext::extract_package(package_loc, out_dir.clone())?;
-        if let Some(lri) = version_id {
+        if let Some(lri) = version_id
+        {
             let x = AdastralVersionFile {
                 version: lri.to_string(),
             }
             .write(Some(out_dir.clone()));
-            if let Err(e) = x {
+            if let Err(e) = x
+            {
                 println!(
                     "[InstallWorkflow::install_from] Failed to set version to {} in .adastral",
                     lri
                 );
                 debug!("{:#?}", e);
             }
-        } else {
+        }
+        else
+        {
             warn!("Not writing .adastral since the version wasn't provided");
         }
         let av = crate::appvar::parse();

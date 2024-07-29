@@ -57,9 +57,12 @@ pub fn get_center_screen() -> (i32, i32) {
 /// current screen.
 pub fn window_ensure(win: &mut Window, width: i32, height: i32) {
     window_centre_screen(win);
-    win.handle(move |w, ev| match ev {
-        fltk::enums::Event::Resize => {
-            if w.width() > width || w.height() > height {
+    win.handle(move |w, ev| match ev
+    {
+        fltk::enums::Event::Resize =>
+        {
+            if w.width() > width || w.height() > height
+            {
                 w.set_size(width, height);
             }
             true
@@ -71,7 +74,8 @@ pub fn window_ensure(win: &mut Window, width: i32, height: i32) {
 }
 
 pub fn apply_app_scheme() {
-    let theme_content = match dark_light::detect() {
+    let theme_content = match dark_light::detect()
+    {
         dark_light::Mode::Light => color_themes::GRAY_THEME,
         _ => color_themes::DARK_THEME,
     };
@@ -84,8 +88,10 @@ pub fn apply_app_scheme() {
 }
 
 pub fn wait_for_quit(app: &app::App, receive_action: &Receiver<GUIAppStatus>) {
-    while app.wait() {
-        if let Some(GUIAppStatus::Quit) = receive_action.recv() {
+    while app.wait()
+    {
+        if let Some(GUIAppStatus::Quit) = receive_action.recv()
+        {
             unsafe {
                 crate::PAUSE_ONCE_DONE = false;
             }

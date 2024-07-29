@@ -33,11 +33,13 @@ impl AppVarData {
     pub fn parse() -> Self {
         debug!("[AppVarData::parse] trying to get JSON_DATA");
         let x = JSON_DATA.read();
-        if let Ok(data) = x {
+        if let Ok(data) = x
+        {
             debug!("[AppVarData::parse] JSON_DATA= {:#?}", data);
             return serde_json::from_str(&data).expect("Failed to deserialize JSON_DATA");
         }
-        if let Err(e) = x {
+        if let Err(e) = x
+        {
             panic!("[AppVarData::parse] Failed to read JSON_DATA {:#?}", e);
         }
         unreachable!();
@@ -60,13 +62,17 @@ impl AppVarData {
     /// NOTE this function panics when Err on `AVD_INSTANCE.read()`.
     pub fn get() -> Self {
         let avd_read = AVD_INSTANCE.read();
-        if let Ok(v) = avd_read {
+        if let Ok(v) = avd_read
+        {
             let vc = v.clone();
-            if let Some(x) = vc {
+            if let Some(x) = vc
+            {
                 debug!("[AppVarData::get] Instance exists in AVD_INSTANCE, so lets return that.");
                 return x;
             }
-        } else if let Err(e) = avd_read {
+        }
+        else if let Err(e) = avd_read
+        {
             panic!("[AppVarData::get] Failed to read AVD_INSTANCE {:#?}", e);
         }
 
@@ -79,15 +85,18 @@ impl AppVarData {
     pub fn reset() -> Self {
         let instance = AppVarData::parse();
 
-        match AVD_INSTANCE.write() {
-            Ok(mut data) => {
+        match AVD_INSTANCE.write()
+        {
+            Ok(mut data) =>
+            {
                 *data = Some(instance.clone());
                 debug!(
                     "[reset_appvar] set content of AVD_INSTANCE to {:#?}",
                     instance
                 );
             }
-            Err(e) => {
+            Err(e) =>
+            {
                 panic!("[reset_appvar] Failed to set AVD_INSTANCE! {:#?}", e);
             }
         }
@@ -102,16 +111,20 @@ impl AppVarData {
     /// is called.
     pub fn set_json_data(data: AppVarData) -> Result<(), BeansError> {
         debug!("[set_json_data] {:#?}", data);
-        match serde_json::to_string(&data) {
-            Ok(v) => {
-                if let Ok(mut ms) = JSON_DATA.write() {
+        match serde_json::to_string(&data)
+        {
+            Ok(v) =>
+            {
+                if let Ok(mut ms) = JSON_DATA.write()
+                {
                     *ms = v.to_string();
                     debug!("[set_json_data] successfully set data, calling reset_appvar()");
                 }
                 Self::reset();
                 Ok(())
             }
-            Err(e) => {
+            Err(e) =>
+            {
                 error!(
                     "[appvar::set_json_data] Failed to serialize data to string! {:}",
                     e

@@ -1,11 +1,9 @@
 #![feature(error_generic_member_access)]
 #![feature(panic_info_message)]
-
 // todo
 // https://rust-lang.github.io/rust-clippy/master/index.html#/result_large_err
 // https://github.com/ktwrd/beans-rs/pull/30
 #![allow(clippy::result_large_err)]
-
 
 use include_flate::flate;
 
@@ -64,25 +62,32 @@ pub fn data_dir() -> String {
 /// - Running on Linux AND the `DISPLAY` or `XDG_SESSION_DESKTOP` environment variables are set.
 pub fn has_gui_support() -> bool {
     unsafe {
-        if !PAUSE_ONCE_DONE {
+        if !PAUSE_ONCE_DONE
+        {
             return false;
         }
     }
 
-    match std::env::consts::OS {
+    match std::env::consts::OS
+    {
         "windows" | "macos" => true,
-        "linux" => {
-            if helper::has_env_var("DISPLAY".to_string()) {
+        "linux" =>
+        {
+            if helper::has_env_var("DISPLAY".to_string())
+            {
                 return true;
             }
-            if let Some(x) = helper::try_get_env_var("XDG_SESSION_DESKTOP".to_string()) {
-                if x.len() >= 3usize {
+            if let Some(x) = helper::try_get_env_var("XDG_SESSION_DESKTOP".to_string())
+            {
+                if x.len() >= 3usize
+                {
                     return true;
                 }
             }
             false
         }
-        _ => {
+        _ =>
+        {
             log::warn!("Unsupported platform for GUI {}", std::env::consts::OS);
             false
         }

@@ -17,7 +17,8 @@ pub struct RunnerContext {
 impl RunnerContext {
     pub async fn create_auto(sml_via: SourceModDirectoryParam) -> Result<Self, BeansError> {
         depends::try_write_deps();
-        if let Err(e) = depends::try_install_vcredist().await {
+        if let Err(e) = depends::try_install_vcredist().await
+        {
             sentry::capture_error(&e);
             println!("Failed to install vcredist! {:}", e);
             debug!(
@@ -25,10 +26,13 @@ impl RunnerContext {
                 e
             );
         }
-        let sourcemod_path = parse_location(match sml_via {
-            SourceModDirectoryParam::AutoDetect => match find_sourcemod_path() {
+        let sourcemod_path = parse_location(match sml_via
+        {
+            SourceModDirectoryParam::AutoDetect => match find_sourcemod_path()
+            {
                 Ok(v) => v,
-                Err(e) => {
+                Err(e) =>
+                {
                     sentry::capture_error(&e);
                     debug!(
                         "[RunnerContext::create_auto] Failed to find sourcemods folder. {:#?}",
@@ -37,7 +41,8 @@ impl RunnerContext {
                     return Err(BeansError::SourceModLocationNotFound);
                 }
             },
-            SourceModDirectoryParam::WithLocation(l) => {
+            SourceModDirectoryParam::WithLocation(l) =>
+            {
                 debug!(
                     "[RunnerContext::create_auto] Using specified location {}",
                     l
@@ -47,7 +52,8 @@ impl RunnerContext {
         });
         let version_list = version::get_version_list().await?;
 
-        if helper::install_state(Some(sourcemod_path.clone())) == InstallType::OtherSource {
+        if helper::install_state(Some(sourcemod_path.clone())) == InstallType::OtherSource
+        {
             version::update_version_file(Some(sourcemod_path.clone()))?;
         }
 
@@ -83,8 +89,10 @@ impl RunnerContext {
     /// Get the latest item in `remote_version_list`
     pub fn latest_remote_version(&mut self) -> (usize, RemoteVersion) {
         let mut highest = usize::MIN;
-        for (key, _) in self.remote_version_list.clone().versions.into_iter() {
-            if key > highest {
+        for (key, _) in self.remote_version_list.clone().versions.into_iter()
+        {
+            if key > highest
+            {
                 highest = key;
             }
         }
@@ -94,10 +102,14 @@ impl RunnerContext {
 
     /// Get the RemoteVersion that matches `self.current_version`
     pub fn current_remote_version(&mut self) -> Result<RemoteVersion, BeansError> {
-        match self.current_version {
-            Some(cv) => {
-                for (v, i) in self.remote_version_list.clone().versions.into_iter() {
-                    if v == cv {
+        match self.current_version
+        {
+            Some(cv) =>
+            {
+                for (v, i) in self.remote_version_list.clone().versions.into_iter()
+                {
+                    if v == cv
+                    {
                         return Ok(i.clone());
                     }
                 }
@@ -116,9 +128,12 @@ impl RunnerContext {
     pub fn has_patch_available(&mut self) -> Option<RemotePatch> {
         let current_version = self.current_version;
         let (remote_version, _) = self.latest_remote_version();
-        match current_version {
-            Some(cv) => {
-                for (_, patch) in self.remote_version_list.clone().patches.into_iter() {
+        match current_version
+        {
+            Some(cv) =>
+            {
+                for (_, patch) in self.remote_version_list.clone().patches.into_iter()
+                {
                     if patch.file
                         == format!(
                             "{}-{}to{}.pwr",
@@ -138,12 +153,15 @@ impl RunnerContext {
     pub fn read_gameinfo_file(&mut self) -> Result<Option<Vec<u8>>, BeansError> {
         self.gameinfo_perms()?;
         let location = self.gameinfo_location();
-        if !helper::file_exists(location.clone()) {
+        if !helper::file_exists(location.clone())
+        {
             return Ok(None);
         }
-        let file = match std::fs::read(&location) {
+        let file = match std::fs::read(&location)
+        {
             Ok(v) => v,
-            Err(error) => {
+            Err(error) =>
+            {
                 let ex = BeansError::GameInfoFileReadFail {
                     error,
                     location,
@@ -167,9 +185,11 @@ impl RunnerContext {
     #[cfg(target_os = "linux")]
     pub fn gameinfo_perms(&mut self) -> Result<(), BeansError> {
         let location = self.gameinfo_location();
-        if helper::file_exists(location.clone()) {
+        if helper::file_exists(location.clone())
+        {
             let perm = std::fs::Permissions::from_mode(0o644 as u32);
-            if let Err(e) = std::fs::set_permissions(&location, perm.clone()) {
+            if let Err(e) = std::fs::set_permissions(&location, perm.clone())
+            {
                 let xe = BeansError::GameInfoPermissionSetFail {
                     error: e,
                     permissions: perm.clone(),
@@ -196,8 +216,10 @@ impl RunnerContext {
         let av = crate::appvar::parse();
         let mut out_loc = helper::get_tmp_dir();
 
-        if let Some(size) = version.pre_sz {
-            if !helper::has_free_space(out_loc.clone(), size)? {
+        if let Some(size) = version.pre_sz
+        {
+            if !helper::has_free_space(out_loc.clone(), size)?
+            {
                 panic!("Not enough free space to install latest version!");
             }
         }
@@ -231,8 +253,10 @@ impl RunnerContext {
 
         let mut archive = tar::Archive::new(&tar_tmp_file);
         let x = archive.unpack(&out_dir);
-        if helper::file_exists(tar_tmp_location.clone()) {
-            if let Err(e) = std::fs::remove_file(tar_tmp_location.clone()) {
+        if helper::file_exists(tar_tmp_location.clone())
+        {
+            if let Err(e) = std::fs::remove_file(tar_tmp_location.clone())
+            {
                 sentry::capture_error(&e);
                 error!(
                     "[RunnerContext::extract_package] Failed to delete temporary file: {:}",
@@ -244,8 +268,10 @@ impl RunnerContext {
                 );
             }
         }
-        match x {
-            Err(e) => {
+        match x
+        {
+            Err(e) =>
+            {
                 let xe = BeansError::TarExtractFailure {
                     src_file: tar_tmp_location,
                     target_dir: out_dir,
@@ -262,13 +288,15 @@ impl RunnerContext {
 
     #[cfg(target_os = "linux")]
     pub fn prepare_symlink(&mut self) -> Result<(), BeansError> {
-        for pair in SYMLINK_FILES.iter() {
+        for pair in SYMLINK_FILES.iter()
+        {
             let target: &str = pair[1];
             let mod_location = self.get_mod_location();
             let ln_location = format!("{}{}", mod_location, target);
             if helper::file_exists(ln_location.clone()) && !helper::is_symlink(ln_location.clone())
             {
-                if let Err(e) = std::fs::remove_file(&ln_location) {
+                if let Err(e) = std::fs::remove_file(&ln_location)
+                {
                     trace!(
                         "[RunnerContext::prepare_symlink] failed to remove {}\n{:#?}",
                         ln_location,

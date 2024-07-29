@@ -192,7 +192,8 @@ pub struct GameinfoBackupWriteFail {
 }
 impl Display for GameinfoBackupFailureReason {
     fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self {
+        match self
+        {
             GameinfoBackupFailureReason::ReadContentFail(v) => write!(
                 f,
                 "Couldn't read the content at {} ({:})",

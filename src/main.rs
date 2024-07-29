@@ -51,7 +51,8 @@ fn init_flags() {
     flags::remove_flag(LaunchFlag::DEBUG_MODE);
     #[cfg(debug_assertions)]
     flags::add_flag(LaunchFlag::DEBUG_MODE);
-    if std::env::var("BEANS_DEBUG").is_ok_and(|x| x == "1") {
+    if std::env::var("BEANS_DEBUG").is_ok_and(|x| x == "1")
+    {
         flags::add_flag(LaunchFlag::DEBUG_MODE);
     }
     flags::add_flag(LaunchFlag::STANDALONE_APP);
@@ -63,14 +64,16 @@ fn init_panic_handle() {
     std::panic::set_hook(Box::new(move |info| {
         debug!("[panic::set_hook] showing msgbox to notify user");
         let mut x = String::new();
-        if let Some(m) = info.message() {
+        if let Some(m) = info.message()
+        {
             x = format!("{}", m);
         }
         info!("[panic] Fatal error!\n{:#?}", x);
         custom_panic_handle(x);
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
         sentry::integrations::panic::panic_handler(info);
-        if flags::has_flag(LaunchFlag::DEBUG_MODE) {
+        if flags::has_flag(LaunchFlag::DEBUG_MODE)
+        {
             eprintln!("{:#?}", info);
         }
         logic_done();
@@ -79,7 +82,8 @@ fn init_panic_handle() {
 
 fn custom_panic_handle(msg: String) {
     unsafe {
-        if !beans_rs::PAUSE_ONCE_DONE {
+        if !beans_rs::PAUSE_ONCE_DONE
+        {
             return;
         }
     }
@@ -98,7 +102,8 @@ fn custom_panic_handle(msg: String) {
 /// will call `helper::get_input` when `PAUSE_ONCE_DONE` is `true`.
 fn logic_done() {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE {
+        if beans_rs::PAUSE_ONCE_DONE
+        {
             let _ = helper::get_input("Press enter/return to exit");
         }
     }
@@ -172,7 +177,8 @@ impl Launcher {
             ]);
 
         let mut i = Self::new(&cmd.get_matches());
-        if let Ok(Some(v)) = helper::beans_has_update().await {
+        if let Ok(Some(v)) = helper::beans_has_update().await
+        {
             info!("A new version of beans-rs is available!");
             info!("{}", v.html_url);
         }
@@ -193,11 +199,14 @@ impl Launcher {
 
     /// add `LaunchFlag::DEBUG_MODE` to `flags` when the `--debug` parameter flag is used.
     pub fn set_debug(&mut self) {
-        if self.root_matches.get_flag("no-debug") {
+        if self.root_matches.get_flag("no-debug")
+        {
             flags::remove_flag(LaunchFlag::DEBUG_MODE);
             beans_rs::logger::set_filter(DEFAULT_LOG_LEVEL_RELEASE);
             info!("Disabled Debug Mode");
-        } else if self.root_matches.get_flag("debug") {
+        }
+        else if self.root_matches.get_flag("debug")
+        {
             flags::add_flag(LaunchFlag::DEBUG_MODE);
             beans_rs::logger::set_filter(LevelFilter::max());
             trace!("Debug mode enabled");
@@ -213,7 +222,8 @@ impl Launcher {
     /// Set `self.to_location` when provided in the arguments.
     pub fn find_arg_sourcemods_location(matches: &ArgMatches) -> Option<String> {
         let mut sml_dir_manual: Option<String> = None;
-        if let Some(x) = matches.get_one::<String>("location") {
+        if let Some(x) = matches.get_one::<String>("location")
+        {
             sml_dir_manual = Some(parse_location(x.to_string()));
             info!("[Launcher::set_to_location] Found in arguments! {}", x);
         }
@@ -222,31 +232,39 @@ impl Launcher {
 
     /// main handler for subcommand processing.
     pub async fn subcommand_processor(&mut self) {
-        match self.root_matches.clone().subcommand() {
-            Some(("install", i_matches)) => {
+        match self.root_matches.clone().subcommand()
+        {
+            Some(("install", i_matches)) =>
+            {
                 self.task_install(i_matches).await;
             }
-            Some(("verify", v_matches)) => {
+            Some(("verify", v_matches)) =>
+            {
                 self.task_verify(v_matches).await;
             }
-            Some(("update", u_matches)) => {
+            Some(("update", u_matches)) =>
+            {
                 self.task_update(u_matches).await;
             }
-            Some(("wizard", wz_matches)) => {
+            Some(("wizard", wz_matches)) =>
+            {
                 self.to_location = Launcher::find_arg_sourcemods_location(wz_matches);
                 self.task_wizard().await;
             }
-            Some(("clean-tmp", _)) => {
+            Some(("clean-tmp", _)) =>
+            {
                 self.task_clean_tmp().await;
             }
-            _ => {
+            _ =>
+            {
                 self.task_wizard().await;
             }
         }
     }
 
     pub fn set_prompt_do_whatever(&mut self) {
-        if self.root_matches.get_flag("confirm") {
+        if self.root_matches.get_flag("confirm")
+        {
             unsafe {
                 beans_rs::PROMPT_DO_WHATEVER = true;
             }
@@ -256,7 +274,8 @@ impl Launcher {
     /// Try and get `SourceModDirectoryParam`.
     /// Returns SourceModDirectoryParam::default() when `to_location` is `None`.
     fn try_get_smdp(&mut self) -> SourceModDirectoryParam {
-        match &self.to_location {
+        match &self.to_location
+        {
             Some(v) => SourceModDirectoryParam::WithLocation(v.to_string()),
             None => SourceModDirectoryParam::default(),
         }
@@ -265,9 +284,12 @@ impl Launcher {
     /// handler for the `wizard` subcommand. it's also the default subcommand.
     pub async fn task_wizard(&mut self) {
         let x = self.try_get_smdp();
-        if let Err(e) = wizard::WizardContext::run(x).await {
+        if let Err(e) = wizard::WizardContext::run(x).await
+        {
             panic!("Failed to run WizardContext {:#?}", e);
-        } else {
+        }
+        else
+        {
             logic_done();
         }
     }
@@ -278,7 +300,8 @@ impl Launcher {
     /// and are reported via sentry.
     pub async fn task_install(&mut self, matches: &ArgMatches) {
         self.to_location = Launcher::find_arg_sourcemods_location(matches);
-        if matches.get_flag("confirm") {
+        if matches.get_flag("confirm")
+        {
             unsafe {
                 beans_rs::PROMPT_DO_WHATEVER = true;
             }
@@ -291,13 +314,15 @@ impl Launcher {
         //
         // `else if let` is used for checking the `--from` parameter,
         // so a return isn't required.
-        if let Some(x) = matches.get_one::<String>("target-version") {
+        if let Some(x) = matches.get_one::<String>("target-version")
+        {
             self.task_install_version_specific(ctx, x.clone()).await;
         }
         // manually install from specific `.tar.zstd` file when the
         // --from parameter is provided. otherwise we install/reinstall
         // the latest version to whatever sourcemods directory is used
-        else if let Some(x) = matches.get_one::<String>("from") {
+        else if let Some(x) = matches.get_one::<String>("from")
+        {
             info!(
                 "Manually installing from {} to {}",
                 x.clone(),
@@ -309,12 +334,18 @@ impl Launcher {
                 error!("Failed to run InstallWorkflow::install_from");
                 sentry::capture_error(&e);
                 panic!("{:#?}", e);
-            } else {
+            }
+            else
+            {
                 logic_done();
             }
-        } else if let Err(e) = InstallWorkflow::wizard(&mut ctx).await {
+        }
+        else if let Err(e) = InstallWorkflow::wizard(&mut ctx).await
+        {
             panic!("Failed to run InstallWorkflow {:#?}", e);
-        } else {
+        }
+        else
+        {
             logic_done();
         }
     }
@@ -324,9 +355,11 @@ impl Launcher {
     /// NOTE this function uses `expect` on `InstallWorkflow::install_version`. panics are handled
     /// and are reported via sentry.
     pub async fn task_install_version_specific(&mut self, ctx: RunnerContext, version_str: String) {
-        let version = match usize::from_str(&version_str) {
+        let version = match usize::from_str(&version_str)
+        {
             Ok(v) => v,
-            Err(e) => {
+            Err(e) =>
+            {
                 sentry::capture_error(&e);
                 error!(
                     "Failed to parse version argument \"{version_str}\": {:#?}",
@@ -337,11 +370,14 @@ impl Launcher {
             }
         };
         let mut wf = InstallWorkflow { context: ctx };
-        if let Err(e) = wf.install_version(version).await {
+        if let Err(e) = wf.install_version(version).await
+        {
             error!("Failed to run InstallWorkflow::install_version");
             sentry::capture_error(&e);
             panic!("{:#?}", e);
-        } else {
+        }
+        else
+        {
             logic_done();
         }
     }
@@ -354,9 +390,12 @@ impl Launcher {
         self.to_location = Launcher::find_arg_sourcemods_location(matches);
         let mut ctx = self.try_create_context().await;
 
-        if let Err(e) = VerifyWorkflow::wizard(&mut ctx).await {
+        if let Err(e) = VerifyWorkflow::wizard(&mut ctx).await
+        {
             panic!("Failed to run VerifyWorkflow {:#?}", e);
-        } else {
+        }
+        else
+        {
             logic_done();
         }
     }
@@ -369,9 +408,12 @@ impl Launcher {
         self.to_location = Launcher::find_arg_sourcemods_location(matches);
         let mut ctx = self.try_create_context().await;
 
-        if let Err(e) = UpdateWorkflow::wizard(&mut ctx).await {
+        if let Err(e) = UpdateWorkflow::wizard(&mut ctx).await
+        {
             panic!("Failed to run UpdateWorkflow {:#?}", e);
-        } else {
+        }
+        else
+        {
             logic_done();
         }
     }
@@ -382,9 +424,12 @@ impl Launcher {
     /// and are reported via sentry.
     pub async fn task_clean_tmp(&mut self) {
         let mut ctx = self.try_create_context().await;
-        if let Err(e) = CleanWorkflow::wizard(&mut ctx) {
+        if let Err(e) = CleanWorkflow::wizard(&mut ctx)
+        {
             panic!("Failed to run CleanWorkflow {:#?}", e);
-        } else {
+        }
+        else
+        {
             logic_done();
         }
     }
@@ -395,9 +440,11 @@ impl Launcher {
     /// on failure, `panic!` is called. but that's okay because a dialog is shown (in
     /// `init_panic_handle`) and the error is reported via sentry.
     async fn try_create_context(&mut self) -> RunnerContext {
-        match RunnerContext::create_auto(self.try_get_smdp()).await {
+        match RunnerContext::create_auto(self.try_get_smdp()).await
+        {
             Ok(v) => v,
-            Err(e) => {
+            Err(e) =>
+            {
                 error!("[try_create_context] {:}", e);
                 trace!("======== Full Error ========");
                 trace!("{:#?}", &e);

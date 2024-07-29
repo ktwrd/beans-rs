@@ -12,9 +12,11 @@ pub fn try_write_deps() {
     safe_write_file(get_butler_1_location().as_str(), &BUTLER_LIB_1);
     safe_write_file(get_butler_2_location().as_str(), &BUTLER_LIB_2);
     #[cfg(not(target_os = "windows"))]
-    if helper::file_exists(get_butler_location()) {
+    if helper::file_exists(get_butler_location())
+    {
         let p = std::fs::Permissions::from_mode(0744 as u32);
-        if let Err(e) = std::fs::set_permissions(get_butler_location(), p) {
+        if let Err(e) = std::fs::set_permissions(get_butler_location(), p)
+        {
             sentry::capture_error(&e);
             error!(
                 "[depends::try_write_deps] Failed to set permissions for {}",
@@ -29,12 +31,16 @@ pub fn try_write_deps() {
     }
 }
 fn safe_write_file(location: &str, data: &[u8]) {
-    if !helper::file_exists(location.to_string()) {
-        if let Err(e) = std::fs::write(location, data) {
+    if !helper::file_exists(location.to_string())
+    {
+        if let Err(e) = std::fs::write(location, data)
+        {
             sentry::capture_error(&e);
             error!("[depends::try_write_deps] failed to extract {}", location);
             error!("[depends::try_write_deps] {:#?}", e);
-        } else {
+        }
+        else
+        {
             debug!("[depends::try_write_deps] extracted {}", location);
         }
     }
@@ -52,16 +58,20 @@ pub async fn try_install_vcredist() -> Result<(), BeansError> {
 pub async fn try_install_vcredist() -> Result<(), BeansError> {
     if !match winreg::RegKey::predef(winreg::enums::HKEY_LOCAL_MACHINE).open_subkey(String::from(
         "Software\\Microsoft\\VisualStudio\\14.0\\VC\\Runtimes\\x64",
-    )) {
-        Ok(v) => {
+    ))
+    {
+        Ok(v) =>
+        {
             let x: std::io::Result<u32> = v.get_value("Installed");
-            match x {
+            match x
+            {
                 Ok(_) => false,
                 Err(_) => true,
             }
         }
         Err(_) => true,
-    } {
+    }
+    {
         debug!("[depends::try_install_vcredist] Seems like vcredist is already installed");
         return Ok(());
     }
@@ -76,7 +86,8 @@ pub async fn try_install_vcredist() -> Result<(), BeansError> {
     )
     .await?;
 
-    if std::path::Path::new(&out_loc).exists() == false {
+    if std::path::Path::new(&out_loc).exists() == false
+    {
         return Err(BeansError::FileNotFound {
             location: out_loc.clone(),
             backtrace: Backtrace::capture(),
@@ -89,8 +100,10 @@ pub async fn try_install_vcredist() -> Result<(), BeansError> {
         .expect("Failed to install vsredist!")
         .wait()?;
 
-    if helper::file_exists(out_loc.clone()) {
-        if let Err(e) = std::fs::remove_file(&out_loc) {
+    if helper::file_exists(out_loc.clone())
+    {
+        if let Err(e) = std::fs::remove_file(&out_loc)
+        {
             sentry::capture_error(&e);
             debug!(
                 "[depends::try_install_vcredist] Failed to remove installer {:#?}",

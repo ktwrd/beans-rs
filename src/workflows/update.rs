@@ -8,9 +8,11 @@ impl UpdateWorkflow {
     pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError> {
         let av = crate::appvar::parse();
 
-        let current_version_id = match ctx.current_version {
+        let current_version_id = match ctx.current_version
+        {
             Some(v) => v,
-            None => {
+            None =>
+            {
                 println!(
                     "[UpdateWorkflow::wizard] Unable to update game since it is not installed!"
                 );
@@ -21,9 +23,11 @@ impl UpdateWorkflow {
         let remote_version = ctx.current_remote_version()?;
 
         ctx.prepare_symlink()?;
-        let patch = match ctx.has_patch_available() {
+        let patch = match ctx.has_patch_available()
+        {
             Some(v) => v,
-            None => {
+            None =>
+            {
                 println!("[UpdateWorkflow::wizard] No patch is available for the version that is currently installed.");
                 return Ok(());
             }
@@ -31,26 +35,30 @@ impl UpdateWorkflow {
 
         ctx.gameinfo_perms()?;
 
-        if !helper::has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq)? {
+        if !helper::has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq)?
+        {
             println!(
                 "[UpdateWorkflow::wizard] Not enough free space! Requires {}",
                 helper::format_size(patch.tempreq)
             );
         }
         debug!("remote_version: {:#?}", remote_version);
-        if remote_version.signature_url.is_none() {
+        if remote_version.signature_url.is_none()
+        {
             eprintln!(
                 "[UpdateWorkflow::wizard] Couldn't get signature URL for version {}",
                 current_version_id
             );
         }
-        if remote_version.heal_url.is_none() {
+        if remote_version.heal_url.is_none()
+        {
             eprintln!(
                 "[UpdateWorkflow::wizard] Couldn't get heal URL for version {}",
                 current_version_id
             );
         }
-        if remote_version.signature_url.is_none() || remote_version.heal_url.is_none() {
+        if remote_version.signature_url.is_none() || remote_version.heal_url.is_none()
+        {
             eprintln!("[UpdateWorkflow::wizard] Unable to update, missing remote files!");
             return Ok(());
         }
@@ -74,7 +82,8 @@ impl UpdateWorkflow {
                 &av.remote_info.base_url,
                 remote_version.heal_url.unwrap()
             ),
-        ) {
+        )
+        {
             sentry::capture_error(&e);
             return Err(e);
         }
