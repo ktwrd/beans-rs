@@ -342,7 +342,7 @@ pub fn format_size(i: usize) -> String {
 
     let dec: String = value.chars().rev().take(dec_l as usize).collect();
 
-    let mut dec_x: String = dec.chars().into_iter().rev().take(decimal_points).collect();
+    let mut dec_x: String = dec.chars().rev().take(decimal_points).collect();
     dec_x = dec_x.trim_end_matches('0').to_string();
 
     let whole_l = value.len() - dec_l;
