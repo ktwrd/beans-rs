@@ -179,7 +179,7 @@ pub fn format_directory_path(location: String) -> String {
     while x.ends_with(crate::PATH_SEP) {
         x.pop();
     }
-    if x.ends_with(crate::PATH_SEP) == false {
+    if !x.ends_with(crate::PATH_SEP) {
         x.push_str(crate::PATH_SEP);
     }
     x
@@ -340,7 +340,7 @@ pub fn format_size(i: usize) -> String {
         dec_l = decimal_points * 5;
     }
 
-    let dec: String = value.chars().rev().take(dec_l as usize).collect();
+    let dec: String = value.chars().rev().take(dec_l).collect();
 
     let mut dec_x: String = dec.chars().rev().take(decimal_points).collect();
     dec_x = dec_x.trim_end_matches('0').to_string();
