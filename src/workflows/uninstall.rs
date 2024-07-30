@@ -1,39 +1,58 @@
-﻿use log::{error, info, trace};
-use crate::{BeansError, helper, RunnerContext};
-use crate::appvar::AppVarData;
+use log::{error,
+          info,
+          trace};
+
+use crate::{appvar::AppVarData,
+            helper,
+            BeansError,
+            RunnerContext};
 
 #[derive(Debug, Clone)]
-pub struct UninstallWorkflow {
+pub struct UninstallWorkflow
+{
     pub context: RunnerContext
 }
-impl UninstallWorkflow {
+impl UninstallWorkflow
+{
     pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError>
     {
         let av = AppVarData::get();
-        if ctx.current_version.is_none() {
+        if ctx.current_version.is_none()
+        {
             info!("{} is not installed.", av.mod_info.name_stylized);
             return Ok(());
         }
 
         let mod_location = ctx.get_mod_location();
-        if let Some(pid) = helper::is_game_running(mod_location.clone()) {
-            info!("{} (pid: {:}) is running! Can't uninstall since the game files are being used.", av.mod_info.name_stylized, pid);
+        if let Some(pid) = helper::is_game_running(mod_location.clone())
+        {
+            info!(
+                "{} (pid: {:}) is running! Can't uninstall since the game files are being used.",
+                av.mod_info.name_stylized, pid
+            );
             return Err(BeansError::GameStillRunning {
                 name: av.mod_info.name_stylized.clone(),
                 pid: format!("{:}", pid)
             });
         }
 
-        if let Err(e) = std::fs::remove_dir_all(&mod_location) {
+        if let Err(e) = std::fs::remove_dir_all(&mod_location)
+        {
             trace!("{:#?}", e);
-            error!("[UninstallWorkflow] Failed to delete mod directory {} ({:})", mod_location, e);
+            error!(
+                "[UninstallWorkflow] Failed to delete mod directory {} ({:})",
+                mod_location, e
+            );
             return Err(BeansError::DirectoryDeleteFailure {
                 location: mod_location,
                 error: e
             });
         }
 
-        info!("[UninstallWorkflow] Successfully uninstalled {}. Please restart Steam.", av.mod_info.name_stylized);
+        info!(
+            "[UninstallWorkflow] Successfully uninstalled {}. Please restart Steam.",
+            av.mod_info.name_stylized
+        );
         return Ok(());
     }
 }

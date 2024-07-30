@@ -3,18 +3,18 @@
 
 use include_flate::flate;
 
+mod ctx;
 pub mod depends;
 pub mod helper;
-pub mod wizard;
 pub mod version;
+pub mod wizard;
 pub mod workflows;
-mod ctx;
 pub use ctx::*;
 mod error;
 pub use error::*;
+pub mod appvar;
 pub mod butler;
 pub mod flags;
-pub mod appvar;
 pub mod logger;
 
 /// NOTE do not change, fetches from the version of beans-rs on build
@@ -23,13 +23,14 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const SENTRY_URL: &str = "https://9df80170f0a4411bb9c834ac54734380@sentry.kate.pet/1";
 /// content to display when showing a message box on panic.
 pub const PANIC_MSG_CONTENT: &str = include_str!("text/msgbox_panic_text.txt");
-/// once everything is done, do we wait for the user to press enter before exiting?
+/// once everything is done, do we wait for the user to press enter before
+/// exiting?
 ///
 /// just like the `pause` thing in batch.
 pub static mut PAUSE_ONCE_DONE: bool = false;
-/// When `true`, everything that prompts the user for Y/N should use the default option.
+/// When `true`, everything that prompts the user for Y/N should use the default
+/// option.
 pub static mut PROMPT_DO_WHATEVER: bool = false;
-
 
 // ------------------------------------------------------------------------
 // please dont change consts below unless you know what you're doing <3

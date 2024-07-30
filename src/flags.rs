@@ -1,6 +1,5 @@
 use bitflags::bitflags;
-bitflags!
-{
+bitflags! {
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash)]
     pub struct LaunchFlag: u32
     {
@@ -29,11 +28,14 @@ pub fn has_flag(flag: LaunchFlag) -> bool
 pub fn add_flag(flag: LaunchFlag)
 {
     unsafe {
-        match flag {
-            LaunchFlag::DEBUG_MODE => {
+        match flag
+        {
+            LaunchFlag::DEBUG_MODE =>
+            {
                 crate::logger::LOG_FORMAT = crate::logger::LOG_FORMAT_DEFAULT;
             }
-            _ => {}
+            _ =>
+            {}
         };
 
         let mut data = LaunchFlag::from_bits(LAUNCH_FLAGS).unwrap_or(LaunchFlag::empty());
@@ -45,11 +47,14 @@ pub fn add_flag(flag: LaunchFlag)
 pub fn remove_flag(flag: LaunchFlag)
 {
     unsafe {
-        match flag {
-            LaunchFlag::DEBUG_MODE => {
+        match flag
+        {
+            LaunchFlag::DEBUG_MODE =>
+            {
                 crate::logger::LOG_FORMAT = crate::logger::LOG_FORMAT_MINIMAL;
             }
-            _ => {}
+            _ =>
+            {}
         };
         let mut data = LaunchFlag::from_bits(LAUNCH_FLAGS).unwrap_or(LaunchFlag::empty());
         data.remove(flag);
