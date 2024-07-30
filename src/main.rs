@@ -10,8 +10,10 @@ use beans_rs::{flags,
                wizard,
                workflows::{CleanWorkflow,
                            InstallWorkflow,
+                           UninstallWorkflow,
                            UpdateWorkflow,
                            VerifyWorkflow},
+               BeansError,
                RunnerContext,
                SourceModDirectoryParam,
                PANIC_MSG_CONTENT};
@@ -81,7 +83,7 @@ fn init_panic_handle()
         let mut x = String::new();
         if let Some(m) = info.message()
         {
-            x = format!("{}", m);
+            x = format!("{:#?}", m);
         }
         info!("[panic] Fatal error!\n{:#?}", x);
         custom_panic_handle(x);
@@ -183,6 +185,9 @@ impl Launcher
                 .arg(Launcher::create_location_arg()))
             .subcommand(Command::new("clean-tmp")
                 .about("Clean up temporary files used by beans"))
+            .subcommand(Command::new("uninstall")
+                .about("Uninstall the target Source Mod.")
+                .args([Launcher::create_location_arg()]))
             .args([
                 Arg::new("debug")
                     .long("debug")
@@ -276,6 +281,10 @@ impl Launcher
             Some(("update", u_matches)) =>
             {
                 self.task_update(u_matches).await;
+            }
+            Some(("uninstall", ui_matches)) =>
+            {
+                self.task_uninstall(ui_matches).await;
             }
             Some(("wizard", wz_matches)) =>
             {
@@ -488,6 +497,28 @@ impl Launcher
         }
     }
 
+    /// handler for the `uninstall` subcommand
+    ///
+    /// NOTE this function uses `panic!` when `UninstallWorkflow::wizard` fails.
+    /// panics are handled and are reported via sentry.
+    pub async fn task_uninstall(
+        &mut self,
+        matches: &ArgMatches
+    )
+    {
+        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        let mut ctx = self.try_create_context().await;
+
+        if let Err(e) = UninstallWorkflow::wizard(&mut ctx).await
+        {
+            panic!("Failed to run UninstallWorkflow {:#?}", e);
+        }
+        else
+        {
+            logic_done();
+        }
+    }
+
     /// try and create an instance of `RunnerContext` via the `create_auto`
     /// method while setting the `sml_via` parameter to the output of
     /// `self.try_get_smdp()`
@@ -505,7 +536,23 @@ impl Launcher
                 trace!("======== Full Error ========");
                 trace!("{:#?}", &e);
                 show_msgbox_error(format!("{:}", &e));
-                sentry::capture_error(&e);
+                let do_report = match e
+                {
+                    BeansError::GameStillRunning {
+                        ..
+                    } => false,
+                    BeansError::LatestVersionAlreadyInstalled {
+                        ..
+                    } => false,
+                    BeansError::FreeSpaceCheckFailure {
+                        ..
+                    } => false,
+                    _ => true
+                };
+                if do_report
+                {
+                    sentry::capture_error(&e);
+                }
                 logic_done();
                 std::process::exit(1);
             }

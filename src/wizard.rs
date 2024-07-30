@@ -15,6 +15,7 @@ use crate::{depends,
                      InstallType},
             workflows::{CleanWorkflow,
                         InstallWorkflow,
+                        UninstallWorkflow,
                         UpdateWorkflow,
                         VerifyWorkflow},
             BeansError,
@@ -90,9 +91,9 @@ impl WizardContext
     #[async_recursion]
     pub async fn menu<'a>(&'a mut self)
     {
+        let av = crate::appvar::AppVarData::get();
         if self.menu_trigger_count == 0
         {
-            let av = crate::appvar::AppVarData::get();
             if let Some(cv) = self.context.current_version
             {
                 let (rv, _) = self.context.latest_remote_version();
@@ -110,6 +111,7 @@ impl WizardContext
         println!("2 - Check for and apply any available updates");
         println!("3 - Verify and repair game files");
         println!("c - Clean up temporary files used by beans.");
+        println!("u - Uninstall {}", av.mod_info.name_stylized);
         println!();
         println!("q - Quit");
         let user_input = helper::get_input("-- Enter option below --");
@@ -119,6 +121,10 @@ impl WizardContext
             "2" | "update" => WizardContext::menu_error_catch(self.task_update().await),
             "3" | "verify" => WizardContext::menu_error_catch(self.task_verify().await),
             "c" | "clean" => Self::menu_error_catch(CleanWorkflow::wizard(&mut self.context)),
+            "u" | "uninstall" =>
+            {
+                Self::menu_error_catch(UninstallWorkflow::wizard(&mut self.context).await)
+            }
             "d" | "debug" =>
             {
                 flags::add_flag(LaunchFlag::DEBUG_MODE);
