@@ -1,23 +1,31 @@
-use log::{info, warn};
-use crate::{BeansError, helper, RunnerContext};
+use log::{info,
+          warn};
+
+use crate::{helper,
+            BeansError,
+            RunnerContext};
 
 #[derive(Debug, Clone)]
-pub struct CleanWorkflow {
+pub struct CleanWorkflow
+{
     pub context: RunnerContext
 }
-impl CleanWorkflow {
+
+impl CleanWorkflow
+{
     pub fn wizard(_ctx: &mut RunnerContext) -> Result<(), BeansError>
     {
         let target_directory = helper::get_tmp_dir();
 
         info!("[CleanWorkflow] Cleaning up {}", target_directory);
-        if helper::file_exists(target_directory.clone()) == false {
+        if !helper::file_exists(target_directory.clone())
+        {
             warn!("[CleanWorkflow] Temporary directory not found, nothing to clean.")
         }
 
-
         // delete directory and it's contents (and error handling)
-        if let Err(e) = std::fs::remove_dir_all(&target_directory) {
+        if let Err(e) = std::fs::remove_dir_all(&target_directory)
+        {
             return Err(BeansError::CleanTempFailure {
                 location: target_directory,
                 error: e
@@ -25,7 +33,8 @@ impl CleanWorkflow {
         }
 
         // re-creating the temporary directory (and error handling)
-        if let Err(e) = std::fs::create_dir(&target_directory) {
+        if let Err(e) = std::fs::create_dir(&target_directory)
+        {
             return Err(BeansError::DirectoryCreateFailure {
                 location: target_directory,
                 error: e
@@ -33,6 +42,6 @@ impl CleanWorkflow {
         }
 
         info!("[CleanWorkflow] Done!");
-        return Ok(());
+        Ok(())
     }
 }
