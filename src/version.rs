@@ -3,7 +3,6 @@ use std::{backtrace::Backtrace,
           fs::read_to_string,
           io::Write};
 
-use futures_util::TryFutureExt;
 use log::{debug,
           error,
           trace};
