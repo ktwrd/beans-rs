@@ -1,20 +1,38 @@
-use crate::flags::LaunchFlag;
-use crate::helper::{find_sourcemod_path, parse_location, InstallType};
-use crate::workflows::{CleanWorkflow, InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
-use crate::{depends, flags, helper, BeansError, RunnerContext, SourceModDirectoryParam};
-use async_recursion::async_recursion;
-use log::{debug, error, info, trace};
 use std::backtrace::Backtrace;
 
+use async_recursion::async_recursion;
+use log::{debug,
+          error,
+          info,
+          trace};
+
+use crate::{depends,
+            flags,
+            flags::LaunchFlag,
+            helper,
+            helper::{find_sourcemod_path,
+                     parse_location,
+                     InstallType},
+            workflows::{CleanWorkflow,
+                        InstallWorkflow,
+                        UpdateWorkflow,
+                        VerifyWorkflow},
+            BeansError,
+            RunnerContext,
+            SourceModDirectoryParam};
+
 #[derive(Debug, Clone)]
-pub struct WizardContext {
+pub struct WizardContext
+{
     pub context: RunnerContext,
-    pub menu_trigger_count: u32,
+    pub menu_trigger_count: u32
 }
 
-impl WizardContext {
+impl WizardContext
+{
     /// run the wizard!
-    pub async fn run(sml_via: SourceModDirectoryParam) -> Result<(), BeansError> {
+    pub async fn run(sml_via: SourceModDirectoryParam) -> Result<(), BeansError>
+    {
         depends::try_write_deps();
         if let Err(e) = depends::try_install_vcredist().await
         {
@@ -56,12 +74,12 @@ impl WizardContext {
             sourcemod_path: sourcemod_path.clone(),
             remote_version_list: version_list,
             current_version: crate::version::get_current_version(Some(sourcemod_path)),
-            appvar: crate::appvar::parse(),
+            appvar: crate::appvar::parse()
         };
 
         let mut i = Self {
             context: ctx,
-            menu_trigger_count: 0u32,
+            menu_trigger_count: 0u32
         };
         i.menu().await;
         Ok(())
@@ -70,7 +88,8 @@ impl WizardContext {
     /// Show the menu
     /// When an invalid option is selected, this will be re-called.
     #[async_recursion]
-    pub async fn menu<'a>(&'a mut self) {
+    pub async fn menu<'a>(&'a mut self)
+    {
         if self.menu_trigger_count == 0
         {
             let av = crate::appvar::AppVarData::get();
@@ -119,7 +138,8 @@ impl WizardContext {
             }
         };
     }
-    fn menu_error_catch(v: Result<(), BeansError>) {
+    fn menu_error_catch(v: Result<(), BeansError>)
+    {
         if let Err(e) = v
         {
             let b = Backtrace::capture();
@@ -129,21 +149,25 @@ impl WizardContext {
     }
 
     /// Install the target game.
-    pub async fn task_install(&mut self) -> Result<(), BeansError> {
+    pub async fn task_install(&mut self) -> Result<(), BeansError>
+    {
         InstallWorkflow::wizard(&mut self.context).await
     }
 
     /// Check for any updates, and if there are any, we install them.
-    pub async fn task_update(&mut self) -> Result<(), BeansError> {
+    pub async fn task_update(&mut self) -> Result<(), BeansError>
+    {
         UpdateWorkflow::wizard(&mut self.context).await
     }
     /// Verify the current data for the target sourcemod.
-    pub async fn task_verify(&mut self) -> Result<(), BeansError> {
+    pub async fn task_verify(&mut self) -> Result<(), BeansError>
+    {
         VerifyWorkflow::wizard(&mut self.context).await
     }
 }
 
-fn get_path() -> String {
+fn get_path() -> String
+{
     find_sourcemod_path().unwrap_or_else(|e| {
         error!("[get_path] Failed to automatically detect sourcemods folder!");
         debug!("{:#?}", e);
@@ -151,7 +175,8 @@ fn get_path() -> String {
     })
 }
 
-fn prompt_sourcemod_location() -> String {
+fn prompt_sourcemod_location() -> String
+{
     let res = helper::get_input("Please provide your sourcemods folder, then press enter.");
     if !helper::file_exists(res.clone())
     {

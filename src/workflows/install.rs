@@ -1,15 +1,25 @@
-use crate::appvar::AppVarData;
-use crate::version::{AdastralVersionFile, RemoteVersion};
-use crate::BeansError;
-use crate::{helper, DownloadFailureReason, RunnerContext};
-use log::{debug, error, info, warn};
+use log::{debug,
+          error,
+          info,
+          warn};
+
+use crate::{appvar::AppVarData,
+            helper,
+            version::{AdastralVersionFile,
+                      RemoteVersion},
+            BeansError,
+            DownloadFailureReason,
+            RunnerContext};
 
 #[derive(Debug, Clone)]
-pub struct InstallWorkflow {
-    pub context: RunnerContext,
+pub struct InstallWorkflow
+{
+    pub context: RunnerContext
 }
-impl InstallWorkflow {
-    pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError> {
+impl InstallWorkflow
+{
+    pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError>
+    {
         let (latest_remote_id, latest_remote) = ctx.latest_remote_version();
         if let Some(_cv) = ctx.current_version
         {
@@ -19,12 +29,15 @@ impl InstallWorkflow {
         Self::install_with_remote_version(ctx, latest_remote_id, latest_remote).await
     }
 
-    /// Prompt the user to confirm if they want to reinstall (when parameter `current_version` is Some)
+    /// Prompt the user to confirm if they want to reinstall (when parameter
+    /// `current_version` is Some)
     ///
     /// Will always return `true` when `crate::PROMPT_DO_WHATEVER` is `true`.
     ///
-    /// Returns: `true` when the installation should continue, `false` when we should silently abort.
-    pub fn prompt_confirm(current_version: Option<usize>) -> bool {
+    /// Returns: `true` when the installation should continue, `false` when we
+    /// should silently abort.
+    pub fn prompt_confirm(current_version: Option<usize>) -> bool
+    {
         unsafe {
             if crate::PROMPT_DO_WHATEVER
             {
@@ -64,7 +77,11 @@ impl InstallWorkflow {
     }
 
     /// Install the specified version by its ID to the output directory.
-    pub async fn install_version(&mut self, version_id: usize) -> Result<(), BeansError> {
+    pub async fn install_version(
+        &mut self,
+        version_id: usize
+    ) -> Result<(), BeansError>
+    {
         let target_version = match self.context.remote_version_list.versions.get(&version_id)
         {
             Some(v) => v,
@@ -72,7 +89,7 @@ impl InstallWorkflow {
             {
                 error!("Could not find remote version {version_id}");
                 return Err(BeansError::RemoteVersionNotFound {
-                    version: Some(version_id),
+                    version: Some(version_id)
                 });
             }
         };
@@ -83,13 +100,15 @@ impl InstallWorkflow {
 
     /// Install with a specific remote version.
     ///
-    /// Note: Will call Self::prompt_confirm, so set `crate::PROMPT_DO_WHATEVER` to `true` before you call
-    ///       this function if you don't want to wait for a newline from stdin.
+    /// Note: Will call Self::prompt_confirm, so set `crate::PROMPT_DO_WHATEVER`
+    /// to `true` before you call       this function if you don't want to
+    /// wait for a newline from stdin.
     pub async fn install_with_remote_version(
         ctx: &mut RunnerContext,
         version_id: usize,
-        version: RemoteVersion,
-    ) -> Result<(), BeansError> {
+        version: RemoteVersion
+    ) -> Result<(), BeansError>
+    {
         if !Self::prompt_confirm(ctx.current_version)
         {
             info!("[InstallWorkflow] Operation aborted by user");
@@ -104,7 +123,7 @@ impl InstallWorkflow {
         Self::install_from(
             presz_loc.clone(),
             ctx.sourcemod_path.clone(),
-            Some(version_id),
+            Some(version_id)
         )
         .await?;
         if helper::file_exists(presz_loc.clone())
@@ -117,20 +136,22 @@ impl InstallWorkflow {
     /// Install the `.tar.zstd` file at `package_loc` to `out_dir`
     /// package_loc: Location to a file that is a `.tar.zstd` file.
     /// out_dir: should be `RunnerContext.sourcemod_path`
-    /// version_id: Version that is from `package_loc`. When not specified, `.adastral` will not be written to.
-    /// Note: This function doesn't check the extension when extracting.
+    /// version_id: Version that is from `package_loc`. When not specified,
+    /// `.adastral` will not be written to. Note: This function doesn't
+    /// check the extension when extracting.
     pub async fn install_from(
         package_loc: String,
         out_dir: String,
-        version_id: Option<usize>,
-    ) -> Result<(), BeansError> {
+        version_id: Option<usize>
+    ) -> Result<(), BeansError>
+    {
         if !helper::file_exists(package_loc.clone())
         {
             error!("[InstallWorkflow::Wizard] Failed to find package! (location: {package_loc})");
             return Err(BeansError::DownloadFailure {
                 reason: DownloadFailureReason::FileNotFound {
-                    location: package_loc.clone(),
-                },
+                    location: package_loc.clone()
+                }
             });
         }
 
@@ -139,7 +160,7 @@ impl InstallWorkflow {
         if let Some(lri) = version_id
         {
             let x = AdastralVersionFile {
-                version: lri.to_string(),
+                version: lri.to_string()
             }
             .write(Some(out_dir.clone()));
             if let Err(e) = x

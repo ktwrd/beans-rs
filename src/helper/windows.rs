@@ -1,13 +1,16 @@
-use crate::helper::format_directory_path;
-use crate::BeansError;
 use std::backtrace::Backtrace;
-use winreg::enums::HKEY_CURRENT_USER;
-use winreg::RegKey;
+
+use winreg::{enums::HKEY_CURRENT_USER,
+             RegKey};
+
+use crate::{helper::format_directory_path,
+            BeansError};
 
 /// TODO use windows registry to get the SourceModInstallPath
 /// HKEY_CURRENT_USER\Software\Value\Steam
 /// Key: SourceModInstallPath
-pub fn find_sourcemod_path() -> Result<String, BeansError> {
+pub fn find_sourcemod_path() -> Result<String, BeansError>
+{
     match RegKey::predef(HKEY_CURRENT_USER).open_subkey(String::from("Software\\Valve\\Steam"))
     {
         Ok(rkey) =>
@@ -22,7 +25,7 @@ pub fn find_sourcemod_path() -> Result<String, BeansError> {
                         msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed"
                             .to_string(),
                         error: e,
-                        backtrace: Backtrace::capture(),
+                        backtrace: Backtrace::capture()
                     });
                 }
             }
@@ -33,7 +36,7 @@ pub fn find_sourcemod_path() -> Result<String, BeansError> {
                 msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed"
                     .to_string(),
                 error: e,
-                backtrace: Backtrace::capture(),
+                backtrace: Backtrace::capture()
             });
         }
     }

@@ -1,16 +1,22 @@
-use crate::helper;
-use crate::helper::{find_sourcemod_path, InstallType};
-use crate::BeansError;
-use futures_util::TryFutureExt;
-use log::{debug, error, trace};
-use std::backtrace::Backtrace;
-use std::collections::HashMap;
-use std::fs::read_to_string;
-use std::io::Write;
+use std::{backtrace::Backtrace,
+          collections::HashMap,
+          fs::read_to_string,
+          io::Write};
 
-/// get the current version installed via the .adastral file in the sourcemod mod folder.
-/// will parse the value of `version` as usize.
-pub fn get_current_version(sourcemods_location: Option<String>) -> Option<usize> {
+use futures_util::TryFutureExt;
+use log::{debug,
+          error,
+          trace};
+
+use crate::{helper,
+            helper::{find_sourcemod_path,
+                     InstallType},
+            BeansError};
+
+/// get the current version installed via the .adastral file in the sourcemod
+/// mod folder. will parse the value of `version` as usize.
+pub fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
+{
     let install_state = helper::install_state(sourcemods_location.clone());
     if install_state != InstallType::Adastral
     {
@@ -32,16 +38,18 @@ pub fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
 
             Some(parsed)
         }
-        None => None,
+        None => None
     }
 }
 
-fn get_version_location(sourcemods_location: Option<String>) -> Option<String> {
+fn get_version_location(sourcemods_location: Option<String>) -> Option<String>
+{
     get_mod_location(sourcemods_location).map(|v| format!("{}.adastral", v))
 }
 
 /// get the full location of the sourcemod mod directory.
-fn get_mod_location(sourcemods_location: Option<String>) -> Option<String> {
+fn get_mod_location(sourcemods_location: Option<String>) -> Option<String>
+{
     let smp_x = match sourcemods_location
     {
         Some(v) => v,
@@ -58,13 +66,15 @@ fn get_mod_location(sourcemods_location: Option<String>) -> Option<String> {
                 );
                 return None;
             }
-        },
+        }
     };
     Some(helper::join_path(smp_x, crate::data_dir()))
 }
 
-/// migrate from old file (.revision) to new file (.adastral) in sourcemod mod directory.
-pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), BeansError> {
+/// migrate from old file (.revision) to new file (.adastral) in sourcemod mod
+/// directory.
+pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), BeansError>
+{
     let install_state = helper::install_state(sourcemods_location.clone());
 
     match install_state
@@ -109,7 +119,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                         sentry::capture_error(&e);
                         return Err(e);
                     }
-                },
+                }
             };
 
             let data_dir = helper::join_path(smp_x, crate::data_dir());
@@ -127,7 +137,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                     sentry::capture_error(&e);
                     return Err(BeansError::VersionFileReadFailure {
                         error: e,
-                        location: old_version_file_location,
+                        location: old_version_file_location
                     });
                 }
             };
@@ -144,13 +154,13 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                     return Err(BeansError::VersionFileParseFailure {
                         error: e,
                         old_location: old_version_file_location,
-                        old_content: old_version_file_content,
+                        old_content: old_version_file_content
                     });
                 }
             };
 
             let new_file_content = AdastralVersionFile {
-                version: old_version_idx.to_string(),
+                version: old_version_idx.to_string()
             };
 
             let new_version_file_location = format!("{}.adastral", &data_dir);
@@ -162,7 +172,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                     sentry::capture_error(&e);
                     return Err(BeansError::VersionFileSerialize {
                         error: e,
-                        instance: new_file_content,
+                        instance: new_file_content
                     });
                 }
             };
@@ -173,7 +183,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                 sentry::capture_error(&e);
                 return Err(BeansError::VersionFileMigrationFailure {
                     error: e,
-                    location: new_version_file_location,
+                    location: new_version_file_location
                 });
             }
             if let Err(e) = std::fs::remove_file(old_version_file_location.clone())
@@ -181,7 +191,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                 sentry::capture_error(&e);
                 return Err(BeansError::VersionFileMigrationDeleteFailure {
                     error: e,
-                    location: old_version_file_location,
+                    location: old_version_file_location
                 });
             }
         }
@@ -190,7 +200,8 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
 }
 
 /// fetch the version list from `{crate::SOURCE_URL}versions.json`
-pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError> {
+pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
+{
     let av = crate::appvar::parse();
     let response = match reqwest::get(&av.remote_info.versions_url).await
     {
@@ -204,7 +215,7 @@ pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError> {
             sentry::capture_error(&e);
             return Err(BeansError::Reqwest {
                 error: e,
-                backtrace: Backtrace::capture(),
+                backtrace: Backtrace::capture()
             });
         }
     };
@@ -220,12 +231,18 @@ pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError> {
 
 /// Version file that is used as `.adastral` in the sourcemod mod folder.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct AdastralVersionFile {
-    pub version: String,
+pub struct AdastralVersionFile
+{
+    pub version: String
 }
 
-impl AdastralVersionFile {
-    pub fn write(&self, sourcemods_location: Option<String>) -> Result<(), BeansError> {
+impl AdastralVersionFile
+{
+    pub fn write(
+        &self,
+        sourcemods_location: Option<String>
+    ) -> Result<(), BeansError>
+    {
         match get_version_location(sourcemods_location)
         {
             Some(vl) =>
@@ -233,7 +250,7 @@ impl AdastralVersionFile {
                 let f = match helper::file_exists(vl.clone())
                 {
                     true => std::fs::File::create(vl.clone()),
-                    false => std::fs::File::create_new(vl.clone()),
+                    false => std::fs::File::create_new(vl.clone())
                 };
                 match f
                 {
@@ -244,25 +261,26 @@ impl AdastralVersionFile {
                             Ok(_) => Ok(()),
                             Err(e) => Err(BeansError::FileWriteFailure {
                                 location: vl,
-                                error: e,
-                            }),
+                                error: e
+                            })
                         },
-                        Err(e) => Err(e.into()),
+                        Err(e) => Err(e.into())
                     },
                     Err(e) => Err(BeansError::FileOpenFailure {
                         location: vl,
-                        error: e,
-                    }),
+                        error: e
+                    })
                 }
             }
-            None => Err(BeansError::SourceModLocationNotFound),
+            None => Err(BeansError::SourceModLocationNotFound)
         }
     }
 }
 
 /// Value of the `versions` property in `RemoteVersionResponse`
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct RemoteVersion {
+pub struct RemoteVersion
+{
     pub url: Option<String>,
     pub file: Option<String>,
     #[serde(rename = "presz")]
@@ -272,20 +290,23 @@ pub struct RemoteVersion {
     #[serde(rename = "signature")]
     pub signature_url: Option<String>,
     #[serde(rename = "heal")]
-    pub heal_url: Option<String>,
+    pub heal_url: Option<String>
 }
 
 /// `versions.json` response content from remote server.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct RemoteVersionResponse {
+pub struct RemoteVersionResponse
+{
     pub versions: HashMap<usize, RemoteVersion>,
-    pub patches: HashMap<usize, RemotePatch>,
+    pub patches: HashMap<usize, RemotePatch>
 }
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct RemotePatch {
+pub struct RemotePatch
+{
     pub url: String,
     pub file: String,
-    /// Amount of file space required for temporary file. Assumed to be measured in bytes.
-    pub tempreq: usize,
+    /// Amount of file space required for temporary file. Assumed to be measured
+    /// in bytes.
+    pub tempreq: usize
 }

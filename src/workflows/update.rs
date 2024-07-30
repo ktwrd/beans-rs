@@ -1,11 +1,19 @@
-use crate::{butler, helper, BeansError, RunnerContext};
-use log::{debug, info};
+use log::{debug,
+          info};
 
-pub struct UpdateWorkflow {
-    pub ctx: RunnerContext,
+use crate::{butler,
+            helper,
+            BeansError,
+            RunnerContext};
+
+pub struct UpdateWorkflow
+{
+    pub ctx: RunnerContext
 }
-impl UpdateWorkflow {
-    pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError> {
+impl UpdateWorkflow
+{
+    pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError>
+    {
         let av = crate::appvar::parse();
 
         let current_version_id = match ctx.current_version
@@ -81,7 +89,7 @@ impl UpdateWorkflow {
                 "{}{}",
                 &av.remote_info.base_url,
                 remote_version.heal_url.unwrap()
-            ),
+            )
         )
         {
             sentry::capture_error(&e);
@@ -93,7 +101,7 @@ impl UpdateWorkflow {
             format!("{}{}", &av.remote_info.base_url, patch.file),
             staging_dir_location,
             patch.file,
-            mod_dir_location,
+            mod_dir_location
         )
         .await
         {

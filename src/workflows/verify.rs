@@ -1,11 +1,17 @@
-use crate::version::RemoteVersion;
-use crate::{butler, helper, BeansError, RunnerContext};
+use crate::{butler,
+            helper,
+            version::RemoteVersion,
+            BeansError,
+            RunnerContext};
 
-pub struct VerifyWorkflow {
-    pub ctx: RunnerContext,
+pub struct VerifyWorkflow
+{
+    pub ctx: RunnerContext
 }
-impl VerifyWorkflow {
-    pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError> {
+impl VerifyWorkflow
+{
+    pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError>
+    {
         let av = crate::appvar::parse();
 
         let current_version_id = match ctx.current_version
@@ -50,7 +56,7 @@ impl VerifyWorkflow {
                 remote.signature_url.unwrap()
             ),
             mod_dir_location.clone(),
-            format!("{}{}", &av.remote_info.base_url, remote.heal_url.unwrap()),
+            format!("{}{}", &av.remote_info.base_url, remote.heal_url.unwrap())
         )?;
         println!("[VerifyWorkflow::wizard] The verification process has completed, and any corruption has been repaired.");
         ctx.gameinfo_perms()?;

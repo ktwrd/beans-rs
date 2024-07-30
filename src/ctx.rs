@@ -1,21 +1,36 @@
-use crate::helper::{find_sourcemod_path, parse_location, InstallType};
-use crate::version::{RemotePatch, RemoteVersion, RemoteVersionResponse};
-use crate::{depends, helper, version, BeansError};
-use log::{debug, error, info, trace};
 use std::backtrace::Backtrace;
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
 
+use log::{debug,
+          error,
+          info,
+          trace};
+
+use crate::{depends,
+            helper,
+            helper::{find_sourcemod_path,
+                     parse_location,
+                     InstallType},
+            version,
+            version::{RemotePatch,
+                      RemoteVersion,
+                      RemoteVersionResponse},
+            BeansError};
+
 #[derive(Debug, Clone)]
-pub struct RunnerContext {
+pub struct RunnerContext
+{
     pub sourcemod_path: String,
     pub remote_version_list: RemoteVersionResponse,
     pub current_version: Option<usize>,
-    pub appvar: crate::appvar::AppVarData,
+    pub appvar: crate::appvar::AppVarData
 }
 
-impl RunnerContext {
-    pub async fn create_auto(sml_via: SourceModDirectoryParam) -> Result<Self, BeansError> {
+impl RunnerContext
+{
+    pub async fn create_auto(sml_via: SourceModDirectoryParam) -> Result<Self, BeansError>
+    {
         depends::try_write_deps();
         if let Err(e) = depends::try_install_vcredist().await
         {
@@ -61,33 +76,39 @@ impl RunnerContext {
             sourcemod_path: parse_location(sourcemod_path.clone()),
             remote_version_list: version_list,
             current_version: crate::version::get_current_version(Some(sourcemod_path.clone())),
-            appvar: crate::appvar::parse(),
+            appvar: crate::appvar::parse()
         })
     }
     /// Sets `remote_version_list` from `version::get_version_list()`
-    pub async fn set_remote_version_list(&mut self) -> Result<(), BeansError> {
+    pub async fn set_remote_version_list(&mut self) -> Result<(), BeansError>
+    {
         self.remote_version_list = version::get_version_list().await?;
         Ok(())
     }
 
     /// Get the location of the sourcemod mod
     /// {sourcemod_dir}{crate::DATA_DIR}
-    /// e.g; /home/kate/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/sourcemods/open_fortress/
-    ///      C:\Games\Steam\steamapps\sourcemods\open_fortress\
-    pub fn get_mod_location(&mut self) -> String {
+    /// e.g; /home/kate/.var/app/com.valvesoftware.Steam/.local/share/Steam/
+    /// steamapps/sourcemods/open_fortress/      C:\Games\Steam\steamapps\
+    /// sourcemods\open_fortress\
+    pub fn get_mod_location(&mut self) -> String
+    {
         helper::join_path(self.sourcemod_path.clone(), crate::data_dir())
     }
 
     /// Get staging location for butler.
     /// {sourcemod_dir}{crate::STAGING_DIR}
-    /// e.g; /home/kate/.var/app/com.valvesoftware.Steam/.local/share/Steam/steamapps/sourcemods/butler-staging
-    ///      C:\Games\Steam\steamapps\sourcemods\butler-staging
-    pub fn get_staging_location(&mut self) -> String {
+    /// e.g; /home/kate/.var/app/com.valvesoftware.Steam/.local/share/Steam/
+    /// steamapps/sourcemods/butler-staging      C:\Games\Steam\steamapps\
+    /// sourcemods\butler-staging
+    pub fn get_staging_location(&mut self) -> String
+    {
         helper::join_path(self.sourcemod_path.clone(), crate::STAGING_DIR.to_string())
     }
 
     /// Get the latest item in `remote_version_list`
-    pub fn latest_remote_version(&mut self) -> (usize, RemoteVersion) {
+    pub fn latest_remote_version(&mut self) -> (usize, RemoteVersion)
+    {
         let mut highest = usize::MIN;
         for (key, _) in self.remote_version_list.clone().versions.into_iter()
         {
@@ -101,7 +122,8 @@ impl RunnerContext {
     }
 
     /// Get the RemoteVersion that matches `self.current_version`
-    pub fn current_remote_version(&mut self) -> Result<RemoteVersion, BeansError> {
+    pub fn current_remote_version(&mut self) -> Result<RemoteVersion, BeansError>
+    {
         match self.current_version
         {
             Some(cv) =>
@@ -114,18 +136,20 @@ impl RunnerContext {
                     }
                 }
                 Err(BeansError::RemoteVersionNotFound {
-                    version: self.current_version,
+                    version: self.current_version
                 })
             }
             None => Err(BeansError::RemoteVersionNotFound {
-                version: self.current_version,
-            }),
+                version: self.current_version
+            })
         }
     }
 
-    /// When self.current_version is some, iterate through patches and fetch the patch that is available
-    /// to bring the current version in-line with the latest version.
-    pub fn has_patch_available(&mut self) -> Option<RemotePatch> {
+    /// When self.current_version is some, iterate through patches and fetch the
+    /// patch that is available to bring the current version in-line with
+    /// the latest version.
+    pub fn has_patch_available(&mut self) -> Option<RemotePatch>
+    {
         let current_version = self.current_version;
         let (remote_version, _) = self.latest_remote_version();
         match current_version
@@ -145,12 +169,14 @@ impl RunnerContext {
                 }
                 None
             }
-            _ => None,
+            _ => None
         }
     }
 
-    /// Read the contents of `gameinfo.txt` in directory from `self.get_mod_location()`
-    pub fn read_gameinfo_file(&mut self) -> Result<Option<Vec<u8>>, BeansError> {
+    /// Read the contents of `gameinfo.txt` in directory from
+    /// `self.get_mod_location()`
+    pub fn read_gameinfo_file(&mut self) -> Result<Option<Vec<u8>>, BeansError>
+    {
         self.gameinfo_perms()?;
         let location = self.gameinfo_location();
         if !helper::file_exists(location.clone())
@@ -165,7 +191,7 @@ impl RunnerContext {
                 let ex = BeansError::GameInfoFileReadFail {
                     error,
                     location,
-                    backtrace: Backtrace::capture(),
+                    backtrace: Backtrace::capture()
                 };
                 sentry::capture_error(&ex);
                 return Err(ex);
@@ -174,8 +200,10 @@ impl RunnerContext {
         Ok(Some(file))
     }
 
-    /// Get the location of `gameinfo.txt` inside of the folder returned by `self.get_mod_location()`
-    pub fn gameinfo_location(&mut self) -> String {
+    /// Get the location of `gameinfo.txt` inside of the folder returned by
+    /// `self.get_mod_location()`
+    pub fn gameinfo_location(&mut self) -> String
+    {
         let mut location = self.get_mod_location();
         location.push_str("gameinfo.txt");
         location
@@ -183,7 +211,8 @@ impl RunnerContext {
 
     /// Make sure that the permissions for gameinfo.txt on linux are 0644
     #[cfg(target_os = "linux")]
-    pub fn gameinfo_perms(&mut self) -> Result<(), BeansError> {
+    pub fn gameinfo_perms(&mut self) -> Result<(), BeansError>
+    {
         let location = self.gameinfo_location();
         if helper::file_exists(location.clone())
         {
@@ -193,7 +222,7 @@ impl RunnerContext {
                 let xe = BeansError::GameInfoPermissionSetFail {
                     error: e,
                     permissions: perm.clone(),
-                    location,
+                    location
                 };
                 sentry::capture_error(&xe);
                 return Err(xe);
@@ -206,13 +235,15 @@ impl RunnerContext {
         Ok(())
     }
     #[cfg(not(target_os = "linux"))]
-    pub fn gameinfo_perms(&mut self) -> Result<(), BeansError> {
+    pub fn gameinfo_perms(&mut self) -> Result<(), BeansError>
+    {
         Ok(())
     }
 
     /// Download package with Progress Bar.
     /// Ok is the location to where it was downloaded to.
-    pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError> {
+    pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
+    {
         let av = crate::appvar::parse();
         let mut out_loc = helper::get_tmp_dir();
 
@@ -234,7 +265,7 @@ impl RunnerContext {
                 &av.remote_info.base_url,
                 version.file.expect("No URL for latest package!")
             ),
-            out_loc.clone(),
+            out_loc.clone()
         )
         .await?;
 
@@ -243,7 +274,11 @@ impl RunnerContext {
 
     /// Extract zstd_location to the detected sourcemods directory.
     /// TODO replace unwrap/expect with match error handling
-    pub fn extract_package(zstd_location: String, out_dir: String) -> Result<(), BeansError> {
+    pub fn extract_package(
+        zstd_location: String,
+        out_dir: String
+    ) -> Result<(), BeansError>
+    {
         let tar_tmp_location = helper::get_tmp_file("data.tar".to_string());
 
         let zstd_file = std::fs::File::open(&zstd_location)?;
@@ -276,18 +311,19 @@ impl RunnerContext {
                     src_file: tar_tmp_location,
                     target_dir: out_dir,
                     error: e,
-                    backtrace: Backtrace::capture(),
+                    backtrace: Backtrace::capture()
                 };
                 trace!("[RunnerContext::extract_package] {:}\n{:#?}", xe, xe);
                 sentry::capture_error(&xe);
                 Err(xe)
             }
-            Ok(_) => Ok(()),
+            Ok(_) => Ok(())
         }
     }
 
     #[cfg(target_os = "linux")]
-    pub fn prepare_symlink(&mut self) -> Result<(), BeansError> {
+    pub fn prepare_symlink(&mut self) -> Result<(), BeansError>
+    {
         for pair in SYMLINK_FILES.iter()
         {
             let target: &str = pair[1];
@@ -310,7 +346,8 @@ impl RunnerContext {
         Ok(())
     }
     #[cfg(not(target_os = "linux"))]
-    pub fn prepare_symlink(&mut self) -> Result<(), BeansError> {
+    pub fn prepare_symlink(&mut self) -> Result<(), BeansError>
+    {
         // ignored since this symlink stuff is for linux only
         Ok(())
     }
@@ -319,10 +356,11 @@ impl RunnerContext {
 pub const SYMLINK_FILES: &[&[&str; 2]] = &[&["bin/server.so", "bin/server_srv.so"]];
 
 #[derive(Clone, Debug, Default)]
-pub enum SourceModDirectoryParam {
+pub enum SourceModDirectoryParam
+{
     /// Default value. Will autodetect location.
     #[default]
     AutoDetect,
     /// Use from the specified sourcemod location.
-    WithLocation(String),
+    WithLocation(String)
 }

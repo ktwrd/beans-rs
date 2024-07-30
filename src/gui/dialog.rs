@@ -1,36 +1,52 @@
-use crate::gui::shared_ui::GenericDialog;
-use crate::gui::{apply_app_scheme, icon, wait_for_quit, window_centre_screen, GUIAppStatus};
-use fltk::image::PngImage;
-use fltk::{prelude::*, *};
+use fltk::{image::PngImage,
+           prelude::*,
+           *};
 use log::warn;
 
-pub struct DialogBuilder {
+use crate::gui::{apply_app_scheme,
+                 icon,
+                 shared_ui::GenericDialog,
+                 wait_for_quit,
+                 window_centre_screen,
+                 GUIAppStatus};
+
+pub struct DialogBuilder
+{
     pub title: String,
     pub content: String,
-    pub icon: Option<PngImage>,
+    pub icon: Option<PngImage>
 }
 
-pub enum DialogIconKind {
+pub enum DialogIconKind
+{
     Default,
     Warn,
-    Error,
+    Error
 }
 
-impl Default for DialogBuilder {
-    fn default() -> Self {
+impl Default for DialogBuilder
+{
+    fn default() -> Self
+    {
         Self {
             title: format!("beans v{}", crate::VERSION),
             content: String::new(),
-            icon: None,
+            icon: None
         }
     }
 }
 
-impl DialogBuilder {
-    pub fn new() -> Self {
+impl DialogBuilder
+{
+    pub fn new() -> Self
+    {
         Self::default()
     }
-    pub fn with_png_data(mut self, data: &[u8]) -> Self {
+    pub fn with_png_data(
+        mut self,
+        data: &[u8]
+    ) -> Self
+    {
         match PngImage::from_data(data)
         {
             Ok(img) => self.icon = Some(img),
@@ -41,24 +57,37 @@ impl DialogBuilder {
         }
         self
     }
-    pub fn with_icon(self, kind: DialogIconKind) -> Self {
+    pub fn with_icon(
+        self,
+        kind: DialogIconKind
+    ) -> Self
+    {
         let data: &Vec<u8> = match kind
         {
             DialogIconKind::Default => &icon::DEFAULT_RAW_X32,
             DialogIconKind::Warn => &icon::DEFAULT_WARN_RAW_X32,
-            DialogIconKind::Error => &icon::DEFAULT_ERROR_RAW_X32,
+            DialogIconKind::Error => &icon::DEFAULT_ERROR_RAW_X32
         };
         self.with_png_data(data)
     }
-    pub fn with_title(mut self, content: String) -> Self {
+    pub fn with_title(
+        mut self,
+        content: String
+    ) -> Self
+    {
         self.title = content.clone();
         self
     }
-    pub fn with_content(mut self, content: String) -> Self {
+    pub fn with_content(
+        mut self,
+        content: String
+    ) -> Self
+    {
         self.content = content.clone();
         self
     }
-    pub fn run(&self) {
+    pub fn run(&self)
+    {
         if !crate::has_gui_support()
         {
             println!("============ {} ============", self.title);
@@ -99,7 +128,7 @@ impl DialogBuilder {
                 }
                 false
             }
-            _ => false,
+            _ => false
         });
         ui.win.make_resizable(false);
         ui.win.show();

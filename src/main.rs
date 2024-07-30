@@ -1,14 +1,29 @@
 #![feature(panic_info_message)]
 
-use beans_rs::flags::LaunchFlag;
-use beans_rs::gui::DialogIconKind;
-use beans_rs::helper::parse_location;
-use beans_rs::workflows::{CleanWorkflow, InstallWorkflow, UpdateWorkflow, VerifyWorkflow};
-use beans_rs::SourceModDirectoryParam;
-use beans_rs::{flags, helper, wizard, RunnerContext, PANIC_MSG_CONTENT};
-use clap::{Arg, ArgAction, ArgMatches, Command};
-use log::{debug, error, info, trace, LevelFilter};
 use std::str::FromStr;
+
+use beans_rs::{flags,
+               flags::LaunchFlag,
+               gui::DialogIconKind,
+               helper,
+               helper::parse_location,
+               wizard,
+               workflows::{CleanWorkflow,
+                           InstallWorkflow,
+                           UpdateWorkflow,
+                           VerifyWorkflow},
+               RunnerContext,
+               SourceModDirectoryParam,
+               PANIC_MSG_CONTENT};
+use clap::{Arg,
+           ArgAction,
+           ArgMatches,
+           Command};
+use log::{debug,
+          error,
+          info,
+          trace,
+          LevelFilter};
 
 pub const DEFAULT_LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Info;
 #[cfg(debug_assertions)]
@@ -16,7 +31,8 @@ pub const DEFAULT_LOG_LEVEL: LevelFilter = LevelFilter::Trace;
 #[cfg(not(debug_assertions))]
 pub const DEFAULT_LOG_LEVEL: LevelFilter = DEFAULT_LOG_LEVEL_RELEASE;
 
-fn main() {
+fn main()
+{
     #[cfg(target_os = "windows")]
     let _ = winconsole::window::show(true);
     #[cfg(target_os = "windows")]
@@ -25,17 +41,14 @@ fn main() {
     init_flags();
     // initialize sentry and custom panic handler for msgbox
     #[cfg(not(debug_assertions))]
-    let _guard = sentry::init((
-        beans_rs::SENTRY_URL,
-        sentry::ClientOptions {
-            release: sentry::release_name!(),
-            debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
-            max_breadcrumbs: 100,
-            auto_session_tracking: true,
-            attach_stacktrace: true,
-            ..Default::default()
-        },
-    ));
+    let _guard = sentry::init((beans_rs::SENTRY_URL, sentry::ClientOptions {
+        release: sentry::release_name!(),
+        debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
+        max_breadcrumbs: 100,
+        auto_session_tracking: true,
+        attach_stacktrace: true,
+        ..Default::default()
+    }));
     init_panic_handle();
 
     tokio::runtime::Builder::new_multi_thread()
@@ -47,7 +60,8 @@ fn main() {
         });
 }
 
-fn init_flags() {
+fn init_flags()
+{
     flags::remove_flag(LaunchFlag::DEBUG_MODE);
     #[cfg(debug_assertions)]
     flags::add_flag(LaunchFlag::DEBUG_MODE);
@@ -60,7 +74,8 @@ fn init_flags() {
     beans_rs::logger::log_to_stdout();
 }
 
-fn init_panic_handle() {
+fn init_panic_handle()
+{
     std::panic::set_hook(Box::new(move |info| {
         debug!("[panic::set_hook] showing msgbox to notify user");
         let mut x = String::new();
@@ -80,7 +95,8 @@ fn init_panic_handle() {
     }));
 }
 
-fn custom_panic_handle(msg: String) {
+fn custom_panic_handle(msg: String)
+{
     unsafe {
         if !beans_rs::PAUSE_ONCE_DONE
         {
@@ -100,7 +116,8 @@ fn custom_panic_handle(msg: String) {
 
 /// should called once the logic flow is done!
 /// will call `helper::get_input` when `PAUSE_ONCE_DONE` is `true`.
-fn logic_done() {
+fn logic_done()
+{
     unsafe {
         if beans_rs::PAUSE_ONCE_DONE
         {
@@ -109,29 +126,36 @@ fn logic_done() {
     }
 }
 
-pub struct Launcher {
-    /// Output location. When none, `SourceModDirectoryParam::default()` will be used.
+pub struct Launcher
+{
+    /// Output location. When none, `SourceModDirectoryParam::default()` will be
+    /// used.
     pub to_location: Option<String>,
     /// Output of `Command.matches()`
-    pub root_matches: ArgMatches,
+    pub root_matches: ArgMatches
 }
 
-impl Launcher {
-    /// Create argument for specifying the location where the sourcemods directory is.
-    fn create_location_arg() -> Arg {
+impl Launcher
+{
+    /// Create argument for specifying the location where the sourcemods
+    /// directory is.
+    fn create_location_arg() -> Arg
+    {
         Arg::new("location")
             .long("location")
             .help("Manually specify sourcemods directory. When not provided, beans-rs will automatically detect the sourcemods directory.")
             .required(false)
     }
-    fn create_confirm_arg() -> Arg {
+    fn create_confirm_arg() -> Arg
+    {
         Arg::new("confirm")
             .long("confirm")
             .help("When prompted to do something (as a multi-choice option), the default option will be automatically chosen when this switch is provided, and there is a default multi-choice option available.")
             .required(false)
             .action(ArgAction::SetTrue)
     }
-    pub async fn run() {
+    pub async fn run()
+    {
         let cmd = Command::new("beans-rs")
             .version(clap::crate_version!())
             .bin_name(clap::crate_name!())
@@ -184,10 +208,11 @@ impl Launcher {
         }
         i.subcommand_processor().await;
     }
-    pub fn new(matches: &ArgMatches) -> Self {
+    pub fn new(matches: &ArgMatches) -> Self
+    {
         let mut i = Self {
             to_location: None,
-            root_matches: matches.clone(),
+            root_matches: matches.clone()
         };
         i.set_debug();
         i.set_no_pause();
@@ -197,8 +222,10 @@ impl Launcher {
         i
     }
 
-    /// add `LaunchFlag::DEBUG_MODE` to `flags` when the `--debug` parameter flag is used.
-    pub fn set_debug(&mut self) {
+    /// add `LaunchFlag::DEBUG_MODE` to `flags` when the `--debug` parameter
+    /// flag is used.
+    pub fn set_debug(&mut self)
+    {
         if self.root_matches.get_flag("no-debug")
         {
             flags::remove_flag(LaunchFlag::DEBUG_MODE);
@@ -212,15 +239,18 @@ impl Launcher {
             trace!("Debug mode enabled");
         }
     }
-    /// Set `PAUSE_ONCE_DONE` to `false` when `--no-pause` is provided. Otherwise, set it to `true`.
-    pub fn set_no_pause(&mut self) {
+    /// Set `PAUSE_ONCE_DONE` to `false` when `--no-pause` is provided.
+    /// Otherwise, set it to `true`.
+    pub fn set_no_pause(&mut self)
+    {
         unsafe {
             beans_rs::PAUSE_ONCE_DONE = !self.root_matches.get_flag("no-pause");
         }
     }
 
     /// Set `self.to_location` when provided in the arguments.
-    pub fn find_arg_sourcemods_location(matches: &ArgMatches) -> Option<String> {
+    pub fn find_arg_sourcemods_location(matches: &ArgMatches) -> Option<String>
+    {
         let mut sml_dir_manual: Option<String> = None;
         if let Some(x) = matches.get_one::<String>("location")
         {
@@ -231,7 +261,8 @@ impl Launcher {
     }
 
     /// main handler for subcommand processing.
-    pub async fn subcommand_processor(&mut self) {
+    pub async fn subcommand_processor(&mut self)
+    {
         match self.root_matches.clone().subcommand()
         {
             Some(("install", i_matches)) =>
@@ -262,7 +293,8 @@ impl Launcher {
         }
     }
 
-    pub fn set_prompt_do_whatever(&mut self) {
+    pub fn set_prompt_do_whatever(&mut self)
+    {
         if self.root_matches.get_flag("confirm")
         {
             unsafe {
@@ -273,16 +305,18 @@ impl Launcher {
 
     /// Try and get `SourceModDirectoryParam`.
     /// Returns SourceModDirectoryParam::default() when `to_location` is `None`.
-    fn try_get_smdp(&mut self) -> SourceModDirectoryParam {
+    fn try_get_smdp(&mut self) -> SourceModDirectoryParam
+    {
         match &self.to_location
         {
             Some(v) => SourceModDirectoryParam::WithLocation(v.to_string()),
-            None => SourceModDirectoryParam::default(),
+            None => SourceModDirectoryParam::default()
         }
     }
 
     /// handler for the `wizard` subcommand. it's also the default subcommand.
-    pub async fn task_wizard(&mut self) {
+    pub async fn task_wizard(&mut self)
+    {
         let x = self.try_get_smdp();
         if let Err(e) = wizard::WizardContext::run(x).await
         {
@@ -296,9 +330,13 @@ impl Launcher {
 
     /// handler for the `install` subcommand
     ///
-    /// NOTE this function uses `panic!` when `InstallWorkflow::wizard` fails. panics are handled
-    /// and are reported via sentry.
-    pub async fn task_install(&mut self, matches: &ArgMatches) {
+    /// NOTE this function uses `panic!` when `InstallWorkflow::wizard` fails.
+    /// panics are handled and are reported via sentry.
+    pub async fn task_install(
+        &mut self,
+        matches: &ArgMatches
+    )
+    {
         self.to_location = Launcher::find_arg_sourcemods_location(matches);
         if matches.get_flag("confirm")
         {
@@ -352,9 +390,14 @@ impl Launcher {
     /// handler for the `install` subcommand where the `--target-version`
     /// parameter is provided.
     ///
-    /// NOTE this function uses `expect` on `InstallWorkflow::install_version`. panics are handled
-    /// and are reported via sentry.
-    pub async fn task_install_version_specific(&mut self, ctx: RunnerContext, version_str: String) {
+    /// NOTE this function uses `expect` on `InstallWorkflow::install_version`.
+    /// panics are handled and are reported via sentry.
+    pub async fn task_install_version_specific(
+        &mut self,
+        ctx: RunnerContext,
+        version_str: String
+    )
+    {
         let version = match usize::from_str(&version_str)
         {
             Ok(v) => v,
@@ -369,7 +412,9 @@ impl Launcher {
                 return;
             }
         };
-        let mut wf = InstallWorkflow { context: ctx };
+        let mut wf = InstallWorkflow {
+            context: ctx
+        };
         if let Err(e) = wf.install_version(version).await
         {
             error!("Failed to run InstallWorkflow::install_version");
@@ -384,9 +429,13 @@ impl Launcher {
 
     /// handler for the `verify` subcommand
     ///
-    /// NOTE this function uses `panic!` when `VerifyWorkflow::wizard` fails. panics are handled
-    /// and are reported via sentry.
-    pub async fn task_verify(&mut self, matches: &ArgMatches) {
+    /// NOTE this function uses `panic!` when `VerifyWorkflow::wizard` fails.
+    /// panics are handled and are reported via sentry.
+    pub async fn task_verify(
+        &mut self,
+        matches: &ArgMatches
+    )
+    {
         self.to_location = Launcher::find_arg_sourcemods_location(matches);
         let mut ctx = self.try_create_context().await;
 
@@ -402,9 +451,13 @@ impl Launcher {
 
     /// handler for the `update` subcommand
     ///
-    /// NOTE this function uses `panic!` when `UpdateWorkflow::wizard` fails. panics are handled
-    /// and are reported via sentry.
-    pub async fn task_update(&mut self, matches: &ArgMatches) {
+    /// NOTE this function uses `panic!` when `UpdateWorkflow::wizard` fails.
+    /// panics are handled and are reported via sentry.
+    pub async fn task_update(
+        &mut self,
+        matches: &ArgMatches
+    )
+    {
         self.to_location = Launcher::find_arg_sourcemods_location(matches);
         let mut ctx = self.try_create_context().await;
 
@@ -420,9 +473,10 @@ impl Launcher {
 
     /// Handler for the `clean-tmp` subcommand.
     ///
-    /// NOTE this function uses `panic!` when `CleanWorkflow::wizard` fails. panics are handled
-    /// and are reported via sentry.
-    pub async fn task_clean_tmp(&mut self) {
+    /// NOTE this function uses `panic!` when `CleanWorkflow::wizard` fails.
+    /// panics are handled and are reported via sentry.
+    pub async fn task_clean_tmp(&mut self)
+    {
         let mut ctx = self.try_create_context().await;
         if let Err(e) = CleanWorkflow::wizard(&mut ctx)
         {
@@ -434,12 +488,14 @@ impl Launcher {
         }
     }
 
-    /// try and create an instance of `RunnerContext` via the `create_auto` method while setting
-    /// the `sml_via` parameter to the output of `self.try_get_smdp()`
+    /// try and create an instance of `RunnerContext` via the `create_auto`
+    /// method while setting the `sml_via` parameter to the output of
+    /// `self.try_get_smdp()`
     ///
-    /// on failure, `panic!` is called. but that's okay because a dialog is shown (in
-    /// `init_panic_handle`) and the error is reported via sentry.
-    async fn try_create_context(&mut self) -> RunnerContext {
+    /// on failure, `panic!` is called. but that's okay because a dialog is
+    /// shown (in `init_panic_handle`) and the error is reported via sentry.
+    async fn try_create_context(&mut self) -> RunnerContext
+    {
         match RunnerContext::create_auto(self.try_get_smdp()).await
         {
             Ok(v) => v,
@@ -457,7 +513,8 @@ impl Launcher {
     }
 }
 
-fn show_msgbox_error(text: String) {
+fn show_msgbox_error(text: String)
+{
     beans_rs::gui::DialogBuilder::new()
         .with_title(String::from("beans - Fatal Error!"))
         .with_icon(DialogIconKind::Error)

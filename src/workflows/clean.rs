@@ -1,13 +1,20 @@
-use crate::{helper, BeansError, RunnerContext};
-use log::{info, warn};
+use log::{info,
+          warn};
+
+use crate::{helper,
+            BeansError,
+            RunnerContext};
 
 #[derive(Debug, Clone)]
-pub struct CleanWorkflow {
-    pub context: RunnerContext,
+pub struct CleanWorkflow
+{
+    pub context: RunnerContext
 }
 
-impl CleanWorkflow {
-    pub fn wizard(_ctx: &mut RunnerContext) -> Result<(), BeansError> {
+impl CleanWorkflow
+{
+    pub fn wizard(_ctx: &mut RunnerContext) -> Result<(), BeansError>
+    {
         let target_directory = helper::get_tmp_dir();
 
         info!("[CleanWorkflow] Cleaning up {}", target_directory);
@@ -21,7 +28,7 @@ impl CleanWorkflow {
         {
             return Err(BeansError::CleanTempFailure {
                 location: target_directory,
-                error: e,
+                error: e
             });
         }
 
@@ -30,7 +37,7 @@ impl CleanWorkflow {
         {
             return Err(BeansError::DirectoryCreateFailure {
                 location: target_directory,
-                error: e,
+                error: e
             });
         }
 

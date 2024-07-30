@@ -32,11 +32,13 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 pub const SENTRY_URL: &str = "https://9df80170f0a4411bb9c834ac54734380@sentry.kate.pet/1";
 /// content to display when showing a message box on panic.
 pub const PANIC_MSG_CONTENT: &str = include_str!("text/msgbox_panic_text.txt");
-/// once everything is done, do we wait for the user to press enter before exiting?
+/// once everything is done, do we wait for the user to press enter before
+/// exiting?
 ///
 /// just like the `pause` thing in batch.
 pub static mut PAUSE_ONCE_DONE: bool = false;
-/// When `true`, everything that prompts the user for Y/N should use the default option.
+/// When `true`, everything that prompts the user for Y/N should use the default
+/// option.
 pub static mut PROMPT_DO_WHATEVER: bool = false;
 
 // ------------------------------------------------------------------------
@@ -49,18 +51,22 @@ pub const PATH_SEP: &str = "/";
 #[cfg(target_os = "windows")]
 pub const PATH_SEP: &str = "\\";
 
-pub fn data_dir() -> String {
+pub fn data_dir() -> String
+{
     let av = appvar::parse();
     format!("{}{}{}", PATH_SEP, av.mod_info.sourcemod_name, PATH_SEP)
 }
 
-/// Check if we have GUI support enabled. Will always return `false` when `PAUSE_ONCE_DONE` is `false`.
+/// Check if we have GUI support enabled. Will always return `false` when
+/// `PAUSE_ONCE_DONE` is `false`.
 ///
 /// Will return `true` when
 /// - Running on Windows
 /// - Running on macOS
-/// - Running on Linux AND the `DISPLAY` or `XDG_SESSION_DESKTOP` environment variables are set.
-pub fn has_gui_support() -> bool {
+/// - Running on Linux AND the `DISPLAY` or `XDG_SESSION_DESKTOP` environment
+///   variables are set.
+pub fn has_gui_support() -> bool
+{
     unsafe {
         if !PAUSE_ONCE_DONE
         {
