@@ -16,6 +16,7 @@ bitflags! {
     }
 }
 pub static mut LAUNCH_FLAGS: u32 = 0x00;
+
 /// check if the `flag` provided is in `LAUNCH_FLAGS`
 pub fn has_flag(flag: LaunchFlag) -> bool
 {
@@ -24,18 +25,14 @@ pub fn has_flag(flag: LaunchFlag) -> bool
         data.contains(flag)
     }
 }
+
 /// Add a flag to `LAUNCH_FLAGS`
 pub fn add_flag(flag: LaunchFlag)
 {
     unsafe {
-        match flag
+        if let LaunchFlag::DEBUG_MODE = flag
         {
-            LaunchFlag::DEBUG_MODE =>
-            {
-                crate::logger::LOG_FORMAT = crate::logger::LOG_FORMAT_DEFAULT;
-            }
-            _ =>
-            {}
+            crate::logger::LOG_FORMAT = crate::logger::LOG_FORMAT_DEFAULT;
         };
 
         let mut data = LaunchFlag::from_bits(LAUNCH_FLAGS).unwrap_or(LaunchFlag::empty());
@@ -43,18 +40,14 @@ pub fn add_flag(flag: LaunchFlag)
         LAUNCH_FLAGS = data.bits();
     }
 }
+
 /// remove a flag from `LAUNCH_FLAGS`
 pub fn remove_flag(flag: LaunchFlag)
 {
     unsafe {
-        match flag
+        if flag == LaunchFlag::DEBUG_MODE
         {
-            LaunchFlag::DEBUG_MODE =>
-            {
-                crate::logger::LOG_FORMAT = crate::logger::LOG_FORMAT_MINIMAL;
-            }
-            _ =>
-            {}
+            crate::logger::LOG_FORMAT = crate::logger::LOG_FORMAT_MINIMAL;
         };
         let mut data = LaunchFlag::from_bits(LAUNCH_FLAGS).unwrap_or(LaunchFlag::empty());
         data.remove(flag);

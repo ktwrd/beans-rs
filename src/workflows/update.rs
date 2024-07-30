@@ -43,7 +43,7 @@ impl UpdateWorkflow
 
         ctx.gameinfo_perms()?;
 
-        if helper::has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq)? == false
+        if !helper::has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq)?
         {
             println!(
                 "[UpdateWorkflow::wizard] Not enough free space! Requires {}",

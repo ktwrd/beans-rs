@@ -16,7 +16,7 @@ pub fn verify(
     remote: String
 ) -> Result<ExitStatus, BeansError>
 {
-    let mut cmd = std::process::Command::new(&depends::get_butler_location());
+    let mut cmd = std::process::Command::new(depends::get_butler_location());
     cmd.args([
         "verify",
         &signature_url,
@@ -64,7 +64,7 @@ pub async fn patch_dl(
     info!("[butler::patch_dl] downloading {} to {}", dl_url, tmp_file);
     helper::download_with_progress(dl_url, tmp_file.clone()).await?;
 
-    if helper::file_exists(tmp_file.clone()) == false
+    if !helper::file_exists(tmp_file.clone())
     {
         return Err(BeansError::DownloadFailure {
             reason: DownloadFailureReason::FileNotFound {
@@ -82,7 +82,7 @@ pub fn patch(
     gamedir: String
 ) -> Result<ExitStatus, BeansError>
 {
-    let mut cmd = std::process::Command::new(&depends::get_butler_location());
+    let mut cmd = std::process::Command::new(depends::get_butler_location());
     cmd.args([
         "apply",
         &format!("--staging-dir={}", &staging_dir),

@@ -4,6 +4,7 @@ use std::str::FromStr;
 
 use beans_rs::{flags,
                flags::LaunchFlag,
+               gui::DialogIconKind,
                helper,
                helper::parse_location,
                wizard,
@@ -60,6 +61,7 @@ fn main()
             Launcher::run().await;
         });
 }
+
 fn init_flags()
 {
     flags::remove_flag(LaunchFlag::DEBUG_MODE);
@@ -73,6 +75,7 @@ fn init_flags()
     beans_rs::logger::set_filter(DEFAULT_LOG_LEVEL);
     beans_rs::logger::log_to_stdout();
 }
+
 fn init_panic_handle()
 {
     std::panic::set_hook(Box::new(move |info| {
@@ -82,9 +85,10 @@ fn init_panic_handle()
         {
             x = format!("{:#?}", m);
         }
+        info!("[panic] Fatal error!\n{:#?}", x);
         custom_panic_handle(x);
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
-        sentry::integrations::panic::panic_handler(&info);
+        sentry::integrations::panic::panic_handler(info);
         if flags::has_flag(LaunchFlag::DEBUG_MODE)
         {
             eprintln!("{:#?}", info);
@@ -92,44 +96,26 @@ fn init_panic_handle()
         logic_done();
     }));
 }
-#[cfg(target_os = "windows")]
-fn fix_msgbox_txt(txt: String) -> String
-{
-    txt.replace("\\n", "\r\n")
-}
-#[cfg(not(target_os = "windows"))]
-fn fix_msgbox_txt(txt: String) -> String
-{
-    txt
-}
+
 fn custom_panic_handle(msg: String)
 {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE
+        if !beans_rs::PAUSE_ONCE_DONE
         {
-            let mut txt = PANIC_MSG_CONTENT.to_string().replace("$err_msg", &msg);
-            txt = fix_msgbox_txt(txt);
-            std::thread::spawn(move || {
-                let d = native_dialog::MessageDialog::new()
-                    .set_type(native_dialog::MessageType::Error)
-                    .set_title("beans - fatal error!")
-                    .set_text(&txt)
-                    .show_alert();
-                if let Err(e) = d
-                {
-                    sentry::capture_error(&e);
-                    eprintln!("Failed to show MessageDialog {:#?}", e);
-                    eprintln!("[msgbox_panic] Come on, we failed to show a messagebox? Well, the error has been reported and we're on it.");
-                    eprintln!("[msgbox_panic] PLEASE report this to kate@dariox.club with as much info as possible <3");
-                }
-            });
-        }
-        else
-        {
-            info!("This error has been reported to the developers");
+            return;
         }
     }
+    let txt = PANIC_MSG_CONTENT
+        .to_string()
+        .replace("$err_msg", &msg)
+        .replace("\\n", "\n");
+    beans_rs::gui::DialogBuilder::new()
+        .with_title(String::from("beans - Fatal Error!"))
+        .with_icon(DialogIconKind::Error)
+        .with_content(txt)
+        .run();
 }
+
 /// should called once the logic flow is done!
 /// will call `helper::get_input` when `PAUSE_ONCE_DONE` is `true`.
 fn logic_done()
@@ -141,6 +127,7 @@ fn logic_done()
         }
     }
 }
+
 pub struct Launcher
 {
     /// Output location. When none, `SourceModDirectoryParam::default()` will be
@@ -149,6 +136,7 @@ pub struct Launcher
     /// Output of `Command.matches()`
     pub root_matches: ArgMatches
 }
+
 impl Launcher
 {
     /// Create argument for specifying the location where the sourcemods
@@ -218,13 +206,10 @@ impl Launcher
             ]);
 
         let mut i = Self::new(&cmd.get_matches());
-        if let Ok(r) = helper::beans_has_update().await
+        if let Ok(Some(v)) = helper::beans_has_update().await
         {
-            if let Some(v) = r
-            {
-                info!("A new version of beans-rs is available!");
-                info!("{}", v.html_url);
-            }
+            info!("A new version of beans-rs is available!");
+            info!("{}", v.html_url);
         }
         i.subcommand_processor().await;
     }
@@ -239,7 +224,7 @@ impl Launcher
         i.set_prompt_do_whatever();
         i.to_location = Launcher::find_arg_sourcemods_location(&i.root_matches);
 
-        return i;
+        i
     }
 
     /// add `LaunchFlag::DEBUG_MODE` to `flags` when the `--debug` parameter
@@ -264,7 +249,7 @@ impl Launcher
     pub fn set_no_pause(&mut self)
     {
         unsafe {
-            beans_rs::PAUSE_ONCE_DONE = self.root_matches.get_flag("no-pause") == false;
+            beans_rs::PAUSE_ONCE_DONE = !self.root_matches.get_flag("no-pause");
         }
     }
 
@@ -361,7 +346,7 @@ impl Launcher
         matches: &ArgMatches
     )
     {
-        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        self.to_location = Launcher::find_arg_sourcemods_location(matches);
         if matches.get_flag("confirm")
         {
             unsafe {
@@ -402,16 +387,13 @@ impl Launcher
                 logic_done();
             }
         }
+        else if let Err(e) = InstallWorkflow::wizard(&mut ctx).await
+        {
+            panic!("Failed to run InstallWorkflow {:#?}", e);
+        }
         else
         {
-            if let Err(e) = InstallWorkflow::wizard(&mut ctx).await
-            {
-                panic!("Failed to run InstallWorkflow {:#?}", e);
-            }
-            else
-            {
-                logic_done();
-            }
+            logic_done();
         }
     }
     /// handler for the `install` subcommand where the `--target-version`
@@ -463,7 +445,7 @@ impl Launcher
         matches: &ArgMatches
     )
     {
-        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        self.to_location = Launcher::find_arg_sourcemods_location(matches);
         let mut ctx = self.try_create_context().await;
 
         if let Err(e) = VerifyWorkflow::wizard(&mut ctx).await
@@ -485,7 +467,7 @@ impl Launcher
         matches: &ArgMatches
     )
     {
-        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        self.to_location = Launcher::find_arg_sourcemods_location(matches);
         let mut ctx = self.try_create_context().await;
 
         if let Err(e) = UpdateWorkflow::wizard(&mut ctx).await
@@ -577,23 +559,12 @@ impl Launcher
         }
     }
 }
+
 fn show_msgbox_error(text: String)
 {
-    unsafe {
-        if beans_rs::PAUSE_ONCE_DONE
-        {
-            std::thread::spawn(move || {
-                let d = native_dialog::MessageDialog::new()
-                    .set_type(native_dialog::MessageType::Error)
-                    .set_title("beans - fatal error!")
-                    .set_text(&format!("{}", fix_msgbox_txt(text)))
-                    .show_alert();
-                if let Err(e) = d
-                {
-                    sentry::capture_error(&e);
-                    eprintln!("Failed to show MessageDialog {:#?}", e);
-                }
-            });
-        }
-    }
+    beans_rs::gui::DialogBuilder::new()
+        .with_title(String::from("beans - Fatal Error!"))
+        .with_icon(DialogIconKind::Error)
+        .with_content(text.replace("\\n", "\n"))
+        .run();
 }

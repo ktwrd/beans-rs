@@ -1,4 +1,4 @@
-﻿brace_style="AlwaysNextLine"
+brace_style="AlwaysNextLine"
 combine_control_expr=false
 condense_wildcard_suffixes=true
 control_brace_style="AlwaysNextLine"

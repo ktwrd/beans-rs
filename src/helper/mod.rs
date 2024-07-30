@@ -8,6 +8,7 @@ pub use linux::*;
 
 #[cfg(target_os = "windows")]
 mod windows;
+
 use std::{collections::HashMap,
           io::Write,
           path::PathBuf};
@@ -133,7 +134,7 @@ pub fn install_state(sourcemods_location: Option<String>) -> InstallType
     {
         return InstallType::OtherSourceManual;
     }
-    return InstallType::NotInstalled;
+    InstallType::NotInstalled
 }
 
 /// get user input from terminal. prompt is displayed on the line above where
@@ -157,11 +158,13 @@ pub fn file_exists(location: String) -> bool
 {
     std::path::Path::new(&location).exists()
 }
+
 /// Check if the location provided exists and it's a directory.
 pub fn dir_exists(location: String) -> bool
 {
     file_exists(location.clone()) && is_directory(location.clone())
 }
+
 pub fn is_directory(location: String) -> bool
 {
     let x = PathBuf::from(&location);
@@ -187,6 +190,7 @@ pub fn generate_rand_str(length: usize) -> String
         .collect();
     s.to_uppercase()
 }
+
 /// Join the path, using `tail` as the base, and `head` as the thing to add on
 /// top of it.
 ///
@@ -208,47 +212,45 @@ pub fn join_path(
 
     format!("{}{}", format_directory_path(tail), h)
 }
+
 pub fn remove_path_head(location: String) -> String
 {
-    let p = std::path::Path::new(&location);
-    if let Some(x) = p.parent()
+    if let Some(Some(m)) = std::path::Path::new(&location).parent().map(|p| p.to_str())
     {
-        if let Some(m) = x.to_str()
-        {
-            return m.to_string();
-        }
+        return m.to_string();
     }
-    return String::new();
+    String::new()
 }
+
 /// Make sure that the location provided is formatted as a directory (ends with
 /// `crate::PATH_SEP`).
 pub fn format_directory_path(location: String) -> String
 {
-    let mut x = location
-        .to_string()
-        .replace("/", crate::PATH_SEP)
-        .replace("\\", crate::PATH_SEP);
+    let mut x = location.to_string().replace(['/', '\\'], crate::PATH_SEP);
+
     while x.ends_with(crate::PATH_SEP)
     {
         x.pop();
     }
-    if x.ends_with(crate::PATH_SEP) == false
+    if !x.ends_with(crate::PATH_SEP)
     {
         x.push_str(crate::PATH_SEP);
     }
-
     x
 }
+
 #[cfg(not(target_os = "windows"))]
 pub fn canonicalize(location: &str) -> Result<PathBuf, std::io::Error>
 {
     std::fs::canonicalize(location)
 }
+
 #[cfg(target_os = "windows")]
 pub fn canonicalize(location: &str) -> Result<PathBuf, std::io::Error>
 {
     dunce::canonicalize(location)
 }
+
 pub fn parse_location(location: String) -> String
 {
     let path = std::path::Path::new(&location);
@@ -408,7 +410,7 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
         debug!("[get_free_space] Checking if {} is in data", l);
         if let Some(x) = data.get(&l)
         {
-            return Ok(x.clone());
+            return Ok(*x);
         }
         l = remove_path_head(l);
     }
@@ -417,14 +419,14 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
         location: parse_location(location.clone())
     })
 }
+
 /// Check if the location provided has enough free space.
 pub fn has_free_space(
     location: String,
     size: usize
 ) -> Result<bool, BeansError>
 {
-    let space = get_free_space(location)?;
-    return Ok((size as u64) < space);
+    Ok((size as u64) < get_free_space(location)?)
 }
 
 /// Download file at the URL provided to the output location provided
@@ -499,11 +501,11 @@ pub fn format_size(i: usize) -> String
     let mut dec_l = decimal_points * 6;
     if i < 1_000
     {
-        dec_l = decimal_points * 0;
+        dec_l = 0
     }
     else if i < 1_000_000
     {
-        dec_l = decimal_points * 1;
+        dec_l = decimal_points
     }
     else if i < 1_000_000_000
     {
@@ -522,20 +524,15 @@ pub fn format_size(i: usize) -> String
         dec_l = decimal_points * 5;
     }
 
-    let dec: String = value
-        .chars()
-        .into_iter()
-        .rev()
-        .take(dec_l as usize)
-        .collect();
+    let dec: String = value.chars().rev().take(dec_l).collect();
 
-    let mut dec_x: String = dec.chars().into_iter().rev().take(decimal_points).collect();
+    let mut dec_x: String = dec.chars().rev().take(decimal_points).collect();
     dec_x = dec_x.trim_end_matches('0').to_string();
 
     let whole_l = value.len() - dec_l;
 
-    let mut whole: String = value.chars().into_iter().take(whole_l).collect();
-    if dec_x.len() > 0
+    let mut whole: String = value.chars().take(whole_l).collect();
+    if !dec_x.is_empty()
     {
         whole.push('.');
     }
@@ -553,8 +550,9 @@ pub fn format_size(i: usize) -> String
             return format!("{}{}{}", whole, dec_x, c);
         }
     }
-    return format!("{}{}", whole, dec_x);
+    format!("{}{}", whole, dec_x)
 }
+
 /// Check if we should use the custom temporary directory, which is stored in
 /// the environment variable defined in `CUSTOM_TMPDIR_NAME`.
 ///
@@ -578,9 +576,11 @@ pub fn use_custom_tmpdir() -> Option<String>
             );
         }
     }
-    return None;
+    None
 }
+
 pub const CUSTOM_TMPDIR_NAME: &str = "ADASTRAL_TMPDIR";
+
 /// Create directory in temp directory with name of "beans-rs"
 pub fn get_tmp_dir() -> String
 {
@@ -652,8 +652,9 @@ pub fn get_tmp_dir() -> String
         }
     }
 
-    return dir;
+    dir
 }
+
 /// Check if the content of `uname -r` contains `valve` (Linux Only)
 ///
 /// ## Returns
@@ -706,16 +707,18 @@ pub fn is_steamdeck() -> bool
         {
             trace!("[helper::is_steamdeck] {:#?}", e);
             warn!("[helper::is_steamdeck] Failed to detect {:}", e);
-            return false;
+            false
         }
     }
 }
+
 /// Generate a full file location for a temporary file.
 pub fn get_tmp_file(filename: String) -> String
 {
     let head = format!("{}_{}", generate_rand_str(8), filename);
     join_path(get_tmp_dir(), head)
 }
+
 /// Check if there is an update available. When the latest release doesn't match
 /// the current release.
 pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
@@ -755,14 +758,13 @@ pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
         }
     };
     trace!("{:#?}", data);
-    if data.draft == false
-        && data.prerelease == false
-        && data.tag_name != format!("v{}", crate::VERSION)
+    if !data.draft && !data.prerelease && data.tag_name != format!("v{}", crate::VERSION)
     {
         return Ok(Some(data.clone()));
     }
-    return Ok(None);
+    Ok(None)
 }
+
 pub fn restore_gameinfo(
     ctx: &mut RunnerContext,
     data: Vec<u8>
@@ -800,8 +802,9 @@ pub fn restore_gameinfo(
         sentry::capture_error(&e);
         return Err(e);
     }
-    return Ok(());
+    Ok(())
 }
+
 pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
 {
     let av = AppVarData::get();
@@ -811,7 +814,7 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
     let current_time = chrono::Local::now();
     let current_time_formatted = current_time.format("%Y%m%d-%H%M%S").to_string();
 
-    if file_exists(backupdir.clone()) == false
+    if !file_exists(backupdir.clone())
     {
         if let Err(e) = std::fs::create_dir(&backupdir)
         {
@@ -841,7 +844,7 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
     );
     let current_location = join_path(gamedir, String::from("gameinfo.txt"));
 
-    if file_exists(current_location.clone()) == false
+    if !file_exists(current_location.clone())
     {
         debug!(
             "[helper::backup_gameinfo] can't backup since {} doesn't exist",
@@ -901,8 +904,10 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
 
     Ok(())
 }
+
 const GAMEINFO_BACKUP_DIRNAME: &str = "gameinfo_backup";
 const GITHUB_RELEASES_URL: &str = "https://api.github.com/repositories/805393469/releases/latest";
+
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct GithubReleaseItem
 {
@@ -914,4 +919,29 @@ pub struct GithubReleaseItem
     pub html_url: String,
     pub draft: bool,
     pub prerelease: bool
+}
+
+/// Return `true` when `try_get_env_var` returns Some with a length greater than
+/// `1`.
+pub fn has_env_var(target_key: String) -> bool
+{
+    if let Some(x) = try_get_env_var(target_key)
+    {
+        return x.len() > 1;
+    }
+    false
+}
+
+/// Try and get a value from `std::env::vars()`
+/// Will return `None` when not found
+pub fn try_get_env_var(target_key: String) -> Option<String>
+{
+    for (key, value) in std::env::vars()
+    {
+        if key == target_key
+        {
+            return Some(value);
+        }
+    }
+    None
 }

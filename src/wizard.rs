@@ -28,6 +28,7 @@ pub struct WizardContext
     pub context: RunnerContext,
     pub menu_trigger_count: u32
 }
+
 impl WizardContext
 {
     /// run the wizard!
@@ -82,7 +83,7 @@ impl WizardContext
             menu_trigger_count: 0u32
         };
         i.menu().await;
-        return Ok(());
+        Ok(())
     }
 
     /// Show the menu
@@ -179,10 +180,11 @@ fn get_path() -> String
         prompt_sourcemod_location()
     })
 }
+
 fn prompt_sourcemod_location() -> String
 {
     let res = helper::get_input("Please provide your sourcemods folder, then press enter.");
-    return if !helper::file_exists(res.clone())
+    if !helper::file_exists(res.clone())
     {
         eprintln!("The location you provided doesn't exist. Try again.");
         prompt_sourcemod_location()
@@ -195,5 +197,5 @@ fn prompt_sourcemod_location() -> String
     else
     {
         res
-    };
+    }
 }
