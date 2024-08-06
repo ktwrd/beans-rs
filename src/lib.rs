@@ -57,6 +57,43 @@ pub fn data_dir() -> String
     format!("{}{}{}", PATH_SEP, av.mod_info.sourcemod_name, PATH_SEP)
 }
 
+/// Temporary directory which is specified by `ADASTRAL_TMPDIR`.
+///
+/// Will return `None` when the environment variable couldn't be found, or it's an empty string.
+pub fn env_custom_tmpdir() -> Option<String>
+{
+    let s = helper::try_get_env_var(String::from("ADASTRAL_TMPDIR"));
+    match s {
+        Some(x) => match x.trim().is_empty() {
+            true => None,
+            false => Some(x)
+        },
+        None => s
+    }
+}
+/// Return `true` when the environment variable `BEANS_DEBUG` or `ADASTRAL_DEBUG` exists and
+/// equals `1` or `true`.
+pub fn env_debug() -> bool
+{
+    check_env_bool("BEANS_DEBUG") || check_env_bool("ADASTRAL_DEBUG")
+}
+/// Return `true` when the environment variable `BEANS_HEADLESS` or `ADASTRAL_HEADLESS` exists and
+/// equals `1` or `true`.
+pub fn env_headless() -> bool
+{
+    check_env_bool("BEANS_HEADLESS") || check_env_bool("ADASTRAL_HEADLESS")
+}
+
+/// Return `true` when the environment variable exists, and it's value equals `1` or `true (when
+/// trimmed and made lowercase).
+fn check_env_bool<K: AsRef<std::ffi::OsStr>>(key: K) -> bool
+{
+    std::env::var(key).is_ok_and(|x| {
+        let y = x.trim().to_lowercase();
+        y == "1" || y == "true"
+    })
+}
+
 /// Check if we have GUI support enabled. Will always return `false` when
 /// `PAUSE_ONCE_DONE` is `false`.
 ///
@@ -72,6 +109,10 @@ pub fn has_gui_support() -> bool
         {
             return false;
         }
+    }
+
+    if env_headless() {
+        return true;
     }
 
     match std::env::consts::OS

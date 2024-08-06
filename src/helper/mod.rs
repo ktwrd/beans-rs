@@ -561,7 +561,7 @@ pub fn format_size(i: usize) -> String
 /// Otherwise `None` is returned.
 pub fn use_custom_tmpdir() -> Option<String>
 {
-    if let Ok(x) = std::env::var(CUSTOM_TMPDIR_NAME)
+    if let Some(x) = crate::env_custom_tmpdir()
     {
         let s = x.to_string();
         if dir_exists(s.clone())
@@ -578,8 +578,6 @@ pub fn use_custom_tmpdir() -> Option<String>
     }
     None
 }
-
-pub const CUSTOM_TMPDIR_NAME: &str = "ADASTRAL_TMPDIR";
 
 /// Create directory in temp directory with name of "beans-rs"
 pub fn get_tmp_dir() -> String

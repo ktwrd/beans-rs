@@ -67,7 +67,7 @@ fn init_flags()
     flags::remove_flag(LaunchFlag::DEBUG_MODE);
     #[cfg(debug_assertions)]
     flags::add_flag(LaunchFlag::DEBUG_MODE);
-    if std::env::var("BEANS_DEBUG").is_ok_and(|x| x == "1")
+    if beans_rs::env_debug()
     {
         flags::add_flag(LaunchFlag::DEBUG_MODE);
     }
