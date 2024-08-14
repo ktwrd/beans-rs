@@ -22,10 +22,10 @@ pub use error::*;
 
 pub mod appvar;
 pub mod butler;
+pub mod extract;
 pub mod flags;
 pub mod gui;
 pub mod logger;
-pub mod extract;
 
 /// NOTE do not change, fetches from the version of beans-rs on build
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -60,33 +60,36 @@ pub fn data_dir() -> String
 
 /// Temporary directory which is specified by `ADASTRAL_TMPDIR`.
 ///
-/// Will return `None` when the environment variable couldn't be found, or it's an empty string.
+/// Will return `None` when the environment variable couldn't be found, or it's
+/// an empty string.
 pub fn env_custom_tmpdir() -> Option<String>
 {
     let s = helper::try_get_env_var(String::from("ADASTRAL_TMPDIR"));
-    match s {
-        Some(x) => match x.trim().is_empty() {
+    match s
+    {
+        Some(x) => match x.trim().is_empty()
+        {
             true => None,
             false => Some(x)
         },
         None => s
     }
 }
-/// Return `true` when the environment variable `BEANS_DEBUG` or `ADASTRAL_DEBUG` exists and
-/// equals `1` or `true`.
+/// Return `true` when the environment variable `BEANS_DEBUG` or
+/// `ADASTRAL_DEBUG` exists and equals `1` or `true`.
 pub fn env_debug() -> bool
 {
     check_env_bool("BEANS_DEBUG") || check_env_bool("ADASTRAL_DEBUG")
 }
-/// Return `true` when the environment variable `BEANS_HEADLESS` or `ADASTRAL_HEADLESS` exists and
-/// equals `1` or `true`.
+/// Return `true` when the environment variable `BEANS_HEADLESS` or
+/// `ADASTRAL_HEADLESS` exists and equals `1` or `true`.
 pub fn env_headless() -> bool
 {
     check_env_bool("BEANS_HEADLESS") || check_env_bool("ADASTRAL_HEADLESS")
 }
 
-/// Return `true` when the environment variable exists, and it's value equals `1` or `true (when
-/// trimmed and made lowercase).
+/// Return `true` when the environment variable exists, and it's value equals
+/// `1` or `true (when trimmed and made lowercase).
 fn check_env_bool<K: AsRef<std::ffi::OsStr>>(key: K) -> bool
 {
     std::env::var(key).is_ok_and(|x| {
@@ -112,7 +115,8 @@ pub fn has_gui_support() -> bool
         }
     }
 
-    if env_headless() {
+    if env_headless()
+    {
         return true;
     }
 

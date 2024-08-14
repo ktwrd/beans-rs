@@ -281,14 +281,23 @@ impl RunnerContext
     {
         let tar_tmp_location = helper::get_tmp_file("data.tar".to_string());
 
-        if let Err(e) = crate::extract::decompress_zstd(zstd_location.clone(), tar_tmp_location.clone(), true) {
+        if let Err(e) =
+            crate::extract::decompress_zstd(zstd_location.clone(), tar_tmp_location.clone(), true)
+        {
             debug!("{:#?}", e);
-            error!("[RunnerContext::extract_package] Failed to decompress file {} ({:})", zstd_location, e);
+            error!(
+                "[RunnerContext::extract_package] Failed to decompress file {} ({:})",
+                zstd_location, e
+            );
             return Err(e);
         }
-        if let Err(e) = crate::extract::unpack_tarball(tar_tmp_location.clone(), out_dir, true) {
+        if let Err(e) = crate::extract::unpack_tarball(tar_tmp_location.clone(), out_dir, true)
+        {
             debug!("{:#?}", e);
-            error!("[RunnerContext::extract_package] Failed to unpack tarball {} ({:})", tar_tmp_location, e);
+            error!(
+                "[RunnerContext::extract_package] Failed to unpack tarball {} ({:})",
+                tar_tmp_location, e
+            );
             return Err(e);
         }
         if helper::file_exists(tar_tmp_location.clone())
