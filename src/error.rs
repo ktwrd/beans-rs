@@ -52,6 +52,15 @@ pub enum BeansError
         error: std::io::Error,
         backtrace: Backtrace
     },
+    #[error("Failed to extract item {link_name} to directory {target_dir} ({error:})")]
+    TarUnpackItemFailure
+    {
+        src_file: String,
+        target_dir: String,
+        link_name: String,
+        error: std::io::Error,
+        backtrace: Backtrace
+    },
     #[error("Failed to send request ({error:})")]
     Reqwest
     {

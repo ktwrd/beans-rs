@@ -281,13 +281,25 @@ impl RunnerContext
     {
         let tar_tmp_location = helper::get_tmp_file("data.tar".to_string());
 
-        let zstd_file = std::fs::File::open(&zstd_location)?;
-        let mut tar_tmp_file = std::fs::File::create_new(&tar_tmp_location)?;
-        zstd::stream::copy_decode(zstd_file, &tar_tmp_file)?;
-        tar_tmp_file = std::fs::File::open(&tar_tmp_location)?; // we do this again to make sure that the tar is properly opened.
-
-        let mut archive = tar::Archive::new(&tar_tmp_file);
-        let x = archive.unpack(&out_dir);
+        if let Err(e) =
+            crate::extract::decompress_zstd(zstd_location.clone(), tar_tmp_location.clone(), true)
+        {
+            debug!("{:#?}", e);
+            error!(
+                "[RunnerContext::extract_package] Failed to decompress file {} ({:})",
+                zstd_location, e
+            );
+            return Err(e);
+        }
+        if let Err(e) = crate::extract::unpack_tarball(tar_tmp_location.clone(), out_dir, true)
+        {
+            debug!("{:#?}", e);
+            error!(
+                "[RunnerContext::extract_package] Failed to unpack tarball {} ({:})",
+                tar_tmp_location, e
+            );
+            return Err(e);
+        }
         if helper::file_exists(tar_tmp_location.clone())
         {
             if let Err(e) = std::fs::remove_file(tar_tmp_location.clone())
@@ -303,22 +315,7 @@ impl RunnerContext
                 );
             }
         }
-        match x
-        {
-            Err(e) =>
-            {
-                let xe = BeansError::TarExtractFailure {
-                    src_file: tar_tmp_location,
-                    target_dir: out_dir,
-                    error: e,
-                    backtrace: Backtrace::capture()
-                };
-                trace!("[RunnerContext::extract_package] {:}\n{:#?}", xe, xe);
-                sentry::capture_error(&xe);
-                Err(xe)
-            }
-            Ok(_) => Ok(())
-        }
+        Ok(())
     }
 
     #[cfg(target_os = "linux")]
