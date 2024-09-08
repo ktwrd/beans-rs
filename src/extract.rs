@@ -117,9 +117,17 @@ pub fn unpack_tarball(
     }
     else
     {
-        archive.unpack(output_directory);
+        if let Err(e) = archive.unpack(&output_directory)
+        {
+            return Err(BeansError::TarExtractFailure {
+                src_file: tarball_location,
+                target_dir: output_directory,
+                error: e,
+                backtrace: Backtrace::capture()
+            });
+        }
     }
-    return Ok(());
+    Ok(())
 }
 pub fn decompress_zstd(
     zstd_location: String,
