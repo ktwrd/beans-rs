@@ -536,19 +536,14 @@ impl Launcher
                 trace!("======== Full Error ========");
                 trace!("{:#?}", &e);
                 show_msgbox_error(format!("{:}", &e));
-                let do_report = match e
-                {
-                    BeansError::GameStillRunning {
-                        ..
-                    } => false,
-                    BeansError::LatestVersionAlreadyInstalled {
-                        ..
-                    } => false,
-                    BeansError::FreeSpaceCheckFailure {
-                        ..
-                    } => false,
-                    _ => true
-                };
+
+                let do_report = !matches!(
+                    e,
+                    BeansError::GameStillRunning { .. }
+                        | BeansError::LatestVersionAlreadyInstalled { .. }
+                        | BeansError::FreeSpaceCheckFailure { .. }
+                );
+
                 if do_report
                 {
                     sentry::capture_error(&e);
