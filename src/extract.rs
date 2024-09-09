@@ -102,6 +102,7 @@ pub fn unpack_tarball(
                 });
             }
         }
+        pb.finish();
     }
     Ok(())
 }
