@@ -22,7 +22,7 @@ pub fn try_write_deps()
     #[cfg(not(target_os = "windows"))]
     if helper::file_exists(get_butler_location())
     {
-        let p = std::fs::Permissions::from_mode(0744 as u32);
+        let p = std::fs::Permissions::from_mode(0o0744_u32);
         if let Err(e) = std::fs::set_permissions(get_butler_location(), p)
         {
             sentry::capture_error(&e);

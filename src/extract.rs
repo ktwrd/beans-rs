@@ -1,6 +1,5 @@
 use std::{backtrace::Backtrace,
-          fs::File,
-          io::Read};
+          fs::File};
 
 use indicatif::{ProgressBar,
                 ProgressStyle};
@@ -44,7 +43,7 @@ pub fn unpack_tarball(
                 });
             }
         };
-        let archive_entry_count = (&archive_entries.count()).clone() as u64;
+        let archive_entry_count = archive_entries.count() as u64;
         info!("Extracting {} files", archive_entry_count);
 
         let pb = ProgressBar::new(archive_entry_count);
@@ -74,7 +73,7 @@ pub fn unpack_tarball(
                                 {
                                     if let Some(s) = p.to_str()
                                     {
-                                        pb.set_message(format!("{:}", s));
+                                        pb.set_message(s.to_string());
                                         filename = String::from(s);
                                     }
                                 }
@@ -115,17 +114,14 @@ pub fn unpack_tarball(
         };
         pb.finish();
     }
-    else
+    else if let Err(e) = archive.unpack(&output_directory)
     {
-        if let Err(e) = archive.unpack(&output_directory)
-        {
-            return Err(BeansError::TarExtractFailure {
-                src_file: tarball_location,
-                target_dir: output_directory,
-                error: e,
-                backtrace: Backtrace::capture()
-            });
-        }
+        return Err(BeansError::TarExtractFailure {
+            src_file: tarball_location,
+            target_dir: output_directory,
+            error: e,
+            backtrace: Backtrace::capture()
+        });
     }
     Ok(())
 }
@@ -143,7 +139,7 @@ pub fn decompress_zstd(
         let decoder = ZstdDecoder::new(zstd_file)?;
         // estimate extracted size as x2 since idk how to get the decompressed size with
         // zstd
-        let pb_decompress = ProgressBar::new((zstd_file_length.clone() * 2) as u64);
+        let pb_decompress = ProgressBar::new((*zstd_file_length * 2));
         pb_decompress
             .set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({bytes_per_sec}, {eta})")
             .unwrap()

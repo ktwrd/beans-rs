@@ -311,8 +311,8 @@ fn is_process_running(
     arguments_contains: Option<String>
 ) -> Option<sysinfo::Pid>
 {
-    return find_process(move |proc: &sysinfo::Process| {
-        if proc.name().to_string() == name
+    find_process(move |proc: &sysinfo::Process| {
+        if *proc.name() == name
         {
             if let Some(x) = arguments_contains.clone()
             {
@@ -325,8 +325,8 @@ fn is_process_running(
                 }
             }
         }
-        return false;
-    });
+        false
+    })
 }
 /// Find a process with a selector filter.
 ///
@@ -344,7 +344,7 @@ where
             return Some(process.pid());
         }
     }
-    return None;
+    None
 }
 
 /// Check if there are any processes running
@@ -377,18 +377,18 @@ pub fn is_game_running(mod_directory: String) -> Option<sysinfo::Pid>
             if item.to_string().starts_with(&mod_directory)
             {
                 let proc_name = proc.name().to_string().to_lowercase();
-                if proc_name != String::from("beans") && proc_name != String::from("beans-rs")
+                if proc_name != *"beans" && proc_name != *"beans-rs"
                 {
                     return true;
                 }
             }
         }
-        return false;
+        false
     })
     {
         return Some(proc);
     }
-    return None;
+    None
 }
 
 /// Get the amount of free space on the drive in the location provided.

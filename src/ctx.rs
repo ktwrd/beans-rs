@@ -216,7 +216,7 @@ impl RunnerContext
         let location = self.gameinfo_location();
         if helper::file_exists(location.clone())
         {
-            let perm = std::fs::Permissions::from_mode(0o644 as u32);
+            let perm = std::fs::Permissions::from_mode(0o644_u32);
             if let Err(e) = std::fs::set_permissions(&location, perm.clone())
             {
                 let xe = BeansError::GameInfoPermissionSetFail {
