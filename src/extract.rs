@@ -23,33 +23,76 @@ pub fn unpack_tarball(
         }
     };
     let mut archive = tar::Archive::new(&tarball);
-    if show_progress {
-        let archive_entries = match archive.entries() {
-            Ok(v) => v,
-            Err(e) => {
-                return Err(BeansError::TarExtractFailure {
-                    src_file: tarball_location,
-                    target_dir: output_directory,
-                    error: e,
-                    backtrace: Backtrace::capture(),
-                });
-            }
-        };
-        let archive_entry_count = archive_entries.count() as u64;
-        info!("Extracting {} files", archive_entry_count);
 
-        let pb = ProgressBar::new(archive_entry_count);
-        pb.set_style(ProgressStyle::with_template("{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
+    if !show_progress {
+        if let Err(e) = archive.unpack(&output_directory) {
+            return Err(BeansError::TarExtractFailure {
+                src_file: tarball_location,
+                target_dir: output_directory,
+                error: e,
+                backtrace: Backtrace::capture(),
+            });
+        }
+        return Ok(());
+    };
+
+    let archive_entries = match archive.entries() {
+        Ok(v) => v,
+        Err(e) => {
+            return Err(BeansError::TarExtractFailure {
+                src_file: tarball_location,
+                target_dir: output_directory,
+                error: e,
+                backtrace: Backtrace::capture(),
+            });
+        }
+    };
+    let archive_entry_count = archive_entries.count() as u64;
+    info!("Extracting {} files", archive_entry_count);
+
+    let pb = ProgressBar::new(archive_entry_count);
+    pb.set_style(ProgressStyle::with_template("{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
             .unwrap()
             .with_key("eta", |state: &indicatif::ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
             .progress_chars("#>-"));
-        pb.set_message("Extracting files");
-        archive = tar::Archive::new(&tarball);
+    pb.set_message("Extracting files");
+    archive = tar::Archive::new(&tarball);
 
-        // TODO START OF WORK
+    let entries = match archive.entries() {
+        Ok(a) => a,
+        Err(error) => {
+            return Err(BeansError::TarExtractFailure {
+                src_file: tarball_location,
+                target_dir: output_directory,
+                error,
+                backtrace: Backtrace::capture(),
+            });
+        }
+    };
 
-        let entries = match archive.entries() {
-            Ok(a) => a,
+    for entry in entries {
+        match entry {
+            Ok(mut x) => {
+                pb.set_message("Extracting files");
+                let mut filename = String::new();
+
+                if let Ok(Some(p)) = x.link_name() {
+                    if let Some(s) = p.to_str() {
+                        pb.set_message(s.to_string());
+                        filename = String::from(s);
+                    }
+                }
+                if let Err(error) = x.unpack_in(&output_directory) {
+                    return Err(BeansError::TarUnpackItemFailure {
+                        src_file: tarball_location,
+                        target_dir: output_directory,
+                        link_name: filename,
+                        error,
+                        backtrace: Backtrace::capture(),
+                    });
+                }
+                pb.inc(1);
+            }
             Err(error) => {
                 return Err(BeansError::TarExtractFailure {
                     src_file: tarball_location,
@@ -58,50 +101,7 @@ pub fn unpack_tarball(
                     backtrace: Backtrace::capture(),
                 });
             }
-        };
-
-        for entry in entries {
-            match entry {
-                Ok(mut x) => {
-                    pb.set_message("Extracting files");
-                    let mut filename = String::new();
-
-                    if let Ok(Some(p)) = x.link_name() {
-                        if let Some(s) = p.to_str() {
-                            pb.set_message(s.to_string());
-                            filename = String::from(s);
-                        }
-                    }
-                    if let Err(error) = x.unpack_in(&output_directory) {
-                        return Err(BeansError::TarUnpackItemFailure {
-                            src_file: tarball_location,
-                            target_dir: output_directory,
-                            link_name: filename,
-                            error,
-                            backtrace: Backtrace::capture(),
-                        });
-                    }
-                    pb.inc(1);
-                }
-                Err(error) => {
-                    return Err(BeansError::TarExtractFailure {
-                        src_file: tarball_location,
-                        target_dir: output_directory,
-                        error,
-                        backtrace: Backtrace::capture(),
-                    });
-                }
-            }
         }
-
-        pb.finish();
-    } else if let Err(e) = archive.unpack(&output_directory) {
-        return Err(BeansError::TarExtractFailure {
-            src_file: tarball_location,
-            target_dir: output_directory,
-            error: e,
-            backtrace: Backtrace::capture(),
-        });
     }
     Ok(())
 }
