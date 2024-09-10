@@ -36,7 +36,8 @@ pub enum BeansError
     DirectoryCreateFailure
     {
         location: String,
-        error: std::io::Error
+        error: std::io::Error,
+        backtrace: Backtrace
     },
     #[error("Failed to delete directory {location} ({error:})")]
     DirectoryDeleteFailure
@@ -209,7 +210,8 @@ pub enum BeansError
     CleanTempFailure
     {
         location: String,
-        error: std::io::Error
+        error: std::io::Error,
+        backtrace: Backtrace
     },
 
     #[error("{name:} ({pid:}) is still running. Please close it and restart beans.")]

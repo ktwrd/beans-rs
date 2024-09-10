@@ -1,4 +1,5 @@
-use log::{info,
+use log::{debug,
+          info,
           warn};
 
 use crate::{helper,
@@ -26,18 +27,22 @@ impl CleanWorkflow
         // delete directory and it's contents (and error handling)
         if let Err(e) = std::fs::remove_dir_all(&target_directory)
         {
+            debug!("{:#?}", e);
             return Err(BeansError::CleanTempFailure {
                 location: target_directory,
-                error: e
+                error: e,
+                backtrace: std::backtrace::Backtrace::capture(),
             });
         }
 
         // re-creating the temporary directory (and error handling)
         if let Err(e) = std::fs::create_dir(&target_directory)
         {
+            debug!("{:#?}", e);
             return Err(BeansError::DirectoryCreateFailure {
                 location: target_directory,
-                error: e
+                error: e,
+                backtrace: std::backtrace::Backtrace::capture(),
             });
         }
 
