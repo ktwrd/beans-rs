@@ -83,7 +83,7 @@ fn init_panic_handle()
         let mut x = String::new();
         if let Some(m) = info.message()
         {
-            x = format!("{:#?}", m);
+            x = format!("{}", m);
         }
         info!("[panic] Fatal error!\n{:#?}", x);
         custom_panic_handle(x);
@@ -506,7 +506,7 @@ impl Launcher
         matches: &ArgMatches
     )
     {
-        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        self.to_location = Launcher::find_arg_sourcemods_location(matches);
         let mut ctx = self.try_create_context().await;
 
         if let Err(e) = UninstallWorkflow::wizard(&mut ctx).await

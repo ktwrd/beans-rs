@@ -337,7 +337,7 @@ where
 {
     let mut sys = sysinfo::System::new_all();
     sys.refresh_all();
-    for (_, process) in sys.processes()
+    for process in sys.processes().values()
     {
         if selector(process)
         {
