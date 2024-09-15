@@ -143,19 +143,7 @@ pub fn unpack_tarball(
     pb.finish();
     Ok(())
 }
-fn open_tarball_file(tarball_location: String, output_directory: String) -> Result<File, BeansError>
-{
-    match File::open(&tarball_location)
-    {
-        Ok(x) => Ok(x),
-        Err(e) => Err(BeansError::TarExtractFailure {
-            src_file: tarball_location,
-            target_dir: output_directory,
-            error: e,
-            backtrace: Backtrace::capture()
-        })
-    }
-}
+
 pub fn decompress_zstd(
     zstd_location: String,
     output_file: String,
