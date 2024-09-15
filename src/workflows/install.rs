@@ -145,6 +145,9 @@ impl InstallWorkflow
         version_id: Option<usize>
     ) -> Result<(), BeansError>
     {
+        debug!("[InstallWorkflow::install_from] package_loc={package_loc:}");
+        debug!("[InstallWorkflow::install_from] out_dir={out_dir:}");
+        debug!("[InstallWorkflow::install_from] version_id={version_id:?}");
         if !helper::file_exists(package_loc.clone())
         {
             error!("[InstallWorkflow::Wizard] Failed to find package! (location: {package_loc})");
@@ -154,8 +157,21 @@ impl InstallWorkflow
                 }
             });
         }
+        if !helper::dir_exists(out_dir.clone())
+        {
+            if let Err(e) = std::fs::create_dir(&out_dir)
+            {
+                debug!("{:#?}", e);
+                error!("[InstallWorkflow::install_from] Failed to create output directory, {out_dir} ({e:})");
+                return Err(BeansError::DirectoryCreateFailure {
+                    location: out_dir.clone(),
+                    error: e,
+                    backtrace: std::backtrace::Backtrace::capture(),
+                });
+            }
+        }
+        info!("[InstallWorkflow::Wizard] Extracting to {out_dir}");
 
-        println!("[InstallWorkflow::Wizard] Extracting to {out_dir}");
         RunnerContext::extract_package(package_loc, out_dir.clone())?;
         if let Some(lri) = version_id
         {
@@ -165,7 +181,7 @@ impl InstallWorkflow
             .write(Some(out_dir.clone()));
             if let Err(e) = x
             {
-                println!(
+                warn!(
                     "[InstallWorkflow::install_from] Failed to set version to {} in .adastral",
                     lri
                 );
@@ -178,6 +194,7 @@ impl InstallWorkflow
         }
         let av = crate::appvar::parse();
         println!("{}", av.sub(INSTALL_FINISH_MSG.to_string()));
+        debug!("[InstallWorkflow::install_from] Displayed INSTALL_FINISH_MSG");
         Ok(())
     }
 }

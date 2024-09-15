@@ -259,8 +259,17 @@ impl Launcher
         let mut sml_dir_manual: Option<String> = None;
         if let Some(x) = matches.get_one::<String>("location")
         {
+            if !helper::dir_exists(x.clone())
+            {
+                if let Err(e) = std::fs::create_dir(x)
+                {
+                    debug!("{:#?}", e);
+                    error!("[Launcher::find_arg_sourcemods_location] Failed to create directory {x:?} ({e:})");
+                    panic!("[Launcher::find_arg_sourcemods_location] Failed to create directory {x:?}\n\n{e:#?}")
+                }
+            }
             sml_dir_manual = Some(parse_location(x.to_string()));
-            info!("[Launcher::set_to_location] Found in arguments! {}", x);
+            info!("[Launcher::find_arg_sourcemods_location] Found in arguments! {}", x);
         }
         sml_dir_manual
     }

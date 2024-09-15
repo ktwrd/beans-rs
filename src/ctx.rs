@@ -4,8 +4,7 @@ use std::os::unix::fs::PermissionsExt;
 
 use log::{debug,
           error,
-          info,
-          trace};
+          info};
 
 use crate::{depends,
             helper,
@@ -330,7 +329,7 @@ impl RunnerContext
             {
                 if let Err(e) = std::fs::remove_file(&ln_location)
                 {
-                    trace!(
+                    debug!(
                         "[RunnerContext::prepare_symlink] failed to remove {}\n{:#?}",
                         ln_location,
                         e

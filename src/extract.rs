@@ -3,10 +3,27 @@ use std::{backtrace::Backtrace,
 
 use indicatif::{ProgressBar,
                 ProgressStyle};
-use log::info;
+use log::{info,
+          debug,
+          error};
 use zstd::stream::read::Decoder as ZstdDecoder;
 
 use crate::BeansError;
+
+fn unpack_tarball_getfile(tarball_location: String, output_directory: String) -> Result<File, BeansError>
+{
+    match File::open(&tarball_location) {
+        Ok(x) => Ok(x),
+        Err(e) => {
+            Err(BeansError::TarExtractFailure {
+                src_file: tarball_location,
+                target_dir: output_directory,
+                error: e,
+                backtrace: Backtrace::capture(),
+            })
+        }
+    }
+}
 
 pub fn unpack_tarball(
     tarball_location: String,
@@ -14,19 +31,7 @@ pub fn unpack_tarball(
     show_progress: bool
 ) -> Result<(), BeansError>
 {
-    let tarball = match File::open(&tarball_location)
-    {
-        Ok(x) => x,
-        Err(e) =>
-        {
-            return Err(BeansError::TarExtractFailure {
-                src_file: tarball_location,
-                target_dir: output_directory,
-                error: e,
-                backtrace: Backtrace::capture()
-            });
-        }
-    };
+    let mut tarball = unpack_tarball_getfile(tarball_location.clone(), output_directory.clone())?;
     let mut archive = tar::Archive::new(&tarball);
 
     if !show_progress
@@ -59,19 +64,23 @@ pub fn unpack_tarball(
     let archive_entry_count = archive_entries.count() as u64;
     info!("Extracting {} files", archive_entry_count);
 
+    tarball = unpack_tarball_getfile(tarball_location.clone(), output_directory.clone())?;
+    archive = tar::Archive::new(&tarball);
+    archive.set_preserve_permissions(false);
+
     let pb = ProgressBar::new(archive_entry_count);
     pb.set_style(ProgressStyle::with_template("{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
             .unwrap()
             .with_key("eta", |state: &indicatif::ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
             .progress_chars("#>-"));
     pb.set_message("Extracting files");
-    archive = tar::Archive::new(&tarball);
 
     let entries = match archive.entries()
     {
         Ok(a) => a,
         Err(error) =>
         {
+            pb.finish_and_clear();
             return Err(BeansError::TarExtractFailure {
                 src_file: tarball_location,
                 target_dir: output_directory,
@@ -81,7 +90,7 @@ pub fn unpack_tarball(
         }
     };
 
-    for entry in entries
+    for (size, entry) in entries.enumerate()
     {
         match entry
         {
@@ -100,6 +109,13 @@ pub fn unpack_tarball(
                 }
                 if let Err(error) = x.unpack_in(&output_directory)
                 {
+                    pb.finish_and_clear();
+                    debug!("error={:#?}", error);
+                    debug!("entry.path={:#?}", x.path());
+                    debug!("entry.link_name={:#?}", x.link_name());
+                    debug!("entry.size={:#?}", x.size());
+                    debug!("size={size:}");
+                    error!("[extract::unpack_tarball] Failed to unpack file {filename} ({error:})");
                     return Err(BeansError::TarUnpackItemFailure {
                         src_file: tarball_location,
                         target_dir: output_directory,
@@ -112,6 +128,9 @@ pub fn unpack_tarball(
             }
             Err(error) =>
             {
+                pb.finish_and_clear();
+                debug!("[extract::unpack_tarball] size={size:}, error={:#?}", error);
+                error!("[extract::unpack_tarball] Failed to unpack entry ({error:})");
                 return Err(BeansError::TarExtractFailure {
                     src_file: tarball_location,
                     target_dir: output_directory,

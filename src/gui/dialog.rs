@@ -1,4 +1,5 @@
 use fltk::{image::PngImage,
+           text::TextBuffer,
            prelude::*,
            *};
 use log::warn;
@@ -99,37 +100,14 @@ impl DialogBuilder
         apply_app_scheme();
         let (send_action, receive_action) = app::channel::<GUIAppStatus>();
         let mut ui = GenericDialog::make_window();
-        let initial_width = ui.win.width();
+        let mut text_buffer = TextBuffer::default();
+        text_buffer.append(&self.content);
+        ui.txt_disp.set_buffer(text_buffer.clone());
         ui.win.set_icon(self.icon.clone());
 
         ui.win.set_label(&self.title);
-        ui.label.set_label(&self.content);
-        ui.btn_ok.set_size(70, 24);
         ui.btn_ok.emit(send_action, GUIAppStatus::Quit);
-
-        let (label_w, label_h) = ui.label.measure_label();
-        ui.win
-            .set_size(25 + label_w + 25, 10 + label_h + 5 + ui.btn_ok.height() + 5);
-
-        ui.btn_ok.set_pos(25, ui.win.height() - 24 - 5);
         window_centre_screen(&mut ui.win);
-        ui.win.handle(move |w, ev| match ev
-        {
-            fltk::enums::Event::Resize =>
-            {
-                let height = w.height();
-                ui.btn_ok.set_pos(25, height - 24 - 5);
-                ui.btn_ok.set_size(70, 24);
-                let (lw, lh) = ui.label.measure_label();
-                let cw = w.width();
-                if cw != initial_width && cw > lw + 50
-                {
-                    w.set_size(lw + 50, 10 + lh + 5 + ui.btn_ok.height() + 5);
-                }
-                false
-            }
-            _ => false
-        });
         ui.win.make_resizable(false);
         ui.win.show();
         wait_for_quit(&app, &receive_action);

@@ -77,11 +77,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
         Ok(v) =>
         {
             let x: std::io::Result<u32> = v.get_value("Installed");
-            match x
-            {
-                Ok(_) => false,
-                Err(_) => true
-            }
+            x.is_err()
         }
         Err(_) => true
     }
@@ -100,7 +96,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
     )
     .await?;
 
-    if std::path::Path::new(&out_loc).exists() == false
+    if !std::path::Path::new(&out_loc).exists()
     {
         return Err(BeansError::FileNotFound {
             location: out_loc.clone(),
