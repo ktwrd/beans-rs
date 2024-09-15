@@ -139,8 +139,8 @@ pub fn unpack_tarball(
                 });
             }
         }
-        pb.finish();
     }
+    pb.finish();
     Ok(())
 }
 fn open_tarball_file(tarball_location: String, output_directory: String) -> Result<File, BeansError>
