@@ -100,8 +100,10 @@ impl WizardContext
                 if cv < rv
                 {
                     println!(
-                        "======== A new update for {} is available! (v{rv}) ========",
-                        av.mod_info.name_stylized
+                        "======== A new update for {} is available! (latest: v{}, current: v{}) ========",
+                        av.mod_info.name_stylized,
+                        rv,
+                        cv
                     );
                 }
             }
