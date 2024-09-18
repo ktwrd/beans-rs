@@ -53,6 +53,6 @@ impl UninstallWorkflow
             "[UninstallWorkflow] Successfully uninstalled {}. Please restart Steam.",
             av.mod_info.name_stylized
         );
-        return Ok(());
+        Ok(())
     }
 }

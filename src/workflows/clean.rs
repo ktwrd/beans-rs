@@ -27,7 +27,7 @@ impl CleanWorkflow
         // delete directory and it's contents (and error handling)
         if let Err(e) = std::fs::remove_dir_all(&target_directory)
         {
-            debug!("{:#?}", e);
+            debug!("[CleanWorkflow::wizard] remove_dir_all {:#?}", e);
             return Err(BeansError::CleanTempFailure {
                 location: target_directory,
                 error: e,
@@ -38,7 +38,7 @@ impl CleanWorkflow
         // re-creating the temporary directory (and error handling)
         if let Err(e) = std::fs::create_dir(&target_directory)
         {
-            debug!("{:#?}", e);
+            debug!("[CleanWorkflow::wizard] create_dir {:#?}", e);
             return Err(BeansError::DirectoryCreateFailure {
                 location: target_directory,
                 error: e,

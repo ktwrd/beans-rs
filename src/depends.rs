@@ -22,7 +22,7 @@ pub fn try_write_deps()
     #[cfg(not(target_os = "windows"))]
     if helper::file_exists(get_butler_location())
     {
-        let p = std::fs::Permissions::from_mode(0744 as u32);
+        let p = std::fs::Permissions::from_mode(0o0744_u32);
         if let Err(e) = std::fs::set_permissions(get_butler_location(), p)
         {
             sentry::capture_error(&e);
@@ -77,11 +77,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
         Ok(v) =>
         {
             let x: std::io::Result<u32> = v.get_value("Installed");
-            match x
-            {
-                Ok(_) => false,
-                Err(_) => true
-            }
+            x.is_err()
         }
         Err(_) => true
     }
@@ -100,7 +96,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
     )
     .await?;
 
-    if std::path::Path::new(&out_loc).exists() == false
+    if !std::path::Path::new(&out_loc).exists()
     {
         return Err(BeansError::FileNotFound {
             location: out_loc.clone(),

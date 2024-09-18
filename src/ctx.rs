@@ -4,8 +4,7 @@ use std::os::unix::fs::PermissionsExt;
 
 use log::{debug,
           error,
-          info,
-          trace};
+          info};
 
 use crate::{depends,
             helper,
@@ -216,7 +215,7 @@ impl RunnerContext
         let location = self.gameinfo_location();
         if helper::file_exists(location.clone())
         {
-            let perm = std::fs::Permissions::from_mode(0o644 as u32);
+            let perm = std::fs::Permissions::from_mode(0o644_u32);
             if let Err(e) = std::fs::set_permissions(&location, perm.clone())
             {
                 let xe = BeansError::GameInfoPermissionSetFail {
@@ -330,7 +329,7 @@ impl RunnerContext
             {
                 if let Err(e) = std::fs::remove_file(&ln_location)
                 {
-                    trace!(
+                    debug!(
                         "[RunnerContext::prepare_symlink] failed to remove {}\n{:#?}",
                         ln_location,
                         e

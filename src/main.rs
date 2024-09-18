@@ -83,7 +83,7 @@ fn init_panic_handle()
         let mut x = String::new();
         if let Some(m) = info.message()
         {
-            x = format!("{:#?}", m);
+            x = format!("{}", m);
         }
         info!("[panic] Fatal error!\n{:#?}", x);
         custom_panic_handle(x);
@@ -515,7 +515,7 @@ impl Launcher
         matches: &ArgMatches
     )
     {
-        self.to_location = Launcher::find_arg_sourcemods_location(&matches);
+        self.to_location = Launcher::find_arg_sourcemods_location(matches);
         let mut ctx = self.try_create_context().await;
 
         if let Err(e) = UninstallWorkflow::wizard(&mut ctx).await
@@ -545,19 +545,14 @@ impl Launcher
                 trace!("======== Full Error ========");
                 trace!("{:#?}", &e);
                 show_msgbox_error(format!("{:}", &e));
-                let do_report = match e
-                {
-                    BeansError::GameStillRunning {
-                        ..
-                    } => false,
-                    BeansError::LatestVersionAlreadyInstalled {
-                        ..
-                    } => false,
-                    BeansError::FreeSpaceCheckFailure {
-                        ..
-                    } => false,
-                    _ => true
-                };
+
+                let do_report = !matches!(
+                    e,
+                    BeansError::GameStillRunning { .. }
+                        | BeansError::LatestVersionAlreadyInstalled { .. }
+                        | BeansError::FreeSpaceCheckFailure { .. }
+                );
+
                 if do_report
                 {
                     sentry::capture_error(&e);

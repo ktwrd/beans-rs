@@ -107,7 +107,6 @@ impl DialogBuilder
 
         ui.win.set_label(&self.title);
         ui.btn_ok.emit(send_action, GUIAppStatus::Quit);
-
         window_centre_screen(&mut ui.win);
         ui.win.make_resizable(false);
         ui.win.show();
