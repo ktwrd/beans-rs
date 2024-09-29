@@ -1,11 +1,11 @@
 # beans-rs
-A Sourcemod Installer written with Rust, using the kachemak versioning system. Intended for general-purpose use, and for server owners.
+A Sourcemod Installer written with Rust, using the Kachemak versioning system (based off TF2C). Intended for general-purpose use, and for server owners.
 
 This is a complete rewrite of the original [beans](https://github.com/int-72h/ofinstaller-beans) installer, but with rust, and extended support.
 
 `beans-rs` is licensed under `GPLv3-only`, so please respect it!
 
-**Note** Releases for Linux v1.5.0 and later are built with Ubuntu 20.04 (using `libssl v1.1`)
+**Note** Releases for Linux v1.5.0 and later are built with Ubuntu 20.04
 
 ## Developing
 Requirements
