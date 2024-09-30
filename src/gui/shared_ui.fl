@@ -1,0 +1,21 @@
+# data file for the Fltk User Interface Designer (fluid)
+version 1.0308
+header_name {.h}
+code_name {.cxx}
+class GenericDialog {open
+} {
+  Function {make_window()} {open
+  } {
+    Fl_Window win {open
+      xywh {1070 474 600 350} type Double visible
+    } {
+      Fl_Button btn_ok {
+        label Ok
+        xywh {25 321 70 24}
+      }
+      Fl_Text_Display txt_disp {
+        xywh {25 10 550 301} align 5
+      }
+    }
+  }
+}

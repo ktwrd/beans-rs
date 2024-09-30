@@ -1,9 +1,11 @@
+mod clean;
 mod install;
+mod uninstall;
 mod update;
 mod verify;
-mod clean;
 
+pub use clean::*;
 pub use install::*;
+pub use uninstall::*;
 pub use update::*;
 pub use verify::*;
-pub use clean::*;
