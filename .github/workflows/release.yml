@@ -63,6 +63,15 @@ jobs:
           command: build
           args: --release --target ${{ matrix.target }}
 
+      - name: Code Signing (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        uses: skymatic/code-sign-action@v1
+        with:
+          certificate: '${{ secrets.CODESIGN }}'
+          password: '${{ secrets.CODESIGN_PASSWORD }}'
+          folder: 'target/${{ matrix.target }}/release/'
+          description: 'beans-rs'
+
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
         with:
