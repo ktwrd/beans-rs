@@ -71,6 +71,7 @@ jobs:
           password: '${{ secrets.CODESIGN_PASSWORD }}'
           folder: 'target/${{ matrix.target }}/release/'
           description: 'beans-rs'
+          certificatesha1: '${{ secrets.CODESIGN_HASH }}'
 
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
