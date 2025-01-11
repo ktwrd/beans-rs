@@ -54,13 +54,22 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2024-05-24
+          toolchain: nightly-2025-01-10
           target: ${{ matrix.target }}
 
       - uses: actions-rs/cargo@v1
         with:
           command: build
           args: --verbose --target ${{ matrix.target }}
+      - name: Code Signing (Windows)
+        if: ${{ matrix.os == 'windows-latest' }}
+        uses: skymatic/code-sign-action@v1
+        with:
+          certificate: '${{ secrets.CODESIGN }}'
+          password: '${{ secrets.CODESIGN_PASSWORD }}'
+          folder: 'target/${{ matrix.target }}/debug/'
+          description: 'beans-rs'
+          certificatesha1: '${{ secrets.CODESIGN_HASH }}'
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:

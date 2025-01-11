@@ -1,8 +1,6 @@
 #![feature(error_generic_member_access)]
-#![feature(panic_info_message)]
 // todo
 // https://rust-lang.github.io/rust-clippy/master/index.html#/result_large_err
-// https://github.com/ktwrd/beans-rs/pull/30
 #![allow(clippy::result_large_err)]
 
 use include_flate::flate;

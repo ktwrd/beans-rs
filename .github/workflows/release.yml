@@ -55,7 +55,7 @@ jobs:
 
       - uses: actions-rs/toolchain@v1
         with:
-          toolchain: nightly-2024-05-24
+          toolchain: nightly-2025-01-10
           target: ${{ matrix.target }}
 
       - uses: actions-rs/cargo@v1

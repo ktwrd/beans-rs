@@ -312,15 +312,18 @@ fn is_process_running(
 ) -> Option<sysinfo::Pid>
 {
     find_process(move |proc: &sysinfo::Process| {
-        if *proc.name() == name
-        {
-            if let Some(x) = arguments_contains.clone()
-            {
-                for item in proc.cmd().iter()
+        if let Some(proc_name_str) = proc.name().to_str() {
+            let proc_name = proc_name_str.to_string();
+            if proc_name == name {
+                if let Some(x) = arguments_contains.clone()
                 {
-                    if item.to_string().starts_with(&x)
+                    for item in proc.cmd().iter()
                     {
-                        return true;
+                        if let Some(item_str) = item.to_str() {
+                            if item_str.starts_with(&x) {
+                                return true;
+                            }
+                        }
                     }
                 }
             }
@@ -374,12 +377,17 @@ pub fn is_game_running(mod_directory: String) -> Option<sysinfo::Pid>
     if let Some(proc) = find_process(move |proc| {
         for item in proc.cmd().iter()
         {
-            if item.to_string().starts_with(&mod_directory)
-            {
-                let proc_name = proc.name().to_string().to_lowercase();
-                if proc_name != *"beans" && proc_name != *"beans-rs"
+            if let Some(os_str) = item.to_str() {
+                let os_string = os_str.to_string();
+                if os_string.starts_with(&mod_directory)
                 {
-                    return true;
+                    if let Some(proc_name_str) = proc.name().to_str() {
+                        let proc_name = proc_name_str.to_string().to_lowercase();
+                        if proc_name != *"beans" && proc_name != *"beans-rs"
+                        {
+                            return true;
+                        }
+                    }
                 }
             }
         }
@@ -942,4 +950,15 @@ pub fn try_get_env_var(target_key: String) -> Option<String>
         }
     }
     None
+}
+
+/// Get the message used from the info passed to std::panic::set_hook.
+pub fn payload_message(info: &std::panic::PanicHookInfo) -> String {
+    if let Some(s) = info.payload().downcast_ref::<&str>() {
+        String::from(*s)
+    } else if let Some(s) = info.payload().downcast_ref::<String>() {
+        s.clone()
+    } else {
+        String::from("<unknown error> (unhandled downcast_ref in payload_message)")
+    }
 }
