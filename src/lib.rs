@@ -89,6 +89,10 @@ pub fn env_headless() -> bool
     check_env_bool("BEANS_HEADLESS") || check_env_bool("ADASTRAL_HEADLESS")
 }
 
+/// Return `true` when the environment variable `BEANS_DISABLE_ARIA2C` or
+/// `ADASTRAL_DISABLE_ARIA2C` exists and equals `1` or `true`.
+pub fn env_disable_aria2c() -> bool { check_env_bool("BEANS_DISABLE_ARIA2C") || check_env_bool("ADASTRAL_DISABLE_ARIA2C") }
+
 /// Return `true` when the environment variable exists, and it's value equals
 /// `1` or `true (when trimmed and made lowercase).
 fn check_env_bool<K: AsRef<std::ffi::OsStr>>(key: K) -> bool
