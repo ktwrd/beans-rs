@@ -87,14 +87,17 @@ pub fn apply_app_scheme()
 {
     let theme_content = match dark_light::detect()
     {
-        Ok(c) => {
-            match c {
-                dark_light::Mode::Light => color_themes::GRAY_THEME,
-                _ => color_themes::DARK_THEME
-            }
+        Ok(c) => match c
+        {
+            dark_light::Mode::Light => color_themes::GRAY_THEME,
+            _ => color_themes::DARK_THEME
         },
-        Err(e) => {
-            log::warn!("[gui::apply_app_scheme] Failed to detect light/dark mode\n{:#?}", e);
+        Err(e) =>
+        {
+            log::warn!(
+                "[gui::apply_app_scheme] Failed to detect light/dark mode\n{:#?}",
+                e
+            );
             color_themes::DARK_THEME
         }
     };

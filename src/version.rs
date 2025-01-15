@@ -7,11 +7,11 @@ use log::{debug,
           error,
           trace};
 
-use crate::{helper,
+use crate::{appvar::AppVarData,
+            helper,
             helper::{find_sourcemod_path,
                      InstallType},
             BeansError};
-use crate::appvar::AppVarData;
 
 /// get the current version installed via the .adastral file in the sourcemod
 /// mod folder. will parse the value of `version` as usize.

@@ -2,6 +2,7 @@ use log::{debug,
           error,
           info,
           warn};
+
 use crate::{appvar::AppVarData,
             helper,
             version::{AdastralVersionFile,
@@ -166,7 +167,7 @@ impl InstallWorkflow
                 return Err(BeansError::DirectoryCreateFailure {
                     location: out_dir.clone(),
                     error: e,
-                    backtrace: std::backtrace::Backtrace::capture(),
+                    backtrace: std::backtrace::Backtrace::capture()
                 });
             }
         }
@@ -195,7 +196,8 @@ impl InstallWorkflow
         InstallWorkflow::install_from_post();
         Ok(())
     }
-    fn install_from_post() {
+    fn install_from_post()
+    {
         let av = AppVarData::get();
         println!("{}", av.sub(INSTALL_FINISH_MSG.to_string()));
         debug!("[InstallWorkflow::install_from] Displayed INSTALL_FINISH_MSG");
@@ -209,7 +211,7 @@ impl InstallWorkflow
             flash_tray: true,
             indefinite: false,
             rate: 0,
-            until_foreground: true,
+            until_foreground: true
         });
     }
 }

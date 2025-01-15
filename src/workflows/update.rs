@@ -1,11 +1,11 @@
 use log::{debug,
           info};
 
-use crate::{butler,
+use crate::{appvar::AppVarData,
+            butler,
             helper,
             BeansError,
             RunnerContext};
-use crate::appvar::AppVarData;
 
 pub struct UpdateWorkflow
 {

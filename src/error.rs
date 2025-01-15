@@ -266,12 +266,16 @@ pub enum Aria2cExitCodeReason
 
     Unknown(i32)
 }
-impl Aria2cExitCodeReason {
-    pub fn from_exit_code(code: i32) -> Option<Aria2cExitCodeReason> {
-        if code <= 0 {
+impl Aria2cExitCodeReason
+{
+    pub fn from_exit_code(code: i32) -> Option<Aria2cExitCodeReason>
+    {
+        if code <= 0
+        {
             return None;
         }
-        match code {
+        match code
+        {
             1 => Some(Aria2cExitCodeReason::UnknownError),
             2 => Some(Aria2cExitCodeReason::Timeout),
             3 => Some(Aria2cExitCodeReason::ResourceNotFound),
@@ -303,7 +307,7 @@ impl Aria2cExitCodeReason {
             29 => Some(Aria2cExitCodeReason::RemoteServerFailureDueToOverloadingOrMaintenance),
             30 => Some(Aria2cExitCodeReason::JsonRpcRequestParseFailure),
             32 => Some(Aria2cExitCodeReason::ChecksumValidationFailure),
-            _ => Some(Aria2cExitCodeReason::Unknown(code)),
+            _ => Some(Aria2cExitCodeReason::Unknown(code))
         }
     }
 }
@@ -312,7 +316,8 @@ pub enum DownloadFailureReason
 {
     Reqwest
     {
-        url: String, error: reqwest::Error
+        url: String,
+        error: reqwest::Error
     },
     /// The downloaded file could not be found, perhaps it failed?
     FileNotFound

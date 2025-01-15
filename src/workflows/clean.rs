@@ -31,7 +31,7 @@ impl CleanWorkflow
             return Err(BeansError::CleanTempFailure {
                 location: target_directory,
                 error: e,
-                backtrace: std::backtrace::Backtrace::capture(),
+                backtrace: std::backtrace::Backtrace::capture()
             });
         }
 
@@ -42,7 +42,7 @@ impl CleanWorkflow
             return Err(BeansError::DirectoryCreateFailure {
                 location: target_directory,
                 error: e,
-                backtrace: std::backtrace::Backtrace::capture(),
+                backtrace: std::backtrace::Backtrace::capture()
             });
         }
 

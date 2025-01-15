@@ -1,6 +1,6 @@
 use fltk::{image::PngImage,
-           text::TextBuffer,
            prelude::*,
+           text::TextBuffer,
            *};
 use log::warn;
 

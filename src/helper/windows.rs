@@ -19,25 +19,18 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
             match x
             {
                 Ok(val) => Ok(format_directory_path(val)),
-                Err(e) =>
-                {
-                    Err(BeansError::RegistryKeyFailure {
-                        msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed"
-                            .to_string(),
-                        error: e,
-                        backtrace: Backtrace::capture()
-                    })
-                }
+                Err(e) => Err(BeansError::RegistryKeyFailure {
+                    msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed"
+                        .to_string(),
+                    error: e,
+                    backtrace: Backtrace::capture()
+                })
             }
         }
-        Err(e) =>
-        {
-            Err(BeansError::RegistryKeyFailure {
-                msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed"
-                    .to_string(),
-                error: e,
-                backtrace: Backtrace::capture()
-            })
-        }
+        Err(e) => Err(BeansError::RegistryKeyFailure {
+            msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed".to_string(),
+            error: e,
+            backtrace: Backtrace::capture()
+        })
     }
 }

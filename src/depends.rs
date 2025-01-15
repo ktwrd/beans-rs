@@ -8,10 +8,10 @@ use log::{debug,
 
 use crate::{helper,
             BeansError,
+            ARIA2C_BINARY,
             BUTLER_BINARY,
             BUTLER_LIB_1,
-            BUTLER_LIB_2,
-            ARIA2C_BINARY};
+            BUTLER_LIB_2};
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
@@ -20,7 +20,8 @@ pub fn try_write_deps()
     safe_write_file(get_butler_location().as_str(), &BUTLER_BINARY);
     safe_write_file(get_butler_1_location().as_str(), &BUTLER_LIB_1);
     safe_write_file(get_butler_2_location().as_str(), &BUTLER_LIB_2);
-    if let Some(s) = get_aria2c_location() {
+    if let Some(s) = get_aria2c_location()
+    {
         safe_write_file(s.as_str(), &ARIA2C_BINARY);
     }
     #[cfg(not(target_os = "windows"))]
@@ -157,7 +158,8 @@ pub fn get_butler_2_location() -> String
 /// Will always return `Some()` on Windows, and `None` on any other platform.
 pub fn get_aria2c_location() -> Option<String>
 {
-    if cfg!(target_os = "windows") {
+    if cfg!(target_os = "windows")
+    {
         let mut path = get_tmp_dir();
         path.push_str(ARIA2C_LOCATION);
         return Some(path);

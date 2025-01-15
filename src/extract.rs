@@ -3,25 +3,27 @@ use std::{backtrace::Backtrace,
 
 use indicatif::{ProgressBar,
                 ProgressStyle};
-use log::{info,
-          debug,
-          error};
+use log::{debug,
+          error,
+          info};
 use zstd::stream::read::Decoder as ZstdDecoder;
 
 use crate::BeansError;
 
-fn unpack_tarball_getfile(tarball_location: String, output_directory: String) -> Result<File, BeansError>
+fn unpack_tarball_getfile(
+    tarball_location: String,
+    output_directory: String
+) -> Result<File, BeansError>
 {
-    match File::open(&tarball_location) {
+    match File::open(&tarball_location)
+    {
         Ok(x) => Ok(x),
-        Err(e) => {
-            Err(BeansError::TarExtractFailure {
-                src_file: tarball_location,
-                target_dir: output_directory,
-                error: e,
-                backtrace: Backtrace::capture(),
-            })
-        }
+        Err(e) => Err(BeansError::TarExtractFailure {
+            src_file: tarball_location,
+            target_dir: output_directory,
+            error: e,
+            backtrace: Backtrace::capture()
+        })
     }
 }
 

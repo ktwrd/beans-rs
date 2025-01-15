@@ -17,6 +17,7 @@ pub use ctx::*;
 mod error;
 
 pub use error::*;
+
 use crate::appvar::AppVarData;
 
 pub mod appvar;
@@ -91,7 +92,10 @@ pub fn env_headless() -> bool
 
 /// Return `true` when the environment variable `BEANS_DISABLE_ARIA2C` or
 /// `ADASTRAL_DISABLE_ARIA2C` exists and equals `1` or `true`.
-pub fn env_disable_aria2c() -> bool { check_env_bool("BEANS_DISABLE_ARIA2C") || check_env_bool("ADASTRAL_DISABLE_ARIA2C") }
+pub fn env_disable_aria2c() -> bool
+{
+    check_env_bool("BEANS_DISABLE_ARIA2C") || check_env_bool("ADASTRAL_DISABLE_ARIA2C")
+}
 
 /// Return `true` when the environment variable exists, and it's value equals
 /// `1` or `true (when trimmed and made lowercase).
@@ -152,7 +156,8 @@ pub fn has_gui_support() -> bool
 }
 
 /// User agent for downloading files or sending web requests.
-pub fn get_user_agent() -> String {
+pub fn get_user_agent() -> String
+{
     let mut result = String::from("beans-rs/");
     result.push_str(&VERSION);
     result
