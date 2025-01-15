@@ -239,7 +239,7 @@ pub fn format_directory_path(location: String) -> String
 }
 
 /// Get the filename of the location provided.
-/// 
+///
 /// If the result is an empty string, then the location provided is invalid, and you should
 /// check that yourself :3
 pub fn get_filename(location: String) -> String
@@ -458,7 +458,7 @@ pub async fn download_with_progress(
 ) -> Result<(), BeansError>
 {
     debug!("[helper::download_with_progress] url: {}, out_location: {}", url, out_location);
-    if crate::aria2::can_use_aria2() {
+    if crate::aria2::can_use_aria2() && !crate::env_disable_aria2c() {
         debug!("[helper::download_with_progress] using aria2c");
         crate::aria2::download_file(url, out_location).await?;
     } else {
