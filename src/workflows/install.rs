@@ -2,7 +2,6 @@ use log::{debug,
           error,
           info,
           warn};
-
 use crate::{appvar::AppVarData,
             helper,
             version::{AdastralVersionFile,
@@ -193,10 +192,25 @@ impl InstallWorkflow
         {
             warn!("Not writing .adastral since the version wasn't provided");
         }
+        InstallWorkflow::install_from_post();
+        Ok(())
+    }
+    fn install_from_post() {
         let av = AppVarData::get();
         println!("{}", av.sub(INSTALL_FINISH_MSG.to_string()));
         debug!("[InstallWorkflow::install_from] Displayed INSTALL_FINISH_MSG");
-        Ok(())
+
+        #[cfg(target_os = "windows")]
+        winconsole::window::show(true);
+        #[cfg(target_os = "windows")]
+        winconsole::window::flash(winconsole::window::FlashInfo {
+            count: 0,
+            flash_caption: true,
+            flash_tray: true,
+            indefinite: false,
+            rate: 0,
+            until_foreground: true,
+        });
     }
 }
 
