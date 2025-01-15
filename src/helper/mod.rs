@@ -12,7 +12,6 @@ mod windows;
 use std::{collections::HashMap,
           io::Write,
           path::PathBuf};
-
 use futures::StreamExt;
 use indicatif::{ProgressBar,
                 ProgressStyle};
@@ -237,6 +236,21 @@ pub fn format_directory_path(location: String) -> String
         x.push_str(crate::PATH_SEP);
     }
     x
+}
+
+/// Get the filename of the location provided.
+/// 
+/// If the result is an empty string, then the location provided is invalid, and you should
+/// check that yourself :3
+pub fn get_filename(location: String) -> String
+{
+    let mut x = location.to_string().replace(['/', '\\'], crate::PATH_SEP);
+    let xr = x.split(crate::PATH_SEP);
+    if let Some(p) = xr.last() {
+        p.to_string()
+    } else {
+        String::new()
+    }
 }
 
 #[cfg(not(target_os = "windows"))]
