@@ -10,7 +10,8 @@ use crate::{helper,
             BeansError,
             BUTLER_BINARY,
             BUTLER_LIB_1,
-            BUTLER_LIB_2};
+            BUTLER_LIB_2,
+            ARIA2C_BINARY};
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
@@ -19,6 +20,9 @@ pub fn try_write_deps()
     safe_write_file(get_butler_location().as_str(), &BUTLER_BINARY);
     safe_write_file(get_butler_1_location().as_str(), &BUTLER_LIB_1);
     safe_write_file(get_butler_2_location().as_str(), &BUTLER_LIB_2);
+    if let Some(s) = get_aria2c_location() {
+        safe_write_file(s.as_str(), &ARIA2C_BINARY);
+    }
     #[cfg(not(target_os = "windows"))]
     if helper::file_exists(get_butler_location())
     {
@@ -150,6 +154,16 @@ pub fn get_butler_2_location() -> String
     path.push_str(BUTLER_2);
     path
 }
+/// Will always return `Some()` on Windows, and `None` on any other platform.
+pub fn get_aria2c_location() -> Option<String>
+{
+    if cfg!(target_os = "windows") {
+        let mut path = get_tmp_dir();
+        path.push_str(ARIA2C_LOCATION);
+        return Some(path);
+    }
+    None
+}
 fn get_tmp_dir() -> String
 {
     let path = helper::get_tmp_dir();
@@ -169,3 +183,6 @@ const BUTLER_1: &str = "7z.so";
 const BUTLER_2: &str = "c7zip.dll";
 #[cfg(not(target_os = "windows"))]
 const BUTLER_2: &str = "libc7zip.so";
+
+#[cfg(target_os = "windows")]
+const ARIA2C_LOCATION: &str = "aria2c.exe";
