@@ -26,6 +26,8 @@ pub mod flags;
 pub mod gui;
 pub mod logger;
 
+pub mod aria2;
+
 /// NOTE do not change, fetches from the version of beans-rs on build
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// sentry url, change on fork please.
