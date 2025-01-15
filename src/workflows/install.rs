@@ -119,7 +119,7 @@ impl InstallWorkflow
             "{:=>60}\nInstalling version {} to {}\n{0:=>60}",
             "=", version_id, &ctx.sourcemod_path
         );
-        let presz_loc = RunnerContext::download_package(version).await?;
+        let presz_loc = RunnerContext::download_package(version, version_id).await?;
         Self::install_from(
             presz_loc.clone(),
             ctx.sourcemod_path.clone(),

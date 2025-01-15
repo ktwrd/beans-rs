@@ -242,7 +242,7 @@ impl RunnerContext
 
     /// Download package with Progress Bar.
     /// Ok is the location to where it was downloaded to.
-    pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
+    pub async fn download_package(version: RemoteVersion, version_id: usize) -> Result<String, BeansError>
     {
         let av = AppVarData::get();
         let mut out_loc = helper::get_tmp_dir();
