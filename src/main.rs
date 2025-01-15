@@ -48,6 +48,10 @@ fn main()
     }));
     init_panic_handle();
 
+    if !beans_rs::aria2::get_executable_location().is_none() {
+        info!("Could not find aria2c!\nFor faster downloads, install it with your package manager (usually called \"aria2\")");
+    }
+
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
         .build()
