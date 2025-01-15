@@ -451,9 +451,24 @@ pub fn has_free_space(
     Ok((size as u64) < get_free_space(location)?)
 }
 
+
+pub async fn download_with_progress(
+    url: String,
+    out_location: String
+) -> Result<(), BeansError>
+{
+    debug!("[helper::download_with_progress] url: {}, out_location: {}", url, out_location);
+    if crate::aria2::can_use_aria2() {
+        debug!("[helper::download_with_progress] using aria2c");
+        crate::aria2::download_file(url, out_location).await?;
+    } else {
+        download_with_progress_reqwest(url, out_location).await?;
+    }
+    Ok(())
+}
 /// Download file at the URL provided to the output location provided
 /// This function will also show a progress bar with indicatif.
-pub async fn download_with_progress(
+async fn download_with_progress_reqwest(
     url: String,
     out_location: String
 ) -> Result<(), BeansError>
