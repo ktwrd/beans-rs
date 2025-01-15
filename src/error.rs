@@ -318,6 +318,13 @@ pub enum DownloadFailureReason
     FileNotFound
     {
         location: String
+    },
+    MissingAria2cExecutable,
+    Aria2cSpawnError
+    {
+        url: String,
+        output_file: String,
+        error: std::io::Error
     }
 }
 #[derive(Debug)]
