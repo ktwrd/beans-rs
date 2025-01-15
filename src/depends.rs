@@ -6,14 +6,13 @@ use std::os::unix::fs::PermissionsExt;
 use log::{debug,
           error};
 
+#[cfg(target_os = "windows")]
+use crate::ARIA2C_BINARY;
 use crate::{helper,
             BeansError,
             BUTLER_BINARY,
             BUTLER_LIB_1,
             BUTLER_LIB_2};
-
-#[cfg(target_os = "windows")]
-use crate::ARIA2C_BINARY;
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()

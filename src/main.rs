@@ -55,7 +55,8 @@ fn main()
         }
     }
 
-    if beans_rs::env_disable_aria2c() && beans_rs::aria2::get_executable_location().is_some() {
+    if beans_rs::env_disable_aria2c() && beans_rs::aria2::get_executable_location().is_some()
+    {
         info!("== aria2c support disabled, even though it's available ==");
     }
 
