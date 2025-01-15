@@ -977,3 +977,25 @@ pub fn payload_message(info: &std::panic::PanicHookInfo) -> String {
         String::from("<unknown error> (unhandled downcast_ref in payload_message)")
     }
 }
+
+/// Check if a program exists in the PATH environment variable folders.
+pub fn program_in_path(name: String) -> bool {
+    get_program_env_location(name).is_some()
+}
+
+/// Get the full executable path for an executable found in the PATH
+/// environment variable.
+///
+/// Derived from https://stackoverflow.com/a/35046243/13037015
+pub fn get_program_env_location(name: String) -> Option<String> {
+    if let Ok(path) = std::env::var("PATH") {
+        for p in path.split(":") {
+            let mut p_str = format_directory_path(p.to_string());
+            p_str.push_str(name.as_str());
+            if std::fs::metadata(&p_str).is_ok() {
+                return Some(p_str);
+            }
+        }
+    }
+    None
+}
