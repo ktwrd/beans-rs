@@ -219,6 +219,92 @@ pub enum BeansError
     GameStillRunning
     {
         name: String, pid: String
+    },
+
+    #[error("Aria2c exited with code {reason:#?}")]
+    Aria2cExitCode
+    {
+        reason: Aria2cExitCodeReason,
+        cmd: String,
+        backtrace: Backtrace
+    }
+}
+#[derive(Debug)]
+pub enum Aria2cExitCodeReason
+{
+    UnknownError,
+    Timeout,
+    ResourceNotFound,
+    ResourceNotFoundLimitReached,
+    AbortedDueToSlowDownloadSpeed,
+    NetworkProblem,
+    ExitedWithUnfinishedDownloads,
+    RemoteServerDoesNotSupportResume,
+    NotEnoughDiskSpace,
+    PieceLengthMismatch,
+    AlreadyDownloadingFile,
+    AlreadyDownloadingFileWithSameTorrentHash,
+    OutputFileAlreadyExists,
+    OutputFileRenameFailure,
+    CouldNotOpenOutputFile,
+    CouldNotCreateOutputFile,
+    IOError,
+    CouldNotCreateDirectory,
+    NameResolutionFailure,
+    CouldNotParseMetalinkDocument,
+    FTPCommandFailure,
+    BadHttpResponseHeader,
+    TooManyHttpRedirects,
+    HttpAuthorizeFailure,
+    CouldNotParseBencodedFile,
+    CorruptTorrentFile,
+    BadMagnetUri,
+    BadOrUnrecognizedOptionOrInvalidArgument,
+    RemoteServerFailureDueToOverloadingOrMaintenance,
+    JsonRpcRequestParseFailure,
+    ChecksumValidationFailure,
+
+    Unknown(i32)
+}
+impl Aria2cExitCodeReason {
+    pub fn from_exit_code(code: i32) -> Option<Aria2cExitCodeReason> {
+        if code <= 0 {
+            return None;
+        }
+        match code {
+            1 => Some(Aria2cExitCodeReason::UnknownError),
+            2 => Some(Aria2cExitCodeReason::Timeout),
+            3 => Some(Aria2cExitCodeReason::ResourceNotFound),
+            4 => Some(Aria2cExitCodeReason::ResourceNotFoundLimitReached),
+            5 => Some(Aria2cExitCodeReason::AbortedDueToSlowDownloadSpeed),
+            6 => Some(Aria2cExitCodeReason::NetworkProblem),
+            7 => Some(Aria2cExitCodeReason::ExitedWithUnfinishedDownloads),
+            8 => Some(Aria2cExitCodeReason::RemoteServerDoesNotSupportResume),
+            9 => Some(Aria2cExitCodeReason::NotEnoughDiskSpace),
+            10 => Some(Aria2cExitCodeReason::PieceLengthMismatch),
+            11 => Some(Aria2cExitCodeReason::AlreadyDownloadingFile),
+            12 => Some(Aria2cExitCodeReason::AlreadyDownloadingFileWithSameTorrentHash),
+            13 => Some(Aria2cExitCodeReason::OutputFileAlreadyExists),
+            14 => Some(Aria2cExitCodeReason::OutputFileRenameFailure),
+            15 => Some(Aria2cExitCodeReason::CouldNotOpenOutputFile),
+            16 => Some(Aria2cExitCodeReason::CouldNotCreateOutputFile),
+            17 => Some(Aria2cExitCodeReason::IOError),
+            18 => Some(Aria2cExitCodeReason::CouldNotCreateDirectory),
+            19 => Some(Aria2cExitCodeReason::NameResolutionFailure),
+            20 => Some(Aria2cExitCodeReason::CouldNotParseMetalinkDocument),
+            21 => Some(Aria2cExitCodeReason::FTPCommandFailure),
+            22 => Some(Aria2cExitCodeReason::BadHttpResponseHeader),
+            23 => Some(Aria2cExitCodeReason::TooManyHttpRedirects),
+            24 => Some(Aria2cExitCodeReason::HttpAuthorizeFailure),
+            25 => Some(Aria2cExitCodeReason::CouldNotParseBencodedFile),
+            26 => Some(Aria2cExitCodeReason::CorruptTorrentFile),
+            27 => Some(Aria2cExitCodeReason::BadMagnetUri),
+            28 => Some(Aria2cExitCodeReason::BadOrUnrecognizedOptionOrInvalidArgument),
+            29 => Some(Aria2cExitCodeReason::RemoteServerFailureDueToOverloadingOrMaintenance),
+            30 => Some(Aria2cExitCodeReason::JsonRpcRequestParseFailure),
+            32 => Some(Aria2cExitCodeReason::ChecksumValidationFailure),
+            _ => Some(Aria2cExitCodeReason::Unknown(code)),
+        }
     }
 }
 #[derive(Debug)]
