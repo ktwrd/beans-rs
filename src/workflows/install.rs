@@ -192,7 +192,7 @@ impl InstallWorkflow
         {
             warn!("Not writing .adastral since the version wasn't provided");
         }
-        let av = crate::appvar::parse();
+        let av = AppVarData::get();
         println!("{}", av.sub(INSTALL_FINISH_MSG.to_string()));
         debug!("[InstallWorkflow::install_from] Displayed INSTALL_FINISH_MSG");
         Ok(())

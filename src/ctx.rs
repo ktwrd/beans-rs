@@ -16,6 +16,7 @@ use crate::{depends,
                       RemoteVersion,
                       RemoteVersionResponse},
             BeansError};
+use crate::appvar::AppVarData;
 
 #[derive(Debug, Clone)]
 pub struct RunnerContext
@@ -75,7 +76,7 @@ impl RunnerContext
             sourcemod_path: parse_location(sourcemod_path.clone()),
             remote_version_list: version_list,
             current_version: crate::version::get_current_version(Some(sourcemod_path.clone())),
-            appvar: crate::appvar::parse()
+            appvar: AppVarData::get()
         })
     }
     /// Sets `remote_version_list` from `version::get_version_list()`
@@ -243,7 +244,7 @@ impl RunnerContext
     /// Ok is the location to where it was downloaded to.
     pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
     {
-        let av = crate::appvar::parse();
+        let av = AppVarData::get();
         let mut out_loc = helper::get_tmp_dir();
 
         if let Some(size) = version.pre_sz

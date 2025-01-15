@@ -3,6 +3,7 @@ use crate::{butler,
             version::RemoteVersion,
             BeansError,
             RunnerContext};
+use crate::appvar::AppVarData;
 
 pub struct VerifyWorkflow
 {
@@ -12,7 +13,7 @@ impl VerifyWorkflow
 {
     pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError>
     {
-        let av = crate::appvar::parse();
+        let av = AppVarData::get();
 
         let current_version_id = match ctx.current_version
         {

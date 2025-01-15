@@ -11,6 +11,7 @@ use crate::{helper,
             helper::{find_sourcemod_path,
                      InstallType},
             BeansError};
+use crate::appvar::AppVarData;
 
 /// get the current version installed via the .adastral file in the sourcemod
 /// mod folder. will parse the value of `version` as usize.
@@ -201,7 +202,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
 /// fetch the version list from `{crate::SOURCE_URL}versions.json`
 pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
 {
-    let av = crate::appvar::parse();
+    let av = AppVarData::get();
     let response = match reqwest::get(&av.remote_info.versions_url).await
     {
         Ok(v) => v,

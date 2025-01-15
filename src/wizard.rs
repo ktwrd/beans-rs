@@ -21,6 +21,7 @@ use crate::{depends,
             BeansError,
             RunnerContext,
             SourceModDirectoryParam};
+use crate::appvar::AppVarData;
 
 #[derive(Debug, Clone)]
 pub struct WizardContext
@@ -75,7 +76,7 @@ impl WizardContext
             sourcemod_path: sourcemod_path.clone(),
             remote_version_list: version_list,
             current_version: crate::version::get_current_version(Some(sourcemod_path)),
-            appvar: crate::appvar::parse()
+            appvar: AppVarData::get()
         };
 
         let mut i = Self {

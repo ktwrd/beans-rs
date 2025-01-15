@@ -2,8 +2,7 @@ use std::sync::RwLock;
 
 use lazy_static::lazy_static;
 use log::{debug,
-          error,
-          trace};
+          error};
 
 use crate::BeansError;
 
@@ -12,13 +11,6 @@ pub const JSON_DATA_DEFAULT: &str = include_str!("appvar.json");
 lazy_static! {
     static ref JSON_DATA: RwLock<String> = RwLock::new(JSON_DATA_DEFAULT.to_string());
     static ref AVD_INSTANCE: RwLock<Option<AppVarData>> = RwLock::new(None);
-}
-
-/// Going to be deprecated, use `get_appvar()` instead.
-pub fn parse() -> AppVarData
-{
-    trace!("======== IMPORTANT NOTICE ========\ncrate::appvar::parse() is going to be deprecated, use crate::appvar::get_appvar() instead!");
-    AppVarData::get()
 }
 
 /// Configuration for the compiled application.
@@ -81,6 +73,7 @@ impl AppVarData
             let vc = v.clone();
             if let Some(x) = vc
             {
+                #[cfg(debug_assertions)]
                 debug!("[AppVarData::get] Instance exists in AVD_INSTANCE, so lets return that.");
                 return x;
             }
@@ -112,7 +105,7 @@ impl AppVarData
             }
             Err(e) =>
             {
-                panic!("[reset_appvar] Failed to set AVD_INSTANCE! {:#?}", e);
+                panic!("[AppVarData::reset] Failed to set AVD_INSTANCE! {:#?}", e);
             }
         }
 
@@ -127,7 +120,7 @@ impl AppVarData
     /// `sentry::capture_error` is called.
     pub fn set_json_data(data: AppVarData) -> Result<(), BeansError>
     {
-        debug!("[set_json_data] {:#?}", data);
+        debug!("[AppVarData::set_json_data] {:#?}", data);
         match serde_json::to_string(&data)
         {
             Ok(v) =>
@@ -135,7 +128,7 @@ impl AppVarData
                 if let Ok(mut ms) = JSON_DATA.write()
                 {
                     *ms = v.to_string();
-                    debug!("[set_json_data] successfully set data, calling reset_appvar()");
+                    debug!("[AppVarData::set_json_data] successfully set data, calling reset_appvar()");
                 }
                 Self::reset();
                 Ok(())
@@ -143,7 +136,7 @@ impl AppVarData
             Err(e) =>
             {
                 error!(
-                    "[appvar::set_json_data] Failed to serialize data to string! {:}",
+                    "[AppVarData::set_json_data] Failed to serialize data to string! {:}",
                     e
                 );
                 debug!("{:#?}", e);

@@ -17,6 +17,7 @@ pub use ctx::*;
 mod error;
 
 pub use error::*;
+use crate::appvar::AppVarData;
 
 pub mod appvar;
 pub mod butler;
@@ -52,7 +53,7 @@ pub const PATH_SEP: &str = "\\";
 
 pub fn data_dir() -> String
 {
-    let av = appvar::parse();
+    let av = AppVarData::get();
     format!("{}{}{}", PATH_SEP, av.mod_info.sourcemod_name, PATH_SEP)
 }
 
