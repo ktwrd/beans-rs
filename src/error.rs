@@ -83,7 +83,8 @@ pub enum BeansError
     #[error("Failed to download file\n{reason:#?}")]
     DownloadFailure
     {
-        reason: DownloadFailureReason
+        reason: DownloadFailureReason,
+        backtrace: Backtrace
     },
 
     #[error("General IO Error\n{error:#?}")]

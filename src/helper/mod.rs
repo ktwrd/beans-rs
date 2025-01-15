@@ -454,7 +454,8 @@ pub async fn download_with_progress(
                 reason: DownloadFailureReason::Reqwest {
                     url: url.clone(),
                     error: e
-                }
+                },
+                backtrace: std::backtrace::Backtrace::capture()
             });
         }
     };

@@ -154,7 +154,8 @@ impl InstallWorkflow
             return Err(BeansError::DownloadFailure {
                 reason: DownloadFailureReason::FileNotFound {
                     location: package_loc.clone()
-                }
+                },
+                backtrace: std::backtrace::Backtrace::capture()
             });
         }
         if !helper::dir_exists(out_dir.clone())
