@@ -8,10 +8,12 @@ use log::{debug,
 
 use crate::{helper,
             BeansError,
-            ARIA2C_BINARY,
             BUTLER_BINARY,
             BUTLER_LIB_1,
             BUTLER_LIB_2};
+
+#[cfg(target_os = "windows")]
+use crate::ARIA2C_BINARY;
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
@@ -20,6 +22,7 @@ pub fn try_write_deps()
     safe_write_file(get_butler_location().as_str(), &BUTLER_BINARY);
     safe_write_file(get_butler_1_location().as_str(), &BUTLER_LIB_1);
     safe_write_file(get_butler_2_location().as_str(), &BUTLER_LIB_2);
+    #[cfg(target_os = "windows")]
     if let Some(s) = get_aria2c_location()
     {
         safe_write_file(s.as_str(), &ARIA2C_BINARY);
@@ -186,5 +189,4 @@ const BUTLER_2: &str = "c7zip.dll";
 #[cfg(not(target_os = "windows"))]
 const BUTLER_2: &str = "libc7zip.so";
 
-#[cfg(target_os = "windows")]
 const ARIA2C_LOCATION: &str = "aria2c.exe";
