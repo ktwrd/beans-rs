@@ -23,6 +23,7 @@ use log::{debug,
           error,
           info,
           trace,
+          warn,
           LevelFilter};
 
 pub const DEFAULT_LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Info;
@@ -33,11 +34,7 @@ pub const DEFAULT_LOG_LEVEL: LevelFilter = DEFAULT_LOG_LEVEL_RELEASE;
 
 fn main()
 {
-    #[cfg(target_os = "windows")]
-    let _ = winconsole::window::show(true);
-    #[cfg(target_os = "windows")]
-    let _ = winconsole::console::set_title(format!("beans v{}", beans_rs::VERSION).as_str());
-
+    init_console();
     init_flags();
     // initialize sentry and custom panic handler for msgbox
     #[cfg(not(debug_assertions))]
@@ -58,6 +55,29 @@ fn main()
         .block_on(async {
             Launcher::run().await;
         });
+}
+
+#[cfg(target_os = "windows")]
+fn init_console()
+{
+    winconsole::window::show(true);
+    if let Err(e) = winconsole::console::set_title(format!("beans v{}", beans_rs::VERSION).as_str()) {
+        trace!("[init_console] failed to set console title {:#?}", e);
+    }
+    if let Ok(mut input_mode) = winconsole::console::get_input_mode() {
+        if input_mode.QuickEditMode {
+            input_mode.QuickEditMode = false;
+            if let Err(e) = winconsole::console::set_input_mode(input_mode) {
+                debug!("[init_console] failed to disable console flag QuickEditMode {:#?}", e);
+                warn!("[init_console] failed to disable Quick Edit mode ({:})", e);
+            }
+        }
+    }
+}
+#[cfg(not(target_os = "windows"))]
+fn init_console()
+{
+    // do nothing
 }
 
 fn init_flags()
