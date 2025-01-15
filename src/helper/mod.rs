@@ -245,7 +245,7 @@ pub fn format_directory_path(location: String) -> String
 /// you should check that yourself :3
 pub fn get_filename(location: String) -> String
 {
-    let mut x = location.to_string().replace(['/', '\\'], crate::PATH_SEP);
+    let x = location.to_string().replace(['/', '\\'], crate::PATH_SEP);
     let xr = x.split(crate::PATH_SEP);
     if let Some(p) = xr.last()
     {
