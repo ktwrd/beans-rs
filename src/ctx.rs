@@ -256,7 +256,7 @@ impl RunnerContext
         }
 
         let out_filename = match crate::aria2::can_use_aria2() {
-            true => format!("{}_{}.dl", av.mod_info.sourcemod_name, version_id),
+            true => format!("{}_{}.pkg", av.mod_info.sourcemod_name, version_id),
             false => format!("presz_{}", helper::generate_rand_str(12))
         };
         out_loc = helper::join_path(out_loc, out_filename);
