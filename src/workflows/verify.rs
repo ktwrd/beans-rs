@@ -1,9 +1,9 @@
-use crate::{butler,
+use crate::{appvar::AppVarData,
+            butler,
             helper,
             version::RemoteVersion,
             BeansError,
             RunnerContext};
-use crate::appvar::AppVarData;
 
 pub struct VerifyWorkflow
 {

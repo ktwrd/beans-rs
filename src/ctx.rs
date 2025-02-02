@@ -6,7 +6,8 @@ use log::{debug,
           error,
           info};
 
-use crate::{depends,
+use crate::{appvar::AppVarData,
+            depends,
             helper,
             helper::{find_sourcemod_path,
                      parse_location,
@@ -16,7 +17,6 @@ use crate::{depends,
                       RemoteVersion,
                       RemoteVersionResponse},
             BeansError};
-use crate::appvar::AppVarData;
 
 #[derive(Debug, Clone)]
 pub struct RunnerContext
@@ -242,7 +242,10 @@ impl RunnerContext
 
     /// Download package with Progress Bar.
     /// Ok is the location to where it was downloaded to.
-    pub async fn download_package(version: RemoteVersion) -> Result<String, BeansError>
+    pub async fn download_package(
+        version: RemoteVersion,
+        version_id: usize
+    ) -> Result<String, BeansError>
     {
         let av = AppVarData::get();
         let mut out_loc = helper::get_tmp_dir();
@@ -255,7 +258,11 @@ impl RunnerContext
             }
         }
 
-        let out_filename = format!("presz_{}", helper::generate_rand_str(12));
+        let out_filename = match crate::aria2::can_use_aria2()
+        {
+            true => format!("{}_{}.pkg", av.mod_info.sourcemod_name, version_id),
+            false => format!("presz_{}", helper::generate_rand_str(12))
+        };
         out_loc = helper::join_path(out_loc, out_filename);
 
         info!("[RunnerContext::download_package] writing to {}", out_loc);
@@ -332,8 +339,7 @@ impl RunnerContext
                 {
                     debug!(
                         "[RunnerContext::prepare_symlink] failed to remove {}\n{:#?}",
-                        ln_location,
-                        e
+                        ln_location, e
                     );
                     return Err(e.into());
                 }

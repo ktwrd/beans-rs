@@ -47,6 +47,18 @@ fn main()
         ..Default::default()
     }));
     init_panic_handle();
+    if !beans_rs::env_disable_aria2c()
+    {
+        if beans_rs::aria2::get_executable_location().is_none()
+        {
+            info!("Could not find aria2c!\nFor faster downloads, install it with your package manager (usually called \"aria2\")");
+        }
+    }
+
+    if beans_rs::env_disable_aria2c() && beans_rs::aria2::get_executable_location().is_some()
+    {
+        info!("== aria2c support disabled, even though it's available ==");
+    }
 
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -61,14 +73,21 @@ fn main()
 fn init_console()
 {
     winconsole::window::show(true);
-    if let Err(e) = winconsole::console::set_title(format!("beans v{}", beans_rs::VERSION).as_str()) {
+    if let Err(e) = winconsole::console::set_title(format!("beans v{}", beans_rs::VERSION).as_str())
+    {
         trace!("[init_console] failed to set console title {:#?}", e);
     }
-    if let Ok(mut input_mode) = winconsole::console::get_input_mode() {
-        if input_mode.QuickEditMode {
+    if let Ok(mut input_mode) = winconsole::console::get_input_mode()
+    {
+        if input_mode.QuickEditMode
+        {
             input_mode.QuickEditMode = false;
-            if let Err(e) = winconsole::console::set_input_mode(input_mode) {
-                debug!("[init_console] failed to disable console flag QuickEditMode {:#?}", e);
+            if let Err(e) = winconsole::console::set_input_mode(input_mode)
+            {
+                debug!(
+                    "[init_console] failed to disable console flag QuickEditMode {:#?}",
+                    e
+                );
                 warn!("[init_console] failed to disable Quick Edit mode ({:})", e);
             }
         }
@@ -284,7 +303,10 @@ impl Launcher
                 }
             }
             sml_dir_manual = Some(parse_location(x.to_string()));
-            info!("[Launcher::find_arg_sourcemods_location] Found in arguments! {}", x);
+            info!(
+                "[Launcher::find_arg_sourcemods_location] Found in arguments! {}",
+                x
+            );
         }
         sml_dir_manual
     }

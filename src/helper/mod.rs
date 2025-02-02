@@ -239,6 +239,24 @@ pub fn format_directory_path(location: String) -> String
     x
 }
 
+/// Get the filename of the location provided.
+///
+/// If the result is an empty string, then the location provided is invalid, and
+/// you should check that yourself :3
+pub fn get_filename(location: String) -> String
+{
+    let x = location.to_string().replace(['/', '\\'], crate::PATH_SEP);
+    let xr = x.split(crate::PATH_SEP);
+    if let Some(p) = xr.last()
+    {
+        p.to_string()
+    }
+    else
+    {
+        String::new()
+    }
+}
+
 #[cfg(not(target_os = "windows"))]
 pub fn canonicalize(location: &str) -> Result<PathBuf, std::io::Error>
 {
@@ -312,15 +330,19 @@ fn is_process_running(
 ) -> Option<sysinfo::Pid>
 {
     find_process(move |proc: &sysinfo::Process| {
-        if let Some(proc_name_str) = proc.name().to_str() {
+        if let Some(proc_name_str) = proc.name().to_str()
+        {
             let proc_name = proc_name_str.to_string();
-            if proc_name == name {
+            if proc_name == name
+            {
                 if let Some(x) = arguments_contains.clone()
                 {
                     for item in proc.cmd().iter()
                     {
-                        if let Some(item_str) = item.to_str() {
-                            if item_str.starts_with(&x) {
+                        if let Some(item_str) = item.to_str()
+                        {
+                            if item_str.starts_with(&x)
+                            {
                                 return true;
                             }
                         }
@@ -377,11 +399,13 @@ pub fn is_game_running(mod_directory: String) -> Option<sysinfo::Pid>
     if let Some(proc) = find_process(move |proc| {
         for item in proc.cmd().iter()
         {
-            if let Some(os_str) = item.to_str() {
+            if let Some(os_str) = item.to_str()
+            {
                 let os_string = os_str.to_string();
                 if os_string.starts_with(&mod_directory)
                 {
-                    if let Some(proc_name_str) = proc.name().to_str() {
+                    if let Some(proc_name_str) = proc.name().to_str()
+                    {
                         let proc_name = proc_name_str.to_string().to_lowercase();
                         if proc_name != *"beans" && proc_name != *"beans-rs"
                         {
@@ -437,9 +461,29 @@ pub fn has_free_space(
     Ok((size as u64) < get_free_space(location)?)
 }
 
+pub async fn download_with_progress(
+    url: String,
+    out_location: String
+) -> Result<(), BeansError>
+{
+    debug!(
+        "[helper::download_with_progress] url: {}, out_location: {}",
+        url, out_location
+    );
+    if crate::aria2::can_use_aria2() && !crate::env_disable_aria2c()
+    {
+        debug!("[helper::download_with_progress] using aria2c");
+        crate::aria2::download_file(url, out_location).await?;
+    }
+    else
+    {
+        download_with_progress_reqwest(url, out_location).await?;
+    }
+    Ok(())
+}
 /// Download file at the URL provided to the output location provided
 /// This function will also show a progress bar with indicatif.
-pub async fn download_with_progress(
+async fn download_with_progress_reqwest(
     url: String,
     out_location: String
 ) -> Result<(), BeansError>
@@ -454,7 +498,8 @@ pub async fn download_with_progress(
                 reason: DownloadFailureReason::Reqwest {
                     url: url.clone(),
                     error: e
-                }
+                },
+                backtrace: std::backtrace::Backtrace::capture()
             });
         }
     };
@@ -953,12 +998,45 @@ pub fn try_get_env_var(target_key: String) -> Option<String>
 }
 
 /// Get the message used from the info passed to std::panic::set_hook.
-pub fn payload_message(info: &std::panic::PanicHookInfo) -> String {
-    if let Some(s) = info.payload().downcast_ref::<&str>() {
+pub fn payload_message(info: &std::panic::PanicHookInfo) -> String
+{
+    if let Some(s) = info.payload().downcast_ref::<&str>()
+    {
         String::from(*s)
-    } else if let Some(s) = info.payload().downcast_ref::<String>() {
+    }
+    else if let Some(s) = info.payload().downcast_ref::<String>()
+    {
         s.clone()
-    } else {
+    }
+    else
+    {
         String::from("<unknown error> (unhandled downcast_ref in payload_message)")
     }
+}
+
+/// Check if a program exists in the PATH environment variable folders.
+pub fn program_in_path(name: String) -> bool
+{
+    get_program_env_location(name).is_some()
+}
+
+/// Get the full executable path for an executable found in the PATH
+/// environment variable.
+///
+/// Derived from https://stackoverflow.com/a/35046243/13037015
+pub fn get_program_env_location(name: String) -> Option<String>
+{
+    if let Ok(path) = std::env::var("PATH")
+    {
+        for p in path.split(":")
+        {
+            let mut p_str = format_directory_path(p.to_string());
+            p_str.push_str(name.as_str());
+            if std::fs::metadata(&p_str).is_ok()
+            {
+                return Some(p_str);
+            }
+        }
+    }
+    None
 }

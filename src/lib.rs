@@ -1,4 +1,6 @@
 #![feature(error_generic_member_access)]
+// required for aria2::get_executable_location()
+#![feature(let_chains)]
 // todo
 // https://rust-lang.github.io/rust-clippy/master/index.html#/result_large_err
 #![allow(clippy::result_large_err)]
@@ -17,6 +19,7 @@ pub use ctx::*;
 mod error;
 
 pub use error::*;
+
 use crate::appvar::AppVarData;
 
 pub mod appvar;
@@ -25,6 +28,8 @@ pub mod extract;
 pub mod flags;
 pub mod gui;
 pub mod logger;
+
+pub mod aria2;
 
 /// NOTE do not change, fetches from the version of beans-rs on build
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
@@ -87,6 +92,13 @@ pub fn env_headless() -> bool
     check_env_bool("BEANS_HEADLESS") || check_env_bool("ADASTRAL_HEADLESS")
 }
 
+/// Return `true` when the environment variable `BEANS_DISABLE_ARIA2C` or
+/// `ADASTRAL_DISABLE_ARIA2C` exists and equals `1` or `true`.
+pub fn env_disable_aria2c() -> bool
+{
+    check_env_bool("BEANS_DISABLE_ARIA2C") || check_env_bool("ADASTRAL_DISABLE_ARIA2C")
+}
+
 /// Return `true` when the environment variable exists, and it's value equals
 /// `1` or `true (when trimmed and made lowercase).
 fn check_env_bool<K: AsRef<std::ffi::OsStr>>(key: K) -> bool
@@ -145,6 +157,14 @@ pub fn has_gui_support() -> bool
     }
 }
 
+/// User agent for downloading files or sending web requests.
+pub fn get_user_agent() -> String
+{
+    let mut result = String::from("beans-rs/");
+    result.push_str(&VERSION);
+    result
+}
+
 #[cfg(not(target_os = "windows"))]
 pub const STAGING_DIR: &str = "/butler-staging";
 #[cfg(target_os = "windows")]
@@ -162,3 +182,5 @@ flate!(pub static BUTLER_LIB_1: [u8] from "Binaries/7z.so");
 flate!(pub static BUTLER_LIB_2: [u8] from "Binaries/c7zip.dll");
 #[cfg(not(target_os = "windows"))]
 flate!(pub static BUTLER_LIB_2: [u8] from "Binaries/libc7zip.so");
+#[cfg(target_os = "windows")]
+flate!(pub static ARIA2C_BINARY: [u8] from "Binaries/aria2c.exe");

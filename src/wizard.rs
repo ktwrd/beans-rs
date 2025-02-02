@@ -6,7 +6,8 @@ use log::{debug,
           info,
           trace};
 
-use crate::{depends,
+use crate::{appvar::AppVarData,
+            depends,
             flags,
             flags::LaunchFlag,
             helper,
@@ -21,7 +22,6 @@ use crate::{depends,
             BeansError,
             RunnerContext,
             SourceModDirectoryParam};
-use crate::appvar::AppVarData;
 
 #[derive(Debug, Clone)]
 pub struct WizardContext

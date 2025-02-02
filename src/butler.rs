@@ -69,7 +69,8 @@ pub async fn patch_dl(
         return Err(BeansError::DownloadFailure {
             reason: DownloadFailureReason::FileNotFound {
                 location: tmp_file
-            }
+            },
+            backtrace: std::backtrace::Backtrace::capture()
         });
     }
 

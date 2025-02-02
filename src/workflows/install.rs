@@ -119,7 +119,7 @@ impl InstallWorkflow
             "{:=>60}\nInstalling version {} to {}\n{0:=>60}",
             "=", version_id, &ctx.sourcemod_path
         );
-        let presz_loc = RunnerContext::download_package(version).await?;
+        let presz_loc = RunnerContext::download_package(version, version_id).await?;
         Self::install_from(
             presz_loc.clone(),
             ctx.sourcemod_path.clone(),
@@ -154,7 +154,8 @@ impl InstallWorkflow
             return Err(BeansError::DownloadFailure {
                 reason: DownloadFailureReason::FileNotFound {
                     location: package_loc.clone()
-                }
+                },
+                backtrace: std::backtrace::Backtrace::capture()
             });
         }
         if !helper::dir_exists(out_dir.clone())
@@ -166,7 +167,7 @@ impl InstallWorkflow
                 return Err(BeansError::DirectoryCreateFailure {
                     location: out_dir.clone(),
                     error: e,
-                    backtrace: std::backtrace::Backtrace::capture(),
+                    backtrace: std::backtrace::Backtrace::capture()
                 });
             }
         }
@@ -192,10 +193,26 @@ impl InstallWorkflow
         {
             warn!("Not writing .adastral since the version wasn't provided");
         }
+        InstallWorkflow::install_from_post();
+        Ok(())
+    }
+    fn install_from_post()
+    {
         let av = AppVarData::get();
         println!("{}", av.sub(INSTALL_FINISH_MSG.to_string()));
         debug!("[InstallWorkflow::install_from] Displayed INSTALL_FINISH_MSG");
-        Ok(())
+
+        #[cfg(target_os = "windows")]
+        winconsole::window::show(true);
+        #[cfg(target_os = "windows")]
+        winconsole::window::flash(winconsole::window::FlashInfo {
+            count: 0,
+            flash_caption: true,
+            flash_tray: true,
+            indefinite: false,
+            rate: 0,
+            until_foreground: true
+        });
     }
 }
 

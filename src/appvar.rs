@@ -128,7 +128,9 @@ impl AppVarData
                 if let Ok(mut ms) = JSON_DATA.write()
                 {
                     *ms = v.to_string();
-                    debug!("[AppVarData::set_json_data] successfully set data, calling reset_appvar()");
+                    debug!(
+                        "[AppVarData::set_json_data] successfully set data, calling reset_appvar()"
+                    );
                 }
                 Self::reset();
                 Ok(())
