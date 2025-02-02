@@ -24,11 +24,9 @@ pub fn get_executable_location() -> Option<String>
         return Some(r);
     }
     if let Some(x) = depends::get_aria2c_location()
+        && helper::file_exists(x.clone())
     {
-        if helper::file_exists(x.clone())
-        {
-            return Some(x);
-        }
+        return Some(x);
     }
 
     None
