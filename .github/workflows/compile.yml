@@ -58,7 +58,8 @@ jobs:
             libxinerama-dev \
             libfltk1.3 \
             libfltk1.3-dev \
-            libssl-dev
+            libssl-dev \
+            musl-tools
 
       - uses: actions-rs/toolchain@v1
         with:
