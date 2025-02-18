@@ -9,6 +9,10 @@ description = "Installer for Open Fortress"
 repository = "https://github.com/ktwrd/beans-rs"
 license = "GPL-3.0"
 
+[features]
+default = []
+gui = ["fl2rust", "fltk", "fltk-theme", "dark-light", "image"]
+
 [dependencies]
 async-recursion = "1.1.1"
 async-stream = "0.3.5"
@@ -35,13 +39,13 @@ colored = "3.0.0"
 sentry-log = "0.36.0"
 chrono = "0.4.38"
 
-fltk = { version = "1.5.1" }
-fltk-theme = "0.7.4"
-dark-light = "2.0.0"
-image = { version = "0.25.5", features = ["png"] }
+fltk = { version = "1.5.1", optional = true }
+fltk-theme = {version = "0.7.4",optional = true }
+dark-light = {version = "2.0.0", optional = true }
+image = { version = "0.25.5", features = ["png"], optional = true }
 
 [build-dependencies]
-fl2rust = "0.6.0"
+fl2rust = { version = "0.6.0", optional = true }
 
 [target.'cfg(target_os = "windows")'.dependencies]
 winconsole = { version = "0.11.1", features = ["window"] }

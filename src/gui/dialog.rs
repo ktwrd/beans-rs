@@ -2,6 +2,7 @@ use fltk::{image::PngImage,
            prelude::*,
            text::TextBuffer,
            *};
+use fltk::window::Window;
 use log::warn;
 
 use crate::gui::{apply_app_scheme,
@@ -112,4 +113,22 @@ impl DialogBuilder
         ui.win.show();
         wait_for_quit(&app, &receive_action);
     }
+}
+
+
+/// Make the `window` provided the in be the center of the current screen.
+fn window_centre_screen(window: &mut Window)
+{
+    let (sx, sy) = app::screen_coords();
+    let width = window.width();
+    let height = window.height();
+    let (mut x, mut y) = app::screen_size();
+    x -= width as f64;
+    y -= height as f64;
+    window.resize(
+        ((x / 2.0) as i32) + sx,
+        ((y / 2.0) as i32) + sy,
+        width,
+        height
+    );
 }

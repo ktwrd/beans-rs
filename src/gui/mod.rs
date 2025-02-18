@@ -1,15 +1,25 @@
+#[cfg(feature = "gui")]
 use fltk::{app::Receiver,
            prelude::*,
            window::Window,
            *};
+#[cfg(feature = "gui")]
 use fltk_theme::{color_themes,
                  ColorTheme};
+#[cfg(feature = "gui")]
 use log::debug;
 
+#[cfg(feature = "gui")]
 mod dialog;
+#[cfg(not(feature = "gui"))]
+mod dialog_headless;
+#[cfg(feature = "gui")]
 pub(crate) mod shared_ui;
 
+#[cfg(feature = "gui")]
 pub use dialog::*;
+#[cfg(not(feature = "gui"))]
+pub use dialog_headless::*;
 
 pub mod icon;
 
@@ -33,24 +43,12 @@ pub enum GUIAppStatus
     BtnContinue
 }
 
-/// Make the `window` provided the in be the center of the current screen.
-pub fn window_centre_screen(window: &mut Window)
-{
-    let (sx, sy) = app::screen_coords();
-    let width = window.width();
-    let height = window.height();
-    let (mut x, mut y) = app::screen_size();
-    x -= width as f64;
-    y -= height as f64;
-    window.resize(
-        ((x / 2.0) as i32) + sx,
-        ((y / 2.0) as i32) + sy,
-        width,
-        height
-    );
-}
+#[cfg(not(feature = "gui"))]
+pub fn get_center_screen() -> (i32, i32)
+{(0, 0)}
 
 /// Get the X and Y position of the center of the current screen.
+#[cfg(feature = "gui")]
 pub fn get_center_screen() -> (i32, i32)
 {
     let (px, py) = app::screen_coords();
@@ -58,31 +56,10 @@ pub fn get_center_screen() -> (i32, i32)
     (((sw / 2.0) as i32) + px, ((sh / 2.0) as i32) + py)
 }
 
-/// Ensure that a window has a fixed width & height, and that it will appear in
-/// the centre of the current screen.
-pub fn window_ensure(
-    win: &mut Window,
-    width: i32,
-    height: i32
-)
-{
-    window_centre_screen(win);
-    win.handle(move |w, ev| match ev
-    {
-        fltk::enums::Event::Resize =>
-        {
-            if w.width() > width || w.height() > height
-            {
-                w.set_size(width, height);
-            }
-            true
-        }
-        _ => false
-    });
-    win.make_resizable(false);
-    win.show();
-}
-
+#[cfg(not(feature = "gui"))]
+pub fn apply_app_scheme()
+{}
+#[cfg(feature = "gui")]
 pub fn apply_app_scheme()
 {
     let theme_content = match dark_light::detect()
@@ -109,7 +86,8 @@ pub fn apply_app_scheme()
     theme.apply();
 }
 
-pub fn wait_for_quit(
+#[cfg(feature = "gui")]
+pub(crate) fn wait_for_quit(
     app: &app::App,
     receive_action: &Receiver<GUIAppStatus>
 )
