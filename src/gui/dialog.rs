@@ -9,7 +9,6 @@ use crate::gui::{apply_app_scheme,
                  icon,
                  shared_ui::GenericDialog,
                  wait_for_quit,
-                 window_centre_screen,
                  GUIAppStatus};
 
 pub struct DialogBuilder
