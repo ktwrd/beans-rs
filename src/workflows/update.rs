@@ -1,7 +1,8 @@
 use log::{debug,
           info};
 
-use crate::{butler,
+use crate::{appvar::AppVarData,
+            butler,
             helper,
             BeansError,
             RunnerContext};
@@ -14,7 +15,7 @@ impl UpdateWorkflow
 {
     pub async fn wizard(ctx: &mut RunnerContext) -> Result<(), BeansError>
     {
-        let av = crate::appvar::parse();
+        let av = AppVarData::get();
 
         let current_version_id = match ctx.current_version
         {

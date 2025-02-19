@@ -6,7 +6,8 @@ use log::{debug,
           info,
           trace};
 
-use crate::{depends,
+use crate::{appvar::AppVarData,
+            depends,
             flags,
             flags::LaunchFlag,
             helper,
@@ -75,7 +76,7 @@ impl WizardContext
             sourcemod_path: sourcemod_path.clone(),
             remote_version_list: version_list,
             current_version: crate::version::get_current_version(Some(sourcemod_path)),
-            appvar: crate::appvar::parse()
+            appvar: AppVarData::get()
         };
 
         let mut i = Self {

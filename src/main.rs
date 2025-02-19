@@ -1,5 +1,3 @@
-#![feature(panic_info_message)]
-
 use std::str::FromStr;
 
 use beans_rs::{flags,
@@ -25,6 +23,7 @@ use log::{debug,
           error,
           info,
           trace,
+          warn,
           LevelFilter};
 
 pub const DEFAULT_LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Info;
@@ -35,11 +34,7 @@ pub const DEFAULT_LOG_LEVEL: LevelFilter = DEFAULT_LOG_LEVEL_RELEASE;
 
 fn main()
 {
-    #[cfg(target_os = "windows")]
-    let _ = winconsole::window::show(true);
-    #[cfg(target_os = "windows")]
-    let _ = winconsole::console::set_title(format!("beans v{}", beans_rs::VERSION).as_str());
-
+    init_console();
     init_flags();
     // initialize sentry and custom panic handler for msgbox
     #[cfg(not(debug_assertions))]
@@ -52,6 +47,18 @@ fn main()
         ..Default::default()
     }));
     init_panic_handle();
+    if !beans_rs::env_disable_aria2c()
+    {
+        if beans_rs::aria2::get_executable_location().is_none()
+        {
+            info!("Could not find aria2c!\nFor faster downloads, install it with your package manager (usually called \"aria2\")");
+        }
+    }
+
+    if beans_rs::env_disable_aria2c() && beans_rs::aria2::get_executable_location().is_some()
+    {
+        info!("== aria2c support disabled, even though it's available ==");
+    }
 
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -60,6 +67,36 @@ fn main()
         .block_on(async {
             Launcher::run().await;
         });
+}
+
+#[cfg(target_os = "windows")]
+fn init_console()
+{
+    winconsole::window::show(true);
+    if let Err(e) = winconsole::console::set_title(format!("beans v{}", beans_rs::VERSION).as_str())
+    {
+        trace!("[init_console] failed to set console title {:#?}", e);
+    }
+    if let Ok(mut input_mode) = winconsole::console::get_input_mode()
+    {
+        if input_mode.QuickEditMode
+        {
+            input_mode.QuickEditMode = false;
+            if let Err(e) = winconsole::console::set_input_mode(input_mode)
+            {
+                debug!(
+                    "[init_console] failed to disable console flag QuickEditMode {:#?}",
+                    e
+                );
+                warn!("[init_console] failed to disable Quick Edit mode ({:})", e);
+            }
+        }
+    }
+}
+#[cfg(not(target_os = "windows"))]
+fn init_console()
+{
+    // do nothing
 }
 
 fn init_flags()
@@ -80,13 +117,9 @@ fn init_panic_handle()
 {
     std::panic::set_hook(Box::new(move |info| {
         debug!("[panic::set_hook] showing msgbox to notify user");
-        let mut x = String::new();
-        if let Some(m) = info.message()
-        {
-            x = format!("{}", m);
-        }
-        info!("[panic] Fatal error!\n{:#?}", x);
-        custom_panic_handle(x);
+        let msg = beans_rs::helper::payload_message(info);
+        info!("[panic] Fatal error!\n{:#?}", msg);
+        custom_panic_handle(msg);
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
         sentry::integrations::panic::panic_handler(info);
         if flags::has_flag(LaunchFlag::DEBUG_MODE)
@@ -109,6 +142,7 @@ fn custom_panic_handle(msg: String)
         .to_string()
         .replace("$err_msg", &msg)
         .replace("\\n", "\n");
+
     beans_rs::gui::DialogBuilder::new()
         .with_title(String::from("beans - Fatal Error!"))
         .with_icon(DialogIconKind::Error)
@@ -269,7 +303,10 @@ impl Launcher
                 }
             }
             sml_dir_manual = Some(parse_location(x.to_string()));
-            info!("[Launcher::find_arg_sourcemods_location] Found in arguments! {}", x);
+            info!(
+                "[Launcher::find_arg_sourcemods_location] Found in arguments! {}",
+                x
+            );
         }
         sml_dir_manual
     }
