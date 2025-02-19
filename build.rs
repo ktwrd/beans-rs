@@ -1,4 +1,3 @@
-use std::path::PathBuf;
 #[allow(dead_code, unused_macros, unused_imports)]
 use std::{env,
           io};
@@ -21,11 +20,12 @@ fn main()
 }
 
 /// generate files for fltk ui stuff
+#[cfg(feature = "gui")]
 fn fltk() -> Result<(), BuildError>
 {
     println!("cargo:rerun-if-changed=src/gui/shared_ui.fl");
     let g = fl2rust::Generator::default();
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    let out_path = std::path::PathBuf::from(env::var("OUT_DIR").unwrap());
     if let Err(e) = g.in_out(
         "src/gui/shared_ui.fl",
         out_path.join("shared_ui.rs").to_str().unwrap()
@@ -39,6 +39,9 @@ fn fltk() -> Result<(), BuildError>
 
     Ok(())
 }
+#[cfg(not(feature = "gui"))]
+fn fltk() -> Result<(), BuildError>
+{Ok(())}
 
 /// check if a location exists
 #[allow(dead_code)]

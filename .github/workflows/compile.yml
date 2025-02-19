@@ -18,9 +18,17 @@ jobs:
           - os: ubuntu-20.04
             filename: 'beans-rs'
             target: x86_64-unknown-linux-gnu
+            feature: gui
+
+          - os: ubuntu-20.04
+            filename: 'beans-rs'
+            target: x86_64-unknown-linux-musl
+            feature: default
+
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             filename: 'beans-rs.exe'
+            feature: gui
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
@@ -50,7 +58,8 @@ jobs:
             libxinerama-dev \
             libfltk1.3 \
             libfltk1.3-dev \
-            libssl-dev
+            libssl-dev \
+            musl-tools
 
       - uses: actions-rs/toolchain@v1
         with:
@@ -60,7 +69,7 @@ jobs:
       - uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --verbose --target ${{ matrix.target }}
+          args: --verbose --target ${{ matrix.target }} -F ${{ matrix.feature }}
       - name: Code Signing (Windows)
         if: ${{ matrix.os == 'windows-latest' }}
         uses: skymatic/code-sign-action@v1
@@ -73,5 +82,5 @@ jobs:
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: binary-${{ matrix.os }}-${{ matrix.target }}
+          name: binary-${{ matrix.os }}-${{ matrix.target }}-${{ matrix.feature }}
           path: target/${{ matrix.target }}/debug/${{ matrix.filename }}
