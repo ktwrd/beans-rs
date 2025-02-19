@@ -1,11 +1,11 @@
 {
   "mod": {
-    "sm_name": "open_fortress",
-    "short_name": "of",
-    "name_stylized": "Open Fortress"
+    "sm_name": "tf2classic",
+    "short_name": "tf2classic",
+    "name_stylized": "Team Fortress 2: Classic"
   },
   "remote": {
-    "base_url": "https://of-proxy.kate.pet/",
-    "versions_url": "https://of-proxy.kate.pet/versions.json"
+    "base_url": "https://wiki.tf2classic.com/kachemak/",
+    "versions_url": "https://wiki.tf2classic.com/kachemak/versions.json"
   }
 }
