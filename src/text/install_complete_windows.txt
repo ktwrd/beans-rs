@@ -5,3 +5,6 @@ Done! Make sure that the following is done;
   3. Install Team Fortress 2
   4. Restart Steam
   5. Play $MOD_NAME_STYLIZED
+
+-- Important --
+Use the "previous2021" branch for Source SDK Base 2013 Multiplayer
