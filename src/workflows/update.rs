@@ -112,7 +112,30 @@ impl UpdateWorkflow
 
         ctx.gameinfo_perms()?;
 
-        println!("Game has been updated!");
+        Self::post_update_msg();
         Ok(())
     }
+    fn post_update_msg()
+    {
+        let av = AppVarData::get();
+        println!("{}", av.sub(UPDATE_FINISH_MSG.to_string()));
+        debug!("[UpdateWorkflow::post_update_msg] Displayed INSTALL_FINISH_MSG");
+
+        #[cfg(target_os = "windows")]
+        winconsole::window::show(true);
+        #[cfg(target_os = "windows")]
+        winconsole::window::flash(winconsole::window::FlashInfo {
+            count: 0,
+            flash_caption: true,
+            flash_tray: true,
+            indefinite: false,
+            rate: 0,
+            until_foreground: true
+        });
+    }
 }
+
+#[cfg(not(target_os = "windows"))]
+pub const UPDATE_FINISH_MSG: &str = include_str!("../text/update_complete_linux.txt");
+#[cfg(target_os = "windows")]
+pub const UPDATE_FINISH_MSG: &str = include_str!("../text/update_complete_windows.txt");
