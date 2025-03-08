@@ -1,5 +1,5 @@
-use log::{error,
-          debug};
+use log::{debug,
+          error};
 
 use crate::{appvar::AppVarData,
             butler,
@@ -71,7 +71,7 @@ impl VerifyWorkflow
         let av = AppVarData::get();
         println!("{}", av.sub(VERIFY_FINISH_MSG.to_string()));
         debug!("[VerifyWorkflow::post_verify_msg] Displayed INSTALL_FINISH_MSG");
-        
+
         #[cfg(target_os = "windows")]
         winconsole::window::show(true);
         #[cfg(target_os = "windows")]
