@@ -166,14 +166,6 @@ fn check_env_bool<K: AsRef<std::ffi::OsStr>>(key: K) -> bool
     })
 }
 
-fn check_env_set<K: AsRef<std::ffi::OsStr>>(key: K) -> bool
-{
-    std::env::var(key).is_ok_and(|x| {
-        let y = x.trim().to_lowercase();
-        y.len() > 0
-    })
-}
-
 /// Check if we have GUI support enabled. Will always return `false` when
 /// `PAUSE_ONCE_DONE` is `false`.
 ///
