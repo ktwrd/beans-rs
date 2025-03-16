@@ -20,7 +20,7 @@ use log::{debug,
           error,
           trace,
           warn};
-use rand::{distributions::Alphanumeric,
+use rand::{distr::Alphanumeric,
            Rng};
 use reqwest::header::USER_AGENT;
 #[cfg(target_os = "windows")]
@@ -183,7 +183,7 @@ pub fn is_symlink(location: String) -> bool
 
 pub fn generate_rand_str(length: usize) -> String
 {
-    let s: String = rand::thread_rng()
+    let s: String = rand::rng()
         .sample_iter(Alphanumeric)
         .take(length)
         .map(char::from)
