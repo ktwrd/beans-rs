@@ -99,6 +99,63 @@ pub fn env_disable_aria2c() -> bool
     check_env_bool("BEANS_DISABLE_ARIA2C") || check_env_bool("ADASTRAL_DISABLE_ARIA2C")
 }
 
+/// Will return the content of either of the following environment variables
+/// if they exist and there is at least 1 character in it;
+/// - `BEANS_ARIA2C_ARGS_OVERRIDE`
+/// - `ADASTRAL_ARIA2C_ARGS_OVERRIDE`
+/// 
+/// This string will be used as the launch arguments for aria2c. It'll replace the following content with;
+/// 
+/// | Look For | Replace With |
+/// | -------- | ------------ |
+/// | `%OUT_DIR%` | Output directory (argument `-d` with aria2c) |
+/// | `%OUT_FILENAME%` | Output Filename (argument `--out=` with aria2c) |
+/// | `%USER_AGENT%` | Used for the `--user-agent=` aria2c argument|
+/// | `%URL%` | URL to download from
+pub fn env_aria2c_override_args() -> Option<String>
+{
+    if let Some(val) = helper::try_get_env_var("BEANS_ARIA2C_ARGS_OVERRIDE".to_string())
+    {
+        if val.len() > 0
+        {
+            return Some(val);
+        }
+    }
+    if let Some(val) = helper::try_get_env_var("ADASTRAL_ARIA2C_ARGS_OVERRIDE".to_string())
+    {
+        if val.len() > 0
+        {
+            return Some(val);
+        }
+    }
+    return None;
+}
+
+/// Will return the content of either of the following environment variables
+/// if they exist and there is at least 1 character in it;
+/// - `BEANS_ARIA2C_ARGS`
+/// - `ADASTRAL_ARIA2C_ARGS`
+/// 
+/// This string will be put in the launch argument for starting the aria2c instance.
+pub fn env_aria2c_extra_args() -> Option<String>
+{
+    if let Some(val) = helper::try_get_env_var("BEANS_ARIA2C_ARGS".to_string())
+    {
+        if val.len() > 0
+        {
+            return Some(val);
+        }
+    }
+    if let Some(val) = helper::try_get_env_var("ADASTRAL_ARIA2C_ARGS".to_string())
+    {
+        if val.len() > 0
+        {
+            return Some(val);
+        }
+    }
+    return None;
+}
+
 /// Return `true` when the environment variable exists, and it's value equals
 /// `1` or `true (when trimmed and made lowercase).
 fn check_env_bool<K: AsRef<std::ffi::OsStr>>(key: K) -> bool
@@ -106,6 +163,14 @@ fn check_env_bool<K: AsRef<std::ffi::OsStr>>(key: K) -> bool
     std::env::var(key).is_ok_and(|x| {
         let y = x.trim().to_lowercase();
         y == "1" || y == "true"
+    })
+}
+
+fn check_env_set<K: AsRef<std::ffi::OsStr>>(key: K) -> bool
+{
+    std::env::var(key).is_ok_and(|x| {
+        let y = x.trim().to_lowercase();
+        y.len() > 0
     })
 }
 
