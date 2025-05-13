@@ -111,20 +111,36 @@ pub fn unpack_tarball(
                 }
                 if let Err(error) = x.unpack_in(&output_directory)
                 {
-                    pb.finish_and_clear();
                     debug!("error={:#?}", error);
                     debug!("entry.path={:#?}", x.path());
                     debug!("entry.link_name={:#?}", x.link_name());
                     debug!("entry.size={:#?}", x.size());
                     debug!("size={size:}");
-                    error!("[extract::unpack_tarball] Failed to unpack file {filename} ({error:})");
-                    return Err(BeansError::TarUnpackItemFailure {
-                        src_file: tarball_location,
-                        target_dir: output_directory,
-                        link_name: filename,
-                        error,
-                        backtrace: Backtrace::capture()
-                    });
+
+                    let error_str = format!("{:#?}", error);
+                    if error_str.contains("io: Custom {")
+                        && error_str.contains("error: TarError {")
+                        && error_str.contains("kind: PermissionDenied")
+                        && error_str.contains("io: Os {")
+                        && error_str.contains("code: 5")
+                    {
+                        warn!("Failed to unpack file {filename} (Permission Denied, might be read-only)")
+                    }
+                    else
+                    {
+                        pb.finish_and_clear();
+                        error!(
+                            "[extract::unpack_tarball] Failed to unpack file {filename} ({error:})"
+                        );
+                        return Err(BeansError::TarUnpackItemFailure {
+                            src_file: tarball_location,
+                            target_dir: output_directory,
+                            link_name: filename,
+                            error,
+                            backtrace: Backtrace::capture()
+                        });
+                    }
+                }
                 }
                 pb.inc(1);
             }
