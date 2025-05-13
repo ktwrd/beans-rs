@@ -15,7 +15,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-20.04
+          - os: ubuntu-22.04
             filename: 'beans-rs'
             target: x86_64-unknown-linux-gnu
 
@@ -26,7 +26,7 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Install Build Dependencies (ubuntu)
-        if: ${{ matrix.os == 'ubuntu-20.04' }}
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
         run: |
           sudo apt-get update;
           sudo apt-get install -y \

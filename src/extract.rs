@@ -5,10 +5,12 @@ use indicatif::{ProgressBar,
                 ProgressStyle};
 use log::{debug,
           error,
-          info};
+          info,
+          warn};
 use zstd::stream::read::Decoder as ZstdDecoder;
 
-use crate::BeansError;
+use crate::{helper::join_path,
+            BeansError};
 
 fn unpack_tarball_getfile(
     tarball_location: String,
@@ -69,6 +71,7 @@ pub fn unpack_tarball(
     tarball = unpack_tarball_getfile(tarball_location.clone(), output_directory.clone())?;
     archive = tar::Archive::new(&tarball);
     archive.set_preserve_permissions(false);
+    archive.set_preserve_ownerships(false);
 
     let pb = ProgressBar::new(archive_entry_count);
     pb.set_style(ProgressStyle::with_template("{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
@@ -98,6 +101,7 @@ pub fn unpack_tarball(
         {
             Ok(mut x) =>
             {
+                x.set_preserve_permissions(false);
                 pb.set_message("Extracting files");
                 let mut filename = String::new();
 
@@ -109,22 +113,66 @@ pub fn unpack_tarball(
                         filename = String::from(s);
                     }
                 }
+
+                if filename.len() == 0
+                {
+                    if let Ok(entry_path) = x.path()
+                    {
+                        if let Some(ep_str) = entry_path.to_str()
+                        {
+                            let ep = ep_str.to_string();
+                            filename = ep;
+                        }
+                    }
+                }
+
                 if let Err(error) = x.unpack_in(&output_directory)
                 {
-                    pb.finish_and_clear();
                     debug!("error={:#?}", error);
                     debug!("entry.path={:#?}", x.path());
                     debug!("entry.link_name={:#?}", x.link_name());
                     debug!("entry.size={:#?}", x.size());
                     debug!("size={size:}");
-                    error!("[extract::unpack_tarball] Failed to unpack file {filename} ({error:})");
-                    return Err(BeansError::TarUnpackItemFailure {
-                        src_file: tarball_location,
-                        target_dir: output_directory,
-                        link_name: filename,
-                        error,
-                        backtrace: Backtrace::capture()
-                    });
+
+                    let error_str = format!("{:#?}", error);
+                    if error_str.contains("io: Custom {")
+                        && error_str.contains("error: TarError {")
+                        && error_str.contains("kind: PermissionDenied")
+                        && error_str.contains("io: Os {")
+                        && error_str.contains("code: 5")
+                    {
+                        warn!("Failed to unpack file {filename} (Permission Denied, might be read-only)")
+                    }
+                    else
+                    {
+                        pb.finish_and_clear();
+                        error!(
+                            "[extract::unpack_tarball] Failed to unpack file {filename} ({error:})"
+                        );
+                        return Err(BeansError::TarUnpackItemFailure {
+                            src_file: tarball_location,
+                            target_dir: output_directory,
+                            link_name: filename,
+                            error,
+                            backtrace: Backtrace::capture()
+                        });
+                    }
+                }
+
+                if let Ok(entry_path) = x.path()
+                {
+                    if let Some(ep_str) = entry_path.to_str()
+                    {
+                        let ep = ep_str.to_string();
+                        let target_path = join_path(output_directory.clone(), ep);
+                        if crate::helper::file_exists(target_path.clone())
+                        {
+                            if let Err(e) = crate::helper::unmark_readonly(target_path.clone())
+                            {
+                                debug!("Failed to unmark read-only on file: {target_path:} {e:#?}");
+                            }
+                        }
+                    }
                 }
                 pb.inc(1);
             }

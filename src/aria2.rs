@@ -69,14 +69,20 @@ pub async fn download_file(
             .replace("%OUT_FILENAME%", &output_filename)
             .replace("%USER_AGENT%", &user_agent)
             .replace("%URL%", &url);
-        debug!("[aria2::download_file] using customized arguments: {}", repl);
+        debug!(
+            "[aria2::download_file] using customized arguments: {}",
+            repl
+        );
         cmd.arg(repl);
     }
     else
     {
         if let Some(extra) = crate::env_aria2c_extra_args()
         {
-            debug!("[aria2::download_file] (prepend) extra arguments: {}", extra);
+            debug!(
+                "[aria2::download_file] (prepend) extra arguments: {}",
+                extra
+            );
             cmd.arg(extra);
         }
         cmd.args([

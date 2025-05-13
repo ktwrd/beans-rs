@@ -85,3 +85,11 @@ fn find_steam_reg_path() -> Result<String, BeansError>
     error!("Couldn't find any of the locations in STEAM_POSSIBLE_DIR");
     Err(BeansError::SteamNotFound)
 }
+
+pub fn unmark_readonly(location: String) -> Result<(), BeansError>
+{
+    // does nothing since this function only
+    // matters for windows
+    // -kate, 13th mar 2025
+    Ok(())
+}
