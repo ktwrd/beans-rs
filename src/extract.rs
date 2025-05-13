@@ -109,6 +109,19 @@ pub fn unpack_tarball(
                         filename = String::from(s);
                     }
                 }
+
+                if filename.len() == 0
+                {
+                    if let Ok(entry_path) = x.path()
+                    {
+                        if let Some(ep_str) = entry_path.to_str()
+                        {
+                            let ep = ep_str.to_string();
+                            filename = ep;
+                        }
+                    }
+                }
+
                 if let Err(error) = x.unpack_in(&output_directory)
                 {
                     debug!("error={:#?}", error);
