@@ -227,6 +227,23 @@ pub enum BeansError
         reason: Aria2cExitCodeReason,
         cmd: String,
         backtrace: Backtrace
+    },
+
+    #[error("Failed to read file attributes on {location} ({error:})")]
+    ReadFileAttributesError
+    {
+        error: std::io::Error,
+        location: String,
+        backtrace: Backtrace
+    },
+
+    #[error("Failed to set file attributes on {location} ({hresult:#010x}, {hresult_msg:})")]
+    WindowsSetFileAttributeError
+    {
+        hresult: i32,
+        hresult_msg: String,
+        location: String,
+        backtrace: Backtrace
     }
 }
 #[derive(Debug)]
