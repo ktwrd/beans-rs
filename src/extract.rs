@@ -5,10 +5,12 @@ use indicatif::{ProgressBar,
                 ProgressStyle};
 use log::{debug,
           error,
-          info};
+          info,
+          warn};
 use zstd::stream::read::Decoder as ZstdDecoder;
 
-use crate::BeansError;
+use crate::{helper::join_path,
+            BeansError};
 
 fn unpack_tarball_getfile(
     tarball_location: String,
@@ -69,6 +71,7 @@ pub fn unpack_tarball(
     tarball = unpack_tarball_getfile(tarball_location.clone(), output_directory.clone())?;
     archive = tar::Archive::new(&tarball);
     archive.set_preserve_permissions(false);
+    archive.set_preserve_ownerships(false);
 
     let pb = ProgressBar::new(archive_entry_count);
     pb.set_style(ProgressStyle::with_template("{msg}\n{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {pos}/{len} ({eta})")
@@ -98,6 +101,7 @@ pub fn unpack_tarball(
         {
             Ok(mut x) =>
             {
+                x.set_preserve_permissions(false);
                 pb.set_message("Extracting files");
                 let mut filename = String::new();
 
