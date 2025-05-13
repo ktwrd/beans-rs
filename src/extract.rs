@@ -154,6 +154,21 @@ pub fn unpack_tarball(
                         });
                     }
                 }
+
+                if let Ok(entry_path) = x.path()
+                {
+                    if let Some(ep_str) = entry_path.to_str()
+                    {
+                        let ep = ep_str.to_string();
+                        let target_path = join_path(output_directory.clone(), ep);
+                        if crate::helper::file_exists(target_path.clone())
+                        {
+                            if let Err(e) = crate::helper::unmark_readonly(target_path.clone())
+                            {
+                                debug!("Failed to unmark read-only on file: {target_path:} {e:#?}");
+                            }
+                        }
+                    }
                 }
                 pb.inc(1);
             }
