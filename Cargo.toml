@@ -1,9 +1,10 @@
 [package]
 name = "beans-rs"
-version = "1.7.2"
+version = "1.7.3"
 edition = "2021"
 authors = [
-    "Kate Ward <kate@dariox.club>"
+    "Kate Ward <kate@dariox.club>",
+    "ToastXC <contact@toastxc.xyz>"
 ]
 description = "Installer for Open Fortress"
 repository = "https://github.com/ktwrd/beans-rs"
