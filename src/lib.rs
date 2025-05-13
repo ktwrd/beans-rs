@@ -103,9 +103,10 @@ pub fn env_disable_aria2c() -> bool
 /// if they exist and there is at least 1 character in it;
 /// - `BEANS_ARIA2C_ARGS_OVERRIDE`
 /// - `ADASTRAL_ARIA2C_ARGS_OVERRIDE`
-/// 
-/// This string will be used as the launch arguments for aria2c. It'll replace the following content with;
-/// 
+///
+/// This string will be used as the launch arguments for aria2c. It'll replace
+/// the following content with;
+///
 /// | Look For | Replace With |
 /// | -------- | ------------ |
 /// | `%OUT_DIR%` | Output directory (argument `-d` with aria2c) |
@@ -135,8 +136,9 @@ pub fn env_aria2c_override_args() -> Option<String>
 /// if they exist and there is at least 1 character in it;
 /// - `BEANS_ARIA2C_ARGS`
 /// - `ADASTRAL_ARIA2C_ARGS`
-/// 
-/// This string will be put in the launch argument for starting the aria2c instance.
+///
+/// This string will be put in the launch argument for starting the aria2c
+/// instance.
 pub fn env_aria2c_extra_args() -> Option<String>
 {
     if let Some(val) = helper::try_get_env_var("BEANS_ARIA2C_ARGS".to_string())
