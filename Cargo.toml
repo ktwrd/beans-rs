@@ -59,6 +59,7 @@ features = [
     "contexts",
     "debug-images",
     "panic",
+    "release-health",
     
     "reqwest",
     "rustls"
