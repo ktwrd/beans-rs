@@ -36,6 +36,7 @@ impl WizardContext
     pub async fn run(sml_via: SourceModDirectoryParam) -> Result<(), BeansError>
     {
         depends::try_write_deps();
+        WizardContext::check_aria();
         if let Err(e) = depends::try_install_vcredist().await
         {
             sentry::capture_error(&e);
@@ -85,6 +86,22 @@ impl WizardContext
         };
         i.menu().await;
         Ok(())
+    }
+
+    fn check_aria()
+    {
+        if !crate::env_disable_aria2c()
+        {
+            if crate::aria2::get_executable_location().is_none()
+            {
+                info!("Could not find aria2c!\nFor faster downloads, install it with your package manager (usually called \"aria2\")");
+            }
+        }
+
+        if crate::env_disable_aria2c() && crate::aria2::get_executable_location().is_some()
+        {
+            info!("== aria2c support disabled, even though it's available ==");
+        }
     }
 
     /// Show the menu
