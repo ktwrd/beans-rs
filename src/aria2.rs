@@ -60,14 +60,39 @@ pub async fn download_file(
         "[aria2::download_file] output_filename: {}",
         output_filename
     );
-    cmd.args([
-        "-d",
-        &output_directory,
-        format!("--out={}", output_filename).as_str(),
-        "-c",
-        format!("--user-agent={}", crate::get_user_agent()).as_str(),
-        &url
-    ]);
+
+    let user_agent = crate::get_user_agent();
+    if let Some(over) = crate::env_aria2c_override_args()
+    {
+        let repl = over
+            .replace("%OUT_DIR%", &output_directory)
+            .replace("%OUT_FILENAME%", &output_filename)
+            .replace("%USER_AGENT%", &user_agent)
+            .replace("%URL%", &url);
+        debug!("[aria2::download_file] using customized arguments: {}", repl);
+        cmd.arg(repl);
+    }
+    else
+    {
+        if let Some(extra) = crate::env_aria2c_extra_args()
+        {
+            debug!("[aria2::download_file] (prepend) extra arguments: {}", extra);
+            cmd.arg(extra);
+        }
+        cmd.args([
+            "--max-connection-per-server=16",
+            "--max-concurrent-downloads=16",
+            "--optimize-concurrent-downloads=true",
+            "--check-integrity=true",
+            "--continue=true",
+            "-d",
+            &output_directory,
+            format!("--out={}", output_filename).as_str(),
+            "-c",
+            format!("--user-agent={}", crate::get_user_agent()).as_str(),
+            &url
+        ]);
+    }
     debug!("[aria2::download_file] spawn\n{:#?}", cmd);
     let cmd_string = format!("{:#?}", cmd);
     match cmd.spawn()
