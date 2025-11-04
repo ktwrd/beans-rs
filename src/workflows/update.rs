@@ -4,6 +4,7 @@ use log::{debug,
 use crate::{appvar::AppVarData,
             butler,
             helper,
+            version,
             BeansError,
             RunnerContext};
 
@@ -30,6 +31,7 @@ impl UpdateWorkflow
         };
 
         let remote_version = ctx.current_remote_version()?;
+        let (remote_version_ident, _) = ctx.latest_remote_version();
 
         ctx.prepare_symlink()?;
         let patch = match ctx.has_patch_available()
@@ -109,6 +111,9 @@ impl UpdateWorkflow
             sentry::capture_error(&e);
             return Err(e);
         }
+
+        info!("[UpdateWorkflow] Updating version file (.adastral)");
+        version::set_current_version(Some(ctx.sourcemod_path.clone()), remote_version_ident)?;
 
         ctx.gameinfo_perms()?;
 

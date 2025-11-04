@@ -171,8 +171,27 @@ pub enum BeansError
         old_location: String,
         old_content: String
     },
+    #[error("Failed to serialize JSON {instance:?} to location {location} ({error:})")]
+    VersionFileSerializeFailure
+    {
+        error: serde_json::Error,
+        instance: AdastralVersionFile,
+        location: String
+    },
     #[error("Failed to read version file at {location}. ({error:})")]
     VersionFileReadFailure
+    {
+        error: std::io::Error,
+        location: String
+    },
+    #[error("Failed to open version file at {location}. ({error:})")]
+    VersionFileOpenFailure
+    {
+        error: std::io::Error,
+        location: String
+    },
+    #[error("Failed to write version file at {location}. ({error:})")]
+    VersionFileWriteFailure
     {
         error: std::io::Error,
         location: String
