@@ -2,8 +2,8 @@ use fltk::{app::Receiver,
            prelude::*,
            window::Window,
            *};
-use fltk_theme::{color_themes,
-                 ColorTheme};
+use fltk_theme::{ColorTheme,
+                 color_themes};
 use log::debug;
 
 mod dialog;

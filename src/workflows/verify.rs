@@ -1,12 +1,12 @@
 use log::{debug,
           error};
 
-use crate::{appvar::AppVarData,
+use crate::{BeansError,
+            RunnerContext,
+            appvar::AppVarData,
             butler,
             helper,
-            version::RemoteVersion,
-            BeansError,
-            RunnerContext};
+            version::RemoteVersion};
 
 pub struct VerifyWorkflow
 {

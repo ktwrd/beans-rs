@@ -2,10 +2,10 @@ use log::{error,
           info,
           trace};
 
-use crate::{appvar::AppVarData,
-            helper,
-            BeansError,
-            RunnerContext};
+use crate::{BeansError,
+            RunnerContext,
+            appvar::AppVarData,
+            helper};
 
 #[derive(Debug, Clone)]
 pub struct UninstallWorkflow

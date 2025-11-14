@@ -20,20 +20,20 @@ use log::{debug,
           error,
           trace,
           warn};
-use rand::{distr::Alphanumeric,
-           Rng};
+use rand::{Rng,
+           distr::Alphanumeric};
 use reqwest::header::USER_AGENT;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
-use crate::{appvar::AppVarData,
-            BeansError,
+use crate::{BeansError,
             DownloadFailureReason,
             GameinfoBackupCreateDirectoryFail,
             GameinfoBackupFailureReason,
             GameinfoBackupReadContentFail,
             GameinfoBackupWriteFail,
-            RunnerContext};
+            RunnerContext,
+            appvar::AppVarData};
 
 #[derive(Clone, Debug)]
 pub enum InstallType
@@ -642,7 +642,9 @@ pub fn get_tmp_dir() -> String
     }
     else if is_steamdeck()
     {
-        trace!("[helper::get_tmp_dir] Detected that we are running on a steam deck. Using ~/.tmp/beans-rs");
+        trace!(
+            "[helper::get_tmp_dir] Detected that we are running on a steam deck. Using ~/.tmp/beans-rs"
+        );
         match simple_home_dir::home_dir()
         {
             Some(v) => match v.to_str()
@@ -799,8 +801,7 @@ pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
         {
             trace!(
                 "Failed to deserialize GithubReleaseItem\nerror: {:#?}\ncontent: {:#?}",
-                e,
-                response_text
+                e, response_text
             );
             return Err(BeansError::SerdeJson {
                 error: e,
@@ -931,7 +932,11 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
     {
         if let Err(e) = std::fs::remove_file(&output_location)
         {
-            warn!("[helper::backup_gameinfo] Failed to delete existing file, lets hope things don't break. {:} {}", e, output_location.clone());
+            warn!(
+                "[helper::backup_gameinfo] Failed to delete existing file, lets hope things don't break. {:} {}",
+                e,
+                output_location.clone()
+            );
         }
     }
 

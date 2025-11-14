@@ -9,8 +9,8 @@ use log::{debug,
           warn};
 use zstd::stream::read::Decoder as ZstdDecoder;
 
-use crate::{helper::join_path,
-            BeansError};
+use crate::{BeansError,
+            helper::join_path};
 
 fn unpack_tarball_getfile(
     tarball_location: String,
@@ -141,7 +141,9 @@ pub fn unpack_tarball(
                         && error_str.contains("io: Os {")
                         && error_str.contains("code: 5")
                     {
-                        warn!("Failed to unpack file {filename} (Permission Denied, might be read-only)")
+                        warn!(
+                            "Failed to unpack file {filename} (Permission Denied, might be read-only)"
+                        )
                     }
                     else
                     {

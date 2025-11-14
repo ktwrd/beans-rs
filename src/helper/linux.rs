@@ -3,8 +3,8 @@ use std::fs::read_to_string;
 use log::{debug,
           error};
 
-use crate::{helper::format_directory_path,
-            BeansError};
+use crate::{BeansError,
+            helper::format_directory_path};
 
 /// all possible known directory where steam *might* be
 /// only is used on linux, since windows will use the registry.
@@ -71,7 +71,9 @@ fn find_steam_reg_path() -> Result<String, BeansError>
                 }
                 None =>
                 {
-                    debug!("[helper::find_steam_reg_path] simple_home_dir::home_dir().to_str() returned None!");
+                    debug!(
+                        "[helper::find_steam_reg_path] simple_home_dir::home_dir().to_str() returned None!"
+                    );
                     return Err(BeansError::SteamNotFound);
                 }
             },

@@ -8,11 +8,11 @@ use log::{debug,
 
 #[cfg(target_os = "windows")]
 use crate::ARIA2C_BINARY;
-use crate::{helper,
-            BeansError,
-            BUTLER_BINARY,
+use crate::{BUTLER_BINARY,
             BUTLER_LIB_1,
-            BUTLER_LIB_2};
+            BUTLER_LIB_2,
+            BeansError,
+            helper};
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()

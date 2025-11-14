@@ -1,6 +1,10 @@
 use std::str::FromStr;
 
-use beans_rs::{flags,
+use beans_rs::{BeansError,
+               PANIC_MSG_CONTENT,
+               RunnerContext,
+               SourceModDirectoryParam,
+               flags,
                flags::LaunchFlag,
                gui::DialogIconKind,
                helper,
@@ -10,21 +14,17 @@ use beans_rs::{flags,
                            InstallWorkflow,
                            UninstallWorkflow,
                            UpdateWorkflow,
-                           VerifyWorkflow},
-               BeansError,
-               RunnerContext,
-               SourceModDirectoryParam,
-               PANIC_MSG_CONTENT};
+                           VerifyWorkflow}};
 use clap::{Arg,
            ArgAction,
            ArgMatches,
            Command};
-use log::{debug,
+use log::{LevelFilter,
+          debug,
           error,
           info,
           trace,
-          warn,
-          LevelFilter};
+          warn};
 
 pub const DEFAULT_LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Info;
 #[cfg(debug_assertions)]
@@ -286,8 +286,12 @@ impl Launcher
                 if let Err(e) = std::fs::create_dir(x)
                 {
                     debug!("{:#?}", e);
-                    error!("[Launcher::find_arg_sourcemods_location] Failed to create directory {x:?} ({e:})");
-                    panic!("[Launcher::find_arg_sourcemods_location] Failed to create directory {x:?}\n\n{e:#?}")
+                    error!(
+                        "[Launcher::find_arg_sourcemods_location] Failed to create directory {x:?} ({e:})"
+                    );
+                    panic!(
+                        "[Launcher::find_arg_sourcemods_location] Failed to create directory {x:?}\n\n{e:#?}"
+                    )
                 }
             }
             sml_dir_manual = Some(parse_location(x.to_string()));

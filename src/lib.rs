@@ -1,6 +1,4 @@
 #![feature(error_generic_member_access)]
-// required for aria2::get_executable_location()
-#![feature(let_chains)]
 // todo
 // https://rust-lang.github.io/rust-clippy/master/index.html#/result_large_err
 #![allow(clippy::result_large_err)]
@@ -224,10 +222,16 @@ pub fn get_user_agent() -> String
     result
 }
 
-#[cfg(not(target_os = "windows"))]
-pub const STAGING_DIR: &str = "/butler-staging";
-#[cfg(target_os = "windows")]
-pub const STAGING_DIR: &str = "\\butler-staging";
+pub fn staging_dir() -> String
+{
+    let av = AppVarData::get();
+    #[cfg(not(target_os = "windows"))] {
+        format!("/butler-staging-{}", av.mod_info.short_name)
+    }
+    #[cfg(target_os = "windows")] {
+        format!("\\butler-staging-{}", av.mod_info.short_name)
+    }
+}
 
 #[cfg(target_os = "windows")]
 flate!(pub static BUTLER_BINARY: [u8] from "Binaries/butler.exe");

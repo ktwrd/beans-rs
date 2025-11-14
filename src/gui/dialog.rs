@@ -4,12 +4,12 @@ use fltk::{image::PngImage,
            *};
 use log::warn;
 
-use crate::gui::{apply_app_scheme,
+use crate::gui::{GUIAppStatus,
+                 apply_app_scheme,
                  icon,
                  shared_ui::GenericDialog,
                  wait_for_quit,
-                 window_centre_screen,
-                 GUIAppStatus};
+                 window_centre_screen};
 
 pub struct DialogBuilder
 {

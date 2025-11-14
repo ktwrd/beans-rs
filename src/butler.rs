@@ -5,10 +5,10 @@ use log::{debug,
           error,
           info};
 
-use crate::{depends,
-            helper,
-            BeansError,
-            DownloadFailureReason};
+use crate::{BeansError,
+            DownloadFailureReason,
+            depends,
+            helper};
 
 pub fn verify(
     signature_url: String,

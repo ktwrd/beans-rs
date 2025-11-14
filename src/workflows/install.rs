@@ -3,13 +3,13 @@ use log::{debug,
           info,
           warn};
 
-use crate::{appvar::AppVarData,
+use crate::{BeansError,
+            DownloadFailureReason,
+            RunnerContext,
+            appvar::AppVarData,
             helper,
             version::{AdastralVersionFile,
-                      RemoteVersion},
-            BeansError,
-            DownloadFailureReason,
-            RunnerContext};
+                      RemoteVersion}};
 
 #[derive(Debug, Clone)]
 pub struct InstallWorkflow
@@ -23,7 +23,9 @@ impl InstallWorkflow
         let (latest_remote_id, latest_remote) = ctx.latest_remote_version();
         if let Some(_cv) = ctx.current_version
         {
-            println!("[InstallWorkflow::wizard] re-installing! game files will not be touched until extraction");
+            println!(
+                "[InstallWorkflow::wizard] re-installing! game files will not be touched until extraction"
+            );
         }
 
         Self::install_with_remote_version(ctx, latest_remote_id, latest_remote).await
@@ -163,7 +165,9 @@ impl InstallWorkflow
             if let Err(e) = std::fs::create_dir(&out_dir)
             {
                 debug!("{:#?}", e);
-                error!("[InstallWorkflow::install_from] Failed to create output directory, {out_dir} ({e:})");
+                error!(
+                    "[InstallWorkflow::install_from] Failed to create output directory, {out_dir} ({e:})"
+                );
                 return Err(BeansError::DirectoryCreateFailure {
                     location: out_dir.clone(),
                     error: e,

@@ -94,7 +94,9 @@ pub enum BeansError
         backtrace: Backtrace
     },
 
-    #[error("Unable to perform action since the mod isn't installed since {missing_file} couldn't be found")]
+    #[error(
+        "Unable to perform action since the mod isn't installed since {missing_file} couldn't be found"
+    )]
     TargetSourcemodNotInstalled
     {
         missing_file: String,
@@ -133,7 +135,9 @@ pub enum BeansError
         version: Option<usize>
     },
 
-    #[error("Could not find steam installation, which means we can't find the sourcemods folder. Please provide the sourcemods folder with the --location parameter.")]
+    #[error(
+        "Could not find steam installation, which means we can't find the sourcemods folder. Please provide the sourcemods folder with the --location parameter."
+    )]
     SteamNotFound,
 
     #[error("{msg}")]

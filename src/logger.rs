@@ -1,6 +1,7 @@
 use std::{io,
           io::Write,
-          sync::Mutex,
+          sync::{Mutex,
+                 RwLock},
           time::Instant};
 
 use lazy_static::lazy_static;
@@ -13,6 +14,7 @@ lazy_static! {
     static ref LOGGER: CustomLogger = CustomLogger {
         inner: Mutex::new(None)
     };
+    pub static ref LOG_FORMAT: RwLock<String> = RwLock::new(LOG_FORMAT_DEFAULT.to_string());
 }
 
 struct CustomLogger
@@ -110,9 +112,11 @@ impl CustomLoggerInner
             let milliseconds = now.subsec_millis();
 
             #[allow(unused_assignments)]
-            let mut data = String::new();
-            unsafe {
-                data = LOG_FORMAT.to_string();
+            #[allow(static_mut_refs)]
+            let mut data: String = LOG_FORMAT_DEFAULT.to_string();
+            if let Ok(datax) = LOG_FORMAT.read()
+            {
+                data = datax.clone();
             }
             data = data
                 .replace("#HOURS", &format!("{:02}", hours))
@@ -150,7 +154,7 @@ pub fn set_filter(filter: LevelFilter)
     }
 }
 static mut LOG_FILTER: LevelFilter = LevelFilter::Trace;
-pub static mut LOG_FORMAT: &str = LOG_FORMAT_DEFAULT;
+
 pub static mut LOG_COLOR: bool = true;
 pub const LOG_FORMAT_DEFAULT: &str =
     "[#HOURS:#MINUTES:#SECONDS.#MILLISECONDS] (#THREAD) #LEVEL #CONTENT";

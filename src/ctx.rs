@@ -6,17 +6,17 @@ use log::{debug,
           error,
           info};
 
-use crate::{appvar::AppVarData,
+use crate::{BeansError,
+            appvar::AppVarData,
             depends,
             helper,
-            helper::{find_sourcemod_path,
-                     parse_location,
-                     InstallType},
+            helper::{InstallType,
+                     find_sourcemod_path,
+                     parse_location},
             version,
             version::{RemotePatch,
                       RemoteVersion,
-                      RemoteVersionResponse},
-            BeansError};
+                      RemoteVersionResponse}};
 
 #[derive(Debug, Clone)]
 pub struct RunnerContext
@@ -97,13 +97,13 @@ impl RunnerContext
     }
 
     /// Get staging location for butler.
-    /// {sourcemod_dir}{crate::STAGING_DIR}
+    /// {sourcemod_dir}{crate::staging_dir()}
     /// e.g; /home/kate/.var/app/com.valvesoftware.Steam/.local/share/Steam/
     /// steamapps/sourcemods/butler-staging      C:\Games\Steam\steamapps\
     /// sourcemods\butler-staging
     pub fn get_staging_location(&mut self) -> String
     {
-        helper::join_path(self.sourcemod_path.clone(), crate::STAGING_DIR.to_string())
+        helper::join_path(self.sourcemod_path.clone(), crate::staging_dir())
     }
 
     /// Get the latest item in `remote_version_list`

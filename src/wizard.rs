@@ -6,22 +6,22 @@ use log::{debug,
           info,
           trace};
 
-use crate::{appvar::AppVarData,
+use crate::{BeansError,
+            RunnerContext,
+            SourceModDirectoryParam,
+            appvar::AppVarData,
             depends,
             flags,
             flags::LaunchFlag,
             helper,
-            helper::{find_sourcemod_path,
-                     parse_location,
-                     InstallType},
+            helper::{InstallType,
+                     find_sourcemod_path,
+                     parse_location},
             workflows::{CleanWorkflow,
                         InstallWorkflow,
                         UninstallWorkflow,
                         UpdateWorkflow,
-                        VerifyWorkflow},
-            BeansError,
-            RunnerContext,
-            SourceModDirectoryParam};
+                        VerifyWorkflow}};
 
 #[derive(Debug, Clone)]
 pub struct WizardContext
@@ -94,7 +94,9 @@ impl WizardContext
         {
             if crate::aria2::get_executable_location().is_none()
             {
-                info!("Could not find aria2c!\nFor faster downloads, install it with your package manager (usually called \"aria2\")");
+                info!(
+                    "Could not find aria2c!\nFor faster downloads, install it with your package manager (usually called \"aria2\")"
+                );
             }
         }
 
@@ -119,9 +121,7 @@ impl WizardContext
                 {
                     println!(
                         "======== A new update for {} is available! (latest: v{}, current: v{}) ========",
-                        av.mod_info.name_stylized,
-                        rv,
-                        cv
+                        av.mod_info.name_stylized, rv, cv
                     );
                 }
             }

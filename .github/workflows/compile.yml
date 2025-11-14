@@ -62,7 +62,7 @@ jobs:
           command: build
           args: --verbose --target ${{ matrix.target }}
       - name: Code Signing (Windows)
-        if: ${{ matrix.os == 'windows-latest' }}
+        if: ${{ matrix.os == 'windows-2022' }}
         uses: skymatic/code-sign-action@v1
         with:
           certificate: '${{ secrets.CODESIGN }}'
