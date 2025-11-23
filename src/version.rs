@@ -72,7 +72,7 @@ fn read_mod_version_file( sourcemods_location: Option<String> ) -> Result<String
     };
 
     let mut json_file= File::open(mod_path.clone() + VPK_JSON_NAME)?;
-    let mut content: &mut String= &mut String::new();
+    let content = &mut String::new();
     let _ = json_file.read_to_string(content);
 
     let vpk_json_content: Value = serde_json::from_str(content)?;
@@ -84,7 +84,7 @@ fn read_mod_version_file( sourcemods_location: Option<String> ) -> Result<String
     {
         // Check root directory first
         let mut mod_version_file= File::open(mod_version_full_path.clone())?;
-        let mut version_content: &mut String = &mut String::new();
+        let version_content = &mut String::new();
         let __ = mod_version_file.read_to_string(version_content);
         let ___ = version_content.trim_end();
         return Ok( version_content.clone() );
@@ -107,7 +107,7 @@ fn read_mod_version_file( sourcemods_location: Option<String> ) -> Result<String
                 panic!("version::read_mod_version_file: version file inside VPK not found..."); 
             }
         };
-        let mut pak_version_content: &mut String = &mut String::new();
+        let pak_version_content = &mut String::new();
         let __ = mod_pack_file_in_vpk.read_to_string(pak_version_content );
         let ___ = pak_version_content.trim_end();
         return Ok ( pak_version_content.clone() );
@@ -137,7 +137,7 @@ fn generate_version_file( sourcemods_location: Option<String> ) -> Result<Adastr
     let mod_version_content = read_mod_version_file( Some( mod_path.clone() ) )?;
 
     let mut json_file = File::open(mod_path.clone() + VPK_JSON_NAME)?;
-    let mut json_content = &mut String::new();
+    let json_content = &mut String::new();
     let _ = json_file.read_to_string(json_content);
     let vpk_json_content: Value = serde_json::from_str(json_content)?;
 
