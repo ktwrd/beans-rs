@@ -20,16 +20,19 @@ use serde_json::{self, Value};
 pub fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
 {
     let install_state = helper::install_state(sourcemods_location.clone());
+
+    if install_state == InstallType::NotInstalled
+    {
+        return None;
+    }
+
     if install_state != InstallType::Adastral
     {
         // generate an .adastral file at this location
-        let version_file: AdastralVersionFile = match generate_version_file(sourcemods_location.clone())
+        let version_file: AdastralVersionFile = match generate_version_file(sourcemods_location)
         {
             Ok( f ) => f,
-            Err( _ ) => {
-                debug!("Failed to generate .adastral file!");
-                return None;
-            }
+            Err( _ ) => panic!("Failed to generate .adastral file!"),
         };
 
         return Some(version_file.version.parse::<usize>().unwrap_or_else(|_| {
@@ -56,13 +59,12 @@ pub fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
     }
 }
 
-const VPK_JSON_NAME: &str = "vpk.json";
-/// Attempt to read a version file from data in vpk.json. 
-/// Checks in sourcemod root directory and returns their contents
-/// 
-fn read_mod_version_file( sourcemods_location: Option<String> ) -> Result<String, BeansError>
+const DATA_JSON_NAME: &str = "data.json";
+/// Read a version file from a json file in the mod path. 
+/// Returns the version file's contents WITHOUT trailing whitespaces 
+fn read_mod_version_file( sourcemods_location: &str ) -> Result<String, BeansError>
 {
-    let mod_path = match sourcemods_location
+    let mod_path = match get_mod_location(Some( sourcemods_location.to_owned() ) )
     {
         Some(x) => x,
         None => 
@@ -71,82 +73,108 @@ fn read_mod_version_file( sourcemods_location: Option<String> ) -> Result<String
         }
     };
 
-    let mut json_file= File::open(mod_path.clone() + VPK_JSON_NAME)?;
-    let content = &mut String::new();
-    let _ = json_file.read_to_string(content);
-
-    let vpk_json_content: Value = serde_json::from_str(content)?;
-    let mod_version_filename = vpk_json_content["vpk"]["version_file"].to_string();
-    let mod_pak_filename = vpk_json_content["vpk"]["pack_file"].to_string();
+    // get the filename and pak directory from the json file
+    let data_json_content = open_json_file_content(sourcemods_location)?;
+    let mod_pak_filename = data_json_content["data"]["pack_file"].to_string().replace("\"", "");
+    let mod_version_filename = data_json_content["data"]["version_file"].to_string().replace("\"", "");
     let mod_version_full_path = mod_path.clone() + &mod_version_filename;
     let mod_pak_full_path = mod_path.clone() + &mod_pak_filename;
+
+    // Check regular sourcemod directory
     if helper::path_exists(mod_version_full_path.clone())
     {
-        // Check root directory first
         let mut mod_version_file= File::open(mod_version_full_path.clone())?;
         let version_content = &mut String::new();
         let __ = mod_version_file.read_to_string(version_content);
-        let ___ = version_content.trim_end();
-        return Ok( version_content.clone() );
+        return Ok( version_content.trim().to_owned().clone() );
     }
+    // else check inside vpk
     else if helper::path_exists(mod_pak_full_path.clone())
     {
-        let mod_pack_file: VPK = match VPK::open(vpk_json_content["vpk"]["pack_file"].to_string() )
+        let mod_pack_file: VPK = match VPK::open( mod_pak_full_path.clone() )
         {
             Ok(f) => f,
-            Err(_) => 
-            {
-                panic!("version::read_mod_version_file: VPK not found");
-            }
+            Err(_) => panic!("version::read_mod_version_file: VPK not found"),
         };
         let mut mod_pack_file_in_vpk: VPKFile = match mod_pack_file.get_file(mod_version_filename.as_str() )
         {
             Ok( f) => f,
-            Err(_) => 
-            { 
-                panic!("version::read_mod_version_file: version file inside VPK not found..."); 
-            }
+            Err( _ ) => panic!("version::read_mod_version_file: {} not found in {}", mod_version_filename, mod_pak_filename),
         };
         let pak_version_content = &mut String::new();
         let __ = mod_pack_file_in_vpk.read_to_string(pak_version_content );
-        let ___ = pak_version_content.trim_end();
-        return Ok ( pak_version_content.clone() );
+        let ___ = pak_version_content.trim();
+        return Ok ( pak_version_content.trim().to_owned().clone() );
     }
 
+    // error out if we can't find the vpk file (last file we checked for)
     Err( BeansError::FileNotFound 
-        {
-            location: mod_path.clone() + &mod_pak_filename, 
-            backtrace: Backtrace::capture()
-        })
+    {
+        location: mod_path.clone() + &mod_pak_filename, 
+        backtrace: Backtrace::capture()
+    })
+}
 
+/// Opens the json file DATA_JSON_NAME from the mod folder. returns a serde_json::Value
+/// 
+fn open_json_file_content( sourcemods_location: &str ) -> Result<Value, BeansError>
+{
+    // get the mod path
+    let mod_path = match get_mod_location( Some( sourcemods_location.to_owned() ) )
+    {
+        Some( p ) => p,
+        None => panic!("version::open_json_file_content: Failed to get mod location!")
+    };
+
+    // try to open the json data file
+    let mut json_file = match File::open(mod_path.clone() + DATA_JSON_NAME )
+    {
+        Ok( f ) => 
+        {
+            log::info!("version::open_json_file_content: found {}", mod_path + DATA_JSON_NAME );
+            f
+        },
+        Err( _ ) => 
+        {
+            panic!("version::open_json_file_content: Failed to get {}!", DATA_JSON_NAME);
+        },
+    };
+
+    // parse it
+    let json_content = &mut String::new();
+    let _ = json_file.read_to_string(json_content);
+    let __ = json_content.trim();
+    let vpk_json_content: Value = serde_json::from_str(json_content)?;
+    Ok( vpk_json_content )
 }
 
 /// generate an .adastral file if the game was installed through other methods based on the build's version file
 /// 
 fn generate_version_file( sourcemods_location: Option<String> ) -> Result<AdastralVersionFile, BeansError>
 {
-    let mod_path = match sourcemods_location
+    let sm_path = match sourcemods_location
     {
         Some(x) => x,
-        None => 
-        {
-            panic!("version::generate_version_file: Failed to get sourcemods_location");
-        }
+        None => panic!("version::read_mod_version_file: Failed to get the sourcemods_location!"),
     };
-    
-    let mod_version_content = read_mod_version_file( Some( mod_path.clone() ) )?;
 
-    let mut json_file = File::open(mod_path.clone() + VPK_JSON_NAME)?;
-    let json_content = &mut String::new();
-    let _ = json_file.read_to_string(json_content);
-    let vpk_json_content: Value = serde_json::from_str(json_content)?;
-
+    let mod_version_content = read_mod_version_file(&sm_path.as_str())?;
+    let data_json_content = open_json_file_content(&sm_path.as_str())?;
+    // create a(n?) .adastral file with the version translation defined in the json
     let mod_version_translation = AdastralVersionFile {
-        version: vpk_json_content["versions"][mod_version_content]["version"].to_string()
+        version: data_json_content["versions"][mod_version_content]["version"].to_string().replace("\"", "")
     };
 
-    mod_version_translation.write( Some( mod_path.clone() + ".adastral" ) )?;
-    
+    mod_version_translation.write(Some(sm_path.to_owned()))?;
+
+    let mod_path = match get_mod_location(Some( sm_path ) )
+    {
+        Some( x ) => x,
+        None => panic!("version::generate_version_file: Failed to get the mod path!"),
+    };
+
+    log::info!("Generated .adastral file at location {}", mod_path );
+
     Ok( mod_version_translation )
 }
 
