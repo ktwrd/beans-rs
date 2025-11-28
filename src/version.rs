@@ -82,10 +82,10 @@ fn read_mod_version_file(sourcemods_location: &str) -> Result<String, BeansError
 
     // get the filename and pak directory from the json file
     let data_json_content = open_json_file_content(sourcemods_location)?;
-    let mod_pak_filename = data_json_content["data"]["pack_file"]
+    let mod_pak_filename = data_json_content["files"]["pack_file"]
         .to_string()
         .replace("\"", "");
-    let mod_version_filename = data_json_content["data"]["version_file"]
+    let mod_version_filename = data_json_content["files"]["version_file"]
         .to_string()
         .replace("\"", "");
     let mod_version_full_path = mod_path.clone() + &mod_version_filename;
