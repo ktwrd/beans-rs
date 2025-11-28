@@ -168,7 +168,7 @@ pub fn dir_exists(location: String) -> bool
 /// check if a path location exists
 pub fn path_exists(path: String) -> bool
 {
-    std::path::Path::new(path.as_str()).exists()
+    std::path::Path::new(&path).exists()
 }
 
 pub fn is_directory(location: String) -> bool

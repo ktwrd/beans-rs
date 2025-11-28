@@ -76,7 +76,7 @@ impl WizardContext
         let ctx = RunnerContext {
             sourcemod_path: sourcemod_path.clone(),
             remote_version_list: version_list,
-            current_version: crate::version::get_current_version(Some(sourcemod_path)),
+            current_version: crate::version::get_current_version(Some(sourcemod_path)).await,
             appvar: AppVarData::get()
         };
 

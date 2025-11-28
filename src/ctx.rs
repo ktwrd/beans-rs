@@ -75,7 +75,8 @@ impl RunnerContext
         Ok(Self {
             sourcemod_path: parse_location(sourcemod_path.clone()),
             remote_version_list: version_list,
-            current_version: crate::version::get_current_version(Some(sourcemod_path.clone())),
+            current_version: crate::version::get_current_version(Some(sourcemod_path.clone()))
+                .await,
             appvar: AppVarData::get()
         })
     }

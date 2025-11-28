@@ -21,7 +21,7 @@ use crate::{BeansError,
 
 /// get the current version installed via the .adastral file in the sourcemod
 /// mod folder. will parse the value of `version` as usize.
-pub fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
+pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
 {
     let install_state = helper::install_state(sourcemods_location.clone());
 
@@ -34,6 +34,7 @@ pub fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
     {
         // generate an .adastral file at this location
         let version_file: AdastralVersionFile = match generate_version_file(sourcemods_location)
+            .await
         {
             Ok(f) => f,
             Err(_) => panic!("Failed to generate .adastral file!")
@@ -66,10 +67,9 @@ pub fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
     }
 }
 
-const FILE_MAP_JSON_DATA: &str = "filemap.json";
 /// Read a version file from a json file in the mod path.
 /// Returns the version file's contents WITHOUT trailing whitespaces
-fn read_mod_version_file(sourcemods_location: &str) -> Result<String, BeansError>
+async fn read_mod_version_file(sourcemods_location: &str) -> Result<String, BeansError>
 {
     let mod_path = match get_mod_location(Some(sourcemods_location.to_owned()))
     {
@@ -79,17 +79,20 @@ fn read_mod_version_file(sourcemods_location: &str) -> Result<String, BeansError
             panic!("version::read_mod_version_file: Failed to get the sourcemods_location!");
         }
     };
-
-    // get the filename and pak directory from the json file
-    let data_json_content = open_json_file_content(sourcemods_location)?;
-    let mod_pak_filename = data_json_content["files"]["pack_file"]
-        .to_string()
-        .replace("\"", "");
-    let mod_version_filename = data_json_content["files"]["version_file"]
-        .to_string()
-        .replace("\"", "");
-    let mod_version_full_path = mod_path.clone() + &mod_version_filename;
-    let mod_pak_full_path = mod_path.clone() + &mod_pak_filename;
+    // get the filename and pak directory from the remote json file
+    let file_map_list = match get_file_map().await
+    {
+        Ok(v) => v,
+        Err(e) =>
+        {
+            trace!("[WizardContext::run] Failed to run version::get_file_map()");
+            trace!("{:#?}", e);
+            sentry::capture_error(&e);
+            return Err(e);
+        }
+    };
+    let mod_version_full_path = mod_path.clone() + &file_map_list.files.version_file;
+    let mod_pak_full_path = mod_path.clone() + &file_map_list.files.pack_file;
 
     // Check regular sourcemod directory
     if helper::path_exists(mod_version_full_path.clone())
@@ -108,12 +111,12 @@ fn read_mod_version_file(sourcemods_location: &str) -> Result<String, BeansError
             Err(_) => panic!("version::read_mod_version_file: VPK not found")
         };
         let mut mod_pack_file_in_vpk: VPKFile = match mod_pack_file
-            .get_file(mod_version_filename.as_str())
+            .get_file(file_map_list.files.version_file.as_str())
         {
             Ok(f) => f,
             Err(_) => panic!(
                 "version::read_mod_version_file: {} not found in {}",
-                mod_version_filename, mod_pak_filename
+                file_map_list.files.version_file, file_map_list.files.pack_file
             )
         };
         let pak_version_content = &mut String::new();
@@ -124,53 +127,14 @@ fn read_mod_version_file(sourcemods_location: &str) -> Result<String, BeansError
 
     // error out if we can't find the vpk file (last file we checked for)
     Err(BeansError::FileNotFound {
-        location: mod_path.clone() + &mod_pak_filename,
+        location: mod_path.clone() + &file_map_list.files.pack_file,
         backtrace: Backtrace::capture()
     })
 }
 
-/// Opens the json file DATA_JSON_NAME from the mod folder. returns a
-/// serde_json::Value
-fn open_json_file_content(sourcemods_location: &str) -> Result<Value, BeansError>
-{
-    // get the mod path
-    let mod_path = match get_mod_location(Some(sourcemods_location.to_owned()))
-    {
-        Some(p) => p,
-        None => panic!("version::open_json_file_content: Failed to get mod location!")
-    };
-
-    // try to open the json data file
-    let mut json_file = match File::open(mod_path.clone() + FILE_MAP_JSON_DATA)
-    {
-        Ok(f) =>
-        {
-            log::info!(
-                "version::open_json_file_content: found {}",
-                mod_path + FILE_MAP_JSON_DATA
-            );
-            f
-        }
-        Err(_) =>
-        {
-            panic!(
-                "version::open_json_file_content: Failed to get {}!",
-                FILE_MAP_JSON_DATA
-            );
-        }
-    };
-
-    // parse it
-    let json_content = &mut String::new();
-    let _ = json_file.read_to_string(json_content);
-    let __ = json_content.trim();
-    let vpk_json_content: Value = serde_json::from_str(json_content)?;
-    Ok(vpk_json_content)
-}
-
 /// generate an .adastral file if the game was installed through other methods
 /// based on the build's version file
-fn generate_version_file(
+async fn generate_version_file(
     sourcemods_location: Option<String>
 ) -> Result<AdastralVersionFile, BeansError>
 {
@@ -180,15 +144,31 @@ fn generate_version_file(
         None => panic!("version::read_mod_version_file: Failed to get the sourcemods_location!")
     };
 
-    let mod_version_content = read_mod_version_file(&sm_path.as_str())?;
-    let data_json_content = open_json_file_content(&sm_path.as_str())?;
-    // create a(n?) .adastral file with the version translation defined in the json
-    let mod_version_translation = AdastralVersionFile {
-        version: data_json_content["versions"][mod_version_content]["version"]
-            .to_string()
-            .replace("\"", "")
+    let mod_version_content = read_mod_version_file(&sm_path.as_str()).await?;
+    // let data_json_content = open_json_file_content(&sm_path.as_str())?;
+    let file_map_list = match get_file_map().await
+    {
+        Ok(v) => v,
+        Err(e) =>
+        {
+            trace!("[WizardContext::run] Failed to run version::get_file_map()");
+            trace!("{:#?}", e);
+            sentry::capture_error(&e);
+            return Err(e);
+        }
     };
-
+    // create a(n?) .adastral file with the version translation defined in the json
+    // I think it's an? it is "ah"-dastral.. right? -Dani
+    let mod_version_translation = AdastralVersionFile {
+        // If this blows something up, my bad -Dani
+        version: file_map_list
+            .versions
+            .get(&mod_version_content)
+            .unwrap()
+            .version
+            .clone()
+    };
+    // self.remote_version_list.versions.get(&highest).unwrap();
     mod_version_translation.write(Some(sm_path.to_owned()))?;
 
     let mod_path = match get_mod_location(Some(sm_path))
@@ -389,6 +369,33 @@ pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
     Ok(data)
 }
 
+/// fetch the file map list from `{crate::SOURCE_URL}filemap.json`
+pub async fn get_file_map() -> Result<RemoteFileMapResponse, BeansError>
+{
+    let av = AppVarData::get();
+    let response = match reqwest::get(&av.remote_info.filemap_url).await
+    {
+        Ok(v) => v,
+        Err(e) =>
+        {
+            error!(
+                "[version::get_file_map] Failed to get available versions! {:}",
+                e
+            );
+            sentry::capture_error(&e);
+            return Err(BeansError::Reqwest {
+                error: e,
+                backtrace: Backtrace::capture()
+            });
+        }
+    };
+    let response_text = response.text().await?;
+    trace!("[version::get_file_map] response text: {}", response_text);
+
+    let data: RemoteFileMapResponse = serde_json::from_str(&response_text)?;
+    Ok(data)
+}
+
 /// Version file that is used as `.adastral` in the sourcemod mod folder.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AdastralVersionFile
@@ -469,4 +476,25 @@ pub struct RemotePatch
     /// Amount of file space required for temporary file. Assumed to be measured
     /// in bytes.
     pub tempreq: usize
+}
+
+/// `filemap.json` response content from remote server.
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct RemoteFileMapResponse
+{
+    pub files: RemoteFiles,
+    pub versions: HashMap<String, RemoteVersionMap>
+}
+/// Value of the `files` property in `RemoteFileMapResponse`
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct RemoteFiles
+{
+    pub version_file: String,
+    pub pack_file: String
+}
+/// Value of the `versions` property in `RemoteFileMapResponse`
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct RemoteVersionMap
+{
+    pub version: String
 }
