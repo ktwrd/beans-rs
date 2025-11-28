@@ -67,9 +67,12 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
     }
 }
 
-/// Read a version file from a json file in the mod path.
-/// Returns the version file's contents WITHOUT trailing whitespaces
-async fn read_mod_version_file(sourcemods_location: &str) -> Result<String, BeansError>
+/// Read a version file from either version file in mod folder or in specified
+/// pack file.
+async fn read_mod_version_file(
+    sourcemods_location: &str,
+    files: &RemoteFiles
+) -> Result<String, BeansError>
 {
     let mod_path = match get_mod_location(Some(sourcemods_location.to_owned()))
     {
@@ -80,19 +83,8 @@ async fn read_mod_version_file(sourcemods_location: &str) -> Result<String, Bean
         }
     };
     // get the filename and pak directory from the remote json file
-    let file_map_list = match get_file_map().await
-    {
-        Ok(v) => v,
-        Err(e) =>
-        {
-            trace!("[WizardContext::run] Failed to run version::get_file_map()");
-            trace!("{:#?}", e);
-            sentry::capture_error(&e);
-            return Err(e);
-        }
-    };
-    let mod_version_full_path = mod_path.clone() + &file_map_list.files.version_file;
-    let mod_pak_full_path = mod_path.clone() + &file_map_list.files.pack_file;
+    let mod_version_full_path = mod_path.clone() + &files.version_file;
+    let mod_pak_full_path = mod_path.clone() + &files.pack_file;
 
     // Check regular sourcemod directory
     if helper::path_exists(mod_version_full_path.clone())
@@ -111,12 +103,12 @@ async fn read_mod_version_file(sourcemods_location: &str) -> Result<String, Bean
             Err(_) => panic!("version::read_mod_version_file: VPK not found")
         };
         let mut mod_pack_file_in_vpk: VPKFile = match mod_pack_file
-            .get_file(file_map_list.files.version_file.as_str())
+            .get_file(files.version_file.as_str())
         {
             Ok(f) => f,
             Err(_) => panic!(
                 "version::read_mod_version_file: {} not found in {}",
-                file_map_list.files.version_file, file_map_list.files.pack_file
+                files.version_file, files.pack_file
             )
         };
         let pak_version_content = &mut String::new();
@@ -127,7 +119,7 @@ async fn read_mod_version_file(sourcemods_location: &str) -> Result<String, Bean
 
     // error out if we can't find the vpk file (last file we checked for)
     Err(BeansError::FileNotFound {
-        location: mod_path.clone() + &file_map_list.files.pack_file,
+        location: mod_path.clone() + &files.pack_file,
         backtrace: Backtrace::capture()
     })
 }
@@ -144,8 +136,6 @@ async fn generate_version_file(
         None => panic!("version::read_mod_version_file: Failed to get the sourcemods_location!")
     };
 
-    let mod_version_content = read_mod_version_file(&sm_path.as_str()).await?;
-    // let data_json_content = open_json_file_content(&sm_path.as_str())?;
     let file_map_list = match get_file_map().await
     {
         Ok(v) => v,
@@ -157,6 +147,8 @@ async fn generate_version_file(
             return Err(e);
         }
     };
+    let mod_version_content =
+        read_mod_version_file(&sm_path.as_str(), &file_map_list.files).await?;
     // create a(n?) .adastral file with the version translation defined in the json
     // I think it's an? it is "ah"-dastral.. right? -Dani
     let mod_version_translation = AdastralVersionFile {
