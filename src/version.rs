@@ -59,7 +59,7 @@ pub fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
     }
 }
 
-const DATA_JSON_NAME: &str = "data.json";
+const FILE_MAP_JSON_DATA: &str = "filemap.json";
 /// Read a version file from a json file in the mod path. 
 /// Returns the version file's contents WITHOUT trailing whitespaces 
 fn read_mod_version_file( sourcemods_location: &str ) -> Result<String, BeansError>
@@ -127,16 +127,16 @@ fn open_json_file_content( sourcemods_location: &str ) -> Result<Value, BeansErr
     };
 
     // try to open the json data file
-    let mut json_file = match File::open(mod_path.clone() + DATA_JSON_NAME )
+    let mut json_file = match File::open(mod_path.clone() + FILE_MAP_JSON_DATA )
     {
         Ok( f ) => 
         {
-            log::info!("version::open_json_file_content: found {}", mod_path + DATA_JSON_NAME );
+            log::info!("version::open_json_file_content: found {}", mod_path + FILE_MAP_JSON_DATA );
             f
         },
         Err( _ ) => 
         {
-            panic!("version::open_json_file_content: Failed to get {}!", DATA_JSON_NAME);
+            panic!("version::open_json_file_content: Failed to get {}!", FILE_MAP_JSON_DATA);
         },
     };
 
