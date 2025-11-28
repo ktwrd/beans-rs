@@ -2,6 +2,8 @@
 
 **When creating a PR, you must branch off the `develop` branch.** When merging back into this repo remember to select the `develop` as the branch to merge into. After the **7th of June 2024** any PRs that **do not** use `develop` as the base branch will be closed.
 
+**Before submitting a PR** make sure to format your code using the `cargo fmt` command. Code that is not properly formatted will need to do so before being merged.
+
 When adding a new feature (that a user will interact with), create a new file in `src/workflows/` with the name of the feature (for example, `launch.rs`). Inside of `launch.rs` you would have a struct with the name of `LaunchWorkflow`. It would look something like this;
 ```rust
 use crate::{RunnerContext, BeansError};
