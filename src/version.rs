@@ -8,8 +8,7 @@ use std::{backtrace::Backtrace,
 use log::{debug,
           error,
           trace};
-use serde_json::{self,
-                 Value};
+use serde_json::{self};
 use valve_pak::{VPK,
                 VPKFile};
 
@@ -37,7 +36,12 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
             .await
         {
             Ok(f) => f,
-            Err(_) => panic!("Failed to generate .adastral file!")
+            Err(e) =>
+            {
+                trace!("{:#?}", e);
+                sentry::capture_error(&e);
+                panic!("[WizardContext::run] Failed to run version::generate_version_file");
+            }
         };
 
         return Some(
@@ -77,11 +81,9 @@ async fn read_mod_version_file(
     let mod_path = match get_mod_location(Some(sourcemods_location.to_owned()))
     {
         Some(x) => x,
-        None =>
-        {
-            panic!("version::read_mod_version_file: Failed to get the sourcemods_location!");
-        }
+        None => return Err(BeansError::SourceModLocationNotFound)
     };
+
     // get the filename and pak directory from the remote json file
     let mod_version_full_path = mod_path.clone() + &files.version_file;
     let mod_pak_full_path = mod_path.clone() + &files.pack_file;
@@ -133,7 +135,7 @@ async fn generate_version_file(
     let sm_path = match sourcemods_location
     {
         Some(x) => x,
-        None => panic!("version::read_mod_version_file: Failed to get the sourcemods_location!")
+        None => return Err(BeansError::SourceModLocationNotFound)
     };
 
     let file_map_list = match get_file_map().await
@@ -166,7 +168,7 @@ async fn generate_version_file(
     let mod_path = match get_mod_location(Some(sm_path))
     {
         Some(x) => x,
-        None => panic!("version::generate_version_file: Failed to get the mod path!")
+        None => return Err(BeansError::SourceModLocationNotFound)
     };
 
     log::info!("Generated .adastral file at location {}", mod_path);
