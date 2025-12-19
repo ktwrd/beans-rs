@@ -40,16 +40,16 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
             {
                 trace!("{:#?}", e);
                 sentry::capture_error(&e);
-                panic!("[WizardContext::run] Failed to run version::generate_version_file. {:#?}", e);
+                panic!(
+                    "[WizardContext::run] Failed to run version::generate_version_file. {:#?}",
+                    e
+                );
             }
         };
 
-        return Some(
-            version_file
-                .version
-                .parse::<usize>()
-                .unwrap_or_else(|_| panic!("[version::get_current_version] Failed to get generated version file's usize."))
-        );
+        return Some(version_file.version.parse::<usize>().unwrap_or_else(|_| {
+            panic!("[version::get_current_version] Failed to get generated version file's usize.")
+        }));
     }
     match get_mod_location(sourcemods_location.clone())
     {
@@ -59,10 +59,17 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
             let location = format!("{}.adastral", smp_x);
             let content =
                 read_to_string(&location).unwrap_or_else(|_| panic!("Failed to open {}", location));
-            let data: AdastralVersionFile = serde_json::from_str(&content)
-                .unwrap_or_else(|_| panic!("[version::get_current_version] Failed to deserialize data at {}", location));
+            let data: AdastralVersionFile = serde_json::from_str(&content).unwrap_or_else(|_| {
+                panic!(
+                    "[version::get_current_version] Failed to deserialize data at {}",
+                    location
+                )
+            });
             let parsed = data.version.parse::<usize>().unwrap_or_else(|_| {
-                panic!("[version::get_current_version] Failed to convert version to usize! ({})", data.version)
+                panic!(
+                    "[version::get_current_version] Failed to convert version to usize! ({})",
+                    data.version
+                )
             });
 
             Some(parsed)
@@ -93,10 +100,14 @@ async fn read_mod_version_file(
     {
         let mut mod_version_file = File::open(mod_version_full_path.clone())?;
         let version_content = &mut String::new();
-        let __ = match mod_version_file.read_to_string(version_content)
+        match mod_version_file.read_to_string(version_content)
         {
             Ok(v) => v,
-            Err(e) => panic!("[version::read_mod_verion_file] Failed to read {}. {:#?}", mod_version_full_path.clone(), e)
+            Err(e) => panic!(
+                "[version::read_mod_verion_file] Failed to read {}. {:#?}",
+                mod_version_full_path.clone(),
+                e
+            )
         };
 
         return Ok(version_content.trim().to_owned().clone());
@@ -119,8 +130,16 @@ async fn read_mod_version_file(
             )
         };
         let pak_version_content = &mut String::new();
-        let __ = mod_pack_file_in_vpk.read_to_string(pak_version_content);
-        let ___ = pak_version_content.trim();
+        match mod_pack_file_in_vpk.read_to_string(pak_version_content)
+        {
+            Ok(v) => v,
+            Err(e) => panic!(
+                "[version::read_mod_version_file] Failed to open {}. {:#?}",
+                files.version_file.as_str(),
+                e
+            )
+        };
+        let _ = pak_version_content.trim();
         return Ok(pak_version_content.trim().to_owned().clone());
     }
 
