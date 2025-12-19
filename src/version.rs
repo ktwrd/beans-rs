@@ -40,7 +40,7 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
             {
                 trace!("{:#?}", e);
                 sentry::capture_error(&e);
-                panic!("[WizardContext::run] Failed to run version::generate_version_file");
+                panic!("[WizardContext::run] Failed to run version::generate_version_file. {:#?}", e);
             }
         };
 
@@ -102,15 +102,15 @@ async fn read_mod_version_file(
         let mod_pack_file: VPK = match VPK::open(mod_pak_full_path.clone())
         {
             Ok(f) => f,
-            Err(_) => panic!("version::read_mod_version_file: VPK not found")
+            Err(e) => panic!("version::read_mod_version_file: VPK not found. {:#?}", e)
         };
         let mut mod_pack_file_in_vpk: VPKFile = match mod_pack_file
             .get_file(files.version_file.as_str())
         {
             Ok(f) => f,
-            Err(_) => panic!(
-                "version::read_mod_version_file: {} not found in {}",
-                files.version_file, files.pack_file
+            Err(e) => panic!(
+                "version::read_mod_version_file: {} not found in {}. {:#?}",
+                files.version_file, files.pack_file, e
             )
         };
         let pak_version_content = &mut String::new();
