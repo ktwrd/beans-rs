@@ -35,7 +35,7 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
         let version_file: AdastralVersionFile = match generate_version_file(sourcemods_location)
             .await
         {
-            Ok(f) => f,
+            Ok(v) => v,
             Err(e) =>
             {
                 trace!("{:#?}", e);
@@ -48,7 +48,7 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
             version_file
                 .version
                 .parse::<usize>()
-                .unwrap_or_else(|_| panic!("Failed to get generated version file's usize"))
+                .unwrap_or_else(|_| panic!("[version::get_current_version] Failed to get generated version file's usize."))
         );
     }
     match get_mod_location(sourcemods_location.clone())
@@ -60,9 +60,9 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
             let content =
                 read_to_string(&location).unwrap_or_else(|_| panic!("Failed to open {}", location));
             let data: AdastralVersionFile = serde_json::from_str(&content)
-                .unwrap_or_else(|_| panic!("Failed to deserialize data at {}", location));
+                .unwrap_or_else(|_| panic!("[version::get_current_version] Failed to deserialize data at {}", location));
             let parsed = data.version.parse::<usize>().unwrap_or_else(|_| {
-                panic!("Failed to convert version to usize! ({})", data.version)
+                panic!("[version::get_current_version] Failed to convert version to usize! ({})", data.version)
             });
 
             Some(parsed)
@@ -93,7 +93,12 @@ async fn read_mod_version_file(
     {
         let mut mod_version_file = File::open(mod_version_full_path.clone())?;
         let version_content = &mut String::new();
-        let __ = mod_version_file.read_to_string(version_content);
+        let __ = match mod_version_file.read_to_string(version_content)
+        {
+            Ok(v) => v,
+            Err(e) => panic!("[version::read_mod_verion_file] Failed to read {}. {:#?}", mod_version_full_path.clone(), e)
+        };
+
         return Ok(version_content.trim().to_owned().clone());
     }
     // else check inside vpk
@@ -101,15 +106,15 @@ async fn read_mod_version_file(
     {
         let mod_pack_file: VPK = match VPK::open(mod_pak_full_path.clone())
         {
-            Ok(f) => f,
-            Err(e) => panic!("version::read_mod_version_file: VPK not found. {:#?}", e)
+            Ok(v) => v,
+            Err(e) => panic!("[version::read_mod_version_file] VPK not found. {:#?}", e)
         };
         let mut mod_pack_file_in_vpk: VPKFile = match mod_pack_file
             .get_file(files.version_file.as_str())
         {
-            Ok(f) => f,
+            Ok(v) => v,
             Err(e) => panic!(
-                "version::read_mod_version_file: {} not found in {}. {:#?}",
+                "[version::read_mod_version_file] {} not found in {}. {:#?}",
                 files.version_file, files.pack_file, e
             )
         };
@@ -265,7 +270,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                 Err(e) =>
                 {
                     debug!(
-                        "[update_version_file] failed to read {}. {:#?}",
+                        "[version::update_version_file] failed to read {}. {:#?}",
                         old_version_file_location, e
                     );
                     sentry::capture_error(&e);
@@ -281,7 +286,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                 Err(e) =>
                 {
                     debug!(
-                        "[update_version_file] Failed to parse content {} caused error {:}",
+                        "[version::update_version_file] Failed to parse content {} caused error {:}",
                         old_version_file_content, e
                     );
                     sentry::capture_error(&e);
