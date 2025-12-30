@@ -173,20 +173,35 @@ async fn generate_version_file(
             return Err(e);
         }
     };
-    let mod_version_content =
+
+    let mod_version_file_content =
         read_mod_version_file(&sm_path.as_str(), &file_map_list.files).await?;
     // create a(n?) .adastral file with the version translation defined in the json
     // I think it's an? it is "ah"-dastral.. right? -Dani
+
+    let mut adastral_value = String::new();
+
+    for (mod_version, adastral_version) in file_map_list.versions.iter()
+    {
+        if mod_version == &mod_version_file_content
+        {
+            adastral_value = adastral_version.to_string();
+            break;
+        }
+    }
+    if adastral_value.is_empty()
+    {
+        error!(
+            "[version::generate_version_file] Local version not found in remote filemap. Has the remote filemap been updated?"
+        )
+    }
+
     let mod_version_translation = AdastralVersionFile {
         // If this blows something up, my bad -Dani
-        version: file_map_list
-            .versions
-            .get(&mod_version_content)
-            .unwrap()
-            .version
-            .clone()
+        // Things no longer blow up :) -Dani
+        version: adastral_value
     };
-    // self.remote_version_list.versions.get(&highest).unwrap();
+
     mod_version_translation.write(Some(sm_path.to_owned()))?;
 
     let mod_path = match get_mod_location(Some(sm_path))
@@ -501,7 +516,7 @@ pub struct RemotePatch
 pub struct RemoteFileMapResponse
 {
     pub files: RemoteFiles,
-    pub versions: HashMap<String, RemoteVersionMap>
+    pub versions: HashMap<String, String>
 }
 /// Value of the `files` property in `RemoteFileMapResponse`
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
@@ -509,10 +524,4 @@ pub struct RemoteFiles
 {
     pub version_file: String,
     pub pack_file: String
-}
-/// Value of the `versions` property in `RemoteFileMapResponse`
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct RemoteVersionMap
-{
-    pub version: String
 }
