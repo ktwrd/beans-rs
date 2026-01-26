@@ -258,7 +258,7 @@ pub enum BeansError
         backtrace: Backtrace
     },
 
-    #[error("Failed to read version file at {location}. ({error:})")]
+    #[error("Failed to read VPK file contents at {location}. ({error:})")]
     VpkReadFailure
     {
         location: String,
@@ -266,7 +266,7 @@ pub enum BeansError
         backtrace: Backtrace
     },
 
-    #[error("Failed to read version file at {location}. ({error:})")]
+    #[error("Failed to read packed file inside of VPK file at {location}. ({error:})")]
     VpkInternalFileReadFailure
     {
         location: String,

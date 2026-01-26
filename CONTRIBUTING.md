@@ -44,5 +44,29 @@ pub async fn task_launch(&mut self, matches: &ArgMatches) {
     }
 }
 ```
-
+### Errors
+When handling errors, utilize the `BeansError` system in favor of other error instances.
+Any necessary external errors should be nested inside of a new `BeansError`.
+```rs 
+#[error("Failed to serialize provided AppVarData to JSON. ({error:})")]
+AppVarDataSerializeFailure
+{
+    error: serde_json::Error, // <-- Outside Error
+    data: AppVarData
+},
+#[error("Failed to read file attributes on {location} ({error:})")]
+ReadFileAttributesError
+{
+    error: std::io::Error,
+    location: String,
+    backtrace: Backtrace
+},
+#[error("Failed to open VPK file at {location} ({error:})")]
+VpkOpenFailure
+{
+    location: String,
+    error: anyhow::Error,
+    backtrace: Backtrace
+}
+```
 **Do not make any PRs to remove the embedded executables in favor of downloading.** Some users would like to use this application offline, or they may have unreliable internet.
