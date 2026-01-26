@@ -103,11 +103,19 @@ async fn read_mod_version_file(
         match mod_version_file.read_to_string(version_content)
         {
             Ok(v) => v,
-            Err(e) => panic!(
-                "[version::read_mod_verion_file] Failed to read {}. {:#?}",
-                mod_version_full_path.clone(),
-                e
-            )
+            Err(e) =>
+            {
+                error!(
+                    "[version::read_mod_verion_file] Failed to read {}. {:}",
+                    mod_version_full_path.clone(),
+                    e
+                );
+                debug!("{:#?}", e);
+                return Err(BeansError::FileOpenFailure {
+                    location: files.version_file.clone(),
+                    error: e
+                });
+            }
         };
 
         return Ok(version_content.trim().to_owned().clone());
@@ -118,28 +126,52 @@ async fn read_mod_version_file(
         let mod_pack_file: VPK = match VPK::open(mod_pak_full_path.clone())
         {
             Ok(v) => v,
-            Err(e) => panic!("[version::read_mod_version_file] VPK not found. {:#?}", e)
+            Err(e) =>
+            {
+                error!("[version::read_mod_version_file] VPK not found. {:}", e);
+                debug!("{:#?}", e);
+                return Err(BeansError::FileOpenFailure {
+                    location: files.version_file.clone(),
+                    error: e
+                });
+            }
         };
         let mut mod_pack_file_in_vpk: VPKFile = match mod_pack_file
             .get_file(files.version_file.as_str())
         {
             Ok(v) => v,
-            Err(e) => panic!(
-                "[version::read_mod_version_file] {} not found in {}. {:#?}",
-                files.version_file, files.pack_file, e
-            )
+            Err(e) =>
+            {
+                error!(
+                    "[version::read_mod_version_file] {} not found in {}. {:}",
+                    files.version_file, files.pack_file, e
+                );
+                debug!("{:#?}", e);
+                return Err(BeansError::FileOpenFailure {
+                    location: files.version_file.clone(),
+                    error: e
+                });
+            }
         };
         let pak_version_content = &mut String::new();
         match mod_pack_file_in_vpk.read_to_string(pak_version_content)
         {
             Ok(v) => v,
-            Err(e) => panic!(
-                "[version::read_mod_version_file] Failed to open {}. {:#?}",
-                files.version_file.as_str(),
-                e
-            )
+            Err(e) =>
+            {
+                error!(
+                    "[version::read_mod_version_file] Failed to open {}. {:}",
+                    files.version_file, e
+                );
+                debug!("{:#?}", e);
+                sentry::capture_error(&e);
+
+                return Err(BeansError::FileOpenFailure {
+                    location: files.version_file.clone(),
+                    error: e
+                });
+            }
         };
-        let _ = pak_version_content.trim();
         return Ok(pak_version_content.trim().to_owned().clone());
     }
 
@@ -179,23 +211,25 @@ async fn generate_version_file(
     // create a(n?) .adastral file with the version translation defined in the json
     // I think it's an? it is "ah"-dastral.. right? -Dani
 
+    // TODO turn this section into a match statement ---
     let mut adastral_value = String::new();
 
     for (mod_version, adastral_version) in file_map_list.versions.iter()
     {
         if mod_version == &mod_version_file_content
         {
-            adastral_value = adastral_version.to_string();
+            adastral_value = String::from(adastral_version);
             break;
         }
     }
+    // Needs some kind of error handling
     if adastral_value.is_empty()
     {
         error!(
             "[version::generate_version_file] Local version not found in remote filemap. Has the remote filemap been updated?"
         )
     }
-
+    // ---
     let mod_version_translation = AdastralVersionFile {
         // If this blows something up, my bad -Dani
         // Things no longer blow up :) -Dani
