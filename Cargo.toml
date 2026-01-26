@@ -41,6 +41,7 @@ fltk-theme = "0.7.9"
 dark-light = "2.0.0"
 image = { version = "0.25.8", features = ["png"] }
 valve_pak = "0.1.0"
+anyhow = "1.0.100"
 
 [build-dependencies]
 fl2rust = "0.7.1"

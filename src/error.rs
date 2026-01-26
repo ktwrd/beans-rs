@@ -248,6 +248,30 @@ pub enum BeansError
         hresult_msg: String,
         location: String,
         backtrace: Backtrace
+    },
+
+    #[error("Failed to open VPK file at {location} ({error:})")]
+    VpkOpenFailure
+    {
+        location: String,
+        error: anyhow::Error,
+        backtrace: Backtrace
+    },
+
+    #[error("Failed to read version file at {location}. ({error:})")]
+    VpkReadFailure
+    {
+        location: String,
+        error: anyhow::Error,
+        backtrace: Backtrace
+    },
+
+    #[error("Failed to read version file at {location}. ({error:})")]
+    VpkInternalFileReadFailure
+    {
+        location: String,
+        error: std::io::Error,
+        backtrace: Backtrace
     }
 }
 #[derive(Debug)]

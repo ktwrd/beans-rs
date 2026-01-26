@@ -130,9 +130,10 @@ async fn read_mod_version_file(
             {
                 error!("[version::read_mod_version_file] VPK not found. {:}", e);
                 debug!("{:#?}", e);
-                return Err(BeansError::FileOpenFailure {
+                return Err(BeansError::VpkOpenFailure {
                     location: files.version_file.clone(),
-                    error: e
+                    error: e,
+                    backtrace: Backtrace::capture()
                 });
             }
         };
@@ -146,10 +147,12 @@ async fn read_mod_version_file(
                     "[version::read_mod_version_file] {} not found in {}. {:}",
                     files.version_file, files.pack_file, e
                 );
+
                 debug!("{:#?}", e);
-                return Err(BeansError::FileOpenFailure {
+                return Err(BeansError::VpkReadFailure {
                     location: files.version_file.clone(),
-                    error: e
+                    error: e,
+                    backtrace: Backtrace::capture()
                 });
             }
         };
@@ -164,11 +167,10 @@ async fn read_mod_version_file(
                     files.version_file, e
                 );
                 debug!("{:#?}", e);
-                sentry::capture_error(&e);
-
-                return Err(BeansError::FileOpenFailure {
+                return Err(BeansError::VpkInternalFileReadFailure {
                     location: files.version_file.clone(),
-                    error: e
+                    error: e,
+                    backtrace: Backtrace::capture()
                 });
             }
         };
