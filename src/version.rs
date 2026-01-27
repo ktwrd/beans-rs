@@ -22,6 +22,7 @@ use crate::{BeansError,
 /// mod folder. will parse the value of `version` as usize.
 pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
 {
+    // TODO change function to return a BeansError
     let install_state = helper::install_state(sourcemods_location.clone());
 
     if install_state == InstallType::NotInstalled
@@ -32,7 +33,7 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
     if install_state != InstallType::Adastral
     {
         // generate an .adastral file at this location
-        let version_file: AdastralVersionFile = match generate_version_file(sourcemods_location)
+        let data: AdastralVersionFile = match generate_version_file(sourcemods_location.clone()?)
             .await
         {
             Ok(v) => v,
@@ -46,31 +47,80 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
                 );
             }
         };
-
-        return Some(version_file.version.parse::<usize>().unwrap_or_else(|_| {
-            panic!("[version::get_current_version] Failed to get generated version file's usize.")
-        }));
+        let parsed = match data.version.parse::<usize>()
+        {
+            Ok(v) => v,
+            Err(e) =>
+            {
+                let ex = BeansError::VersionFileParseFailure {
+                    error: e,
+                    old_location: sourcemods_location.clone()?,
+                    old_content: data.version
+                };
+                debug!("{:#?}", ex);
+                sentry::capture_error(&ex);
+                panic!(
+                    "[version::get_current_version] Failed to get generated version file's usize. {:#?}",
+                    ex
+                );
+            }
+        };
+        return Some(parsed);
     }
     match get_mod_location(sourcemods_location.clone())
     {
         Some(smp_x) =>
         {
-            // TODO generate BeansError instead of using panic
             let location = format!("{}.adastral", smp_x);
-            let content =
-                read_to_string(&location).unwrap_or_else(|_| panic!("Failed to open {}", location));
-            let data: AdastralVersionFile = serde_json::from_str(&content).unwrap_or_else(|_| {
-                panic!(
-                    "[version::get_current_version] Failed to deserialize data at {}",
-                    location
-                )
-            });
-            let parsed = data.version.parse::<usize>().unwrap_or_else(|_| {
-                panic!(
-                    "[version::get_current_version] Failed to convert version to usize! ({})",
-                    data.version
-                )
-            });
+            let content = match read_to_string(&location)
+            {
+                Ok(v) => v,
+                Err(e) =>
+                {
+                    let ex = BeansError::VersionFileReadFailure {
+                        error: e,
+                        location: location.clone()
+                    };
+                    debug!("{:#?}", ex);
+                    sentry::capture_error(&ex);
+                    panic!("Failed to open {} {:#?}", location, ex);
+                }
+            };
+            let data: AdastralVersionFile = match serde_json::from_str(&content)
+            {
+                Ok(v) => v,
+                Err(e) =>
+                {
+                    let ex = BeansError::SerdeJson {
+                        error: e,
+                        backtrace: Backtrace::capture()
+                    };
+                    debug!("{:#?}", ex);
+                    sentry::capture_error(&ex);
+                    panic!(
+                        "[version::get_current_version] Failed to deserialize data at {} {:#?}",
+                        location, ex
+                    )
+                }
+            };
+            let parsed = match data.version.parse::<usize>()
+            {
+                Ok(v) => v,
+                Err(e) =>
+                {
+                    let ex = BeansError::VersionFileParseFailure {
+                        error: e,
+                        old_location: location.clone(),
+                        old_content: data.version.clone()
+                    };
+                    debug!("{:#?}", ex);
+                    sentry::capture_error(&ex);
+                    panic!(
+                        "[version::get_current_version] Failed to convert version to usize! ({}) {:#?}",
+                        data.version, ex
+                    )
+                }
+            };
 
             Some(parsed)
         }
@@ -147,7 +197,6 @@ async fn read_mod_version_file(
                     "[version::read_mod_version_file] {} not found in {}. {:}",
                     files.version_file, files.pack_file, e
                 );
-
                 debug!("{:#?}", e);
                 return Err(BeansError::VpkReadFailure {
                     location: files.version_file.clone(),
@@ -187,15 +236,9 @@ async fn read_mod_version_file(
 /// generate an .adastral file if the game was installed through other methods
 /// based on the build's version file
 async fn generate_version_file(
-    sourcemods_location: Option<String>
+    sourcemods_location: String
 ) -> Result<AdastralVersionFile, BeansError>
 {
-    let sm_path = match sourcemods_location
-    {
-        Some(x) => x,
-        None => return Err(BeansError::SourceModLocationNotFound)
-    };
-
     let file_map_list = match get_file_map().await
     {
         Ok(v) => v,
@@ -209,7 +252,17 @@ async fn generate_version_file(
     };
 
     let mod_version_file_content =
-        read_mod_version_file(&sm_path.as_str(), &file_map_list.files).await?;
+        match read_mod_version_file(sourcemods_location.as_str(), &file_map_list.files).await
+        {
+            Ok(v) => v,
+            Err(e) =>
+            {
+                trace!("[version::read_mod_version_file] Failed to read mod version file.");
+                trace!("{:#?}", e);
+                sentry::capture_error(&e);
+                return Err(e);
+            }
+        };
     // create a(n?) .adastral file with the version translation defined in the json
     // I think it's an? it is "ah"-dastral.. right? -Dani
 
@@ -235,12 +288,25 @@ async fn generate_version_file(
     let mod_version_translation = AdastralVersionFile {
         // If this blows something up, my bad -Dani
         // Things no longer blow up :) -Dani
-        version: adastral_value
+        version: adastral_value.clone()
     };
+    match mod_version_translation.write(Some(sourcemods_location.clone()))
+    {
+        Ok(v) => v,
+        Err(e) =>
+        {
+            debug!("{:#?}", e);
+            error!(
+                "[version::generate_version_file] Failed to set version to {} in .adastral {:#?}",
+                adastral_value.clone(),
+                e
+            );
+            sentry::capture_error(&e);
+            return Err(e);
+        }
+    }
 
-    mod_version_translation.write(Some(sm_path.to_owned()))?;
-
-    let mod_path = match get_mod_location(Some(sm_path))
+    let mod_path = match get_mod_location(Some(sourcemods_location.clone()))
     {
         Some(x) => x,
         None => return Err(BeansError::SourceModLocationNotFound)
