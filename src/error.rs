@@ -272,6 +272,12 @@ pub enum BeansError
         location: String,
         error: std::io::Error,
         backtrace: Backtrace
+    },
+
+    #[error("Failed to find local version '{expected}' in remote filemap.")]
+    RemoteFileMapLocalVersionNotFound
+    {
+        expected: String
     }
 }
 #[derive(Debug)]

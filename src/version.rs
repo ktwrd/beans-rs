@@ -244,7 +244,7 @@ async fn generate_version_file(
         Ok(v) => v,
         Err(e) =>
         {
-            trace!("[WizardContext::run] Failed to run version::get_file_map()");
+            error!("[WizardContext::run] Failed to run version::get_file_map() {:#?}", e);
             trace!("{:#?}", e);
             sentry::capture_error(&e);
             return Err(e);
@@ -257,7 +257,7 @@ async fn generate_version_file(
             Ok(v) => v,
             Err(e) =>
             {
-                trace!("[version::read_mod_version_file] Failed to read mod version file.");
+                error!("[version::read_mod_version_file] Failed to read mod version file. {:#?}", e);
                 trace!("{:#?}", e);
                 sentry::capture_error(&e);
                 return Err(e);
@@ -265,8 +265,6 @@ async fn generate_version_file(
         };
     // create a(n?) .adastral file with the version translation defined in the json
     // I think it's an? it is "ah"-dastral.. right? -Dani
-
-    // TODO turn this section into a match statement ---
     let mut adastral_value = String::new();
 
     for (mod_version, adastral_version) in file_map_list.versions.iter()
@@ -277,14 +275,20 @@ async fn generate_version_file(
             break;
         }
     }
-    // Needs some kind of error handling
+
     if adastral_value.is_empty()
     {
+        let ex = BeansError::RemoteFileMapLocalVersionNotFound {
+            expected: mod_version_file_content.clone(),
+        };
+        debug!("{:#?}", ex);
         error!(
-            "[version::generate_version_file] Local version not found in remote filemap. Has the remote filemap been updated?"
-        )
+            "[version::generate_version_file] Local version not found in remote filemap. Remote FileMap potentially outdated. {:#?}", ex
+        );
+        sentry::capture_error(&ex);
+        return Err(ex);
     }
-    // ---
+
     let mod_version_translation = AdastralVersionFile {
         // If this blows something up, my bad -Dani
         // Things no longer blow up :) -Dani
