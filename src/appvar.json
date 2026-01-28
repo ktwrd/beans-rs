@@ -1,11 +1,12 @@
 {
-  "mod": {
-    "sm_name": "pf2",
-    "short_name": "pf2",
-    "name_stylized": "Pre-Fortress 2"
-  },
-  "remote": {
-    "base_url": "https://dl.prefortress.com/beans/",
-    "versions_url": "https://dl.prefortress.com/beans/versions.json"
-  }
+	"mod": {
+		"sm_name": "pf2",
+		"short_name": "pf2",
+		"name_stylized": "Pre-Fortress 2"
+	},
+	"remote": {
+		"base_url": "https://dl.prefortress.com/beans/",
+		"versions_url": "https://dl.prefortress.com/beans/versions.json",
+		"filemap_url": "https://dl.prefortress.com/beans/filemap.json"
+	}
 }
