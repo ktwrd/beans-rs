@@ -7,6 +7,17 @@ on:
       tag:
         description: 'Github Release Tag'
         required: true
+      game_branch:
+        description: 'Game Branch to Compile'
+        required: false
+        default: 'main'
+        type: choice
+        options:
+          - main
+          - game/tf2c
+          - game/pf2
+
+run-name: Release (${{ inputs.game_branch }})
 
 jobs:
   release:
@@ -26,6 +37,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@master
+        with:
+          ref: ${{ inputs.game_branch }}
+
       - name: Install Build Dependencies (ubuntu)
         if: ${{ matrix.os == 'ubuntu-22.04' }}
         run: |
@@ -82,6 +96,7 @@ jobs:
           draft: false
           prerelease: true
           target_commitish: ${{ github.sha }}
+          
       #- name: Create Sentry release
       #  if: ${{ matrix.os == 'ubuntu-latest' }}
       #  uses: getsentry/action-release@v1
