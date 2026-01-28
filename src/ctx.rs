@@ -281,7 +281,6 @@ impl RunnerContext
     }
 
     /// Extract zstd_location to the detected sourcemods directory.
-    /// TODO replace unwrap/expect with match error handling
     pub fn extract_package(
         zstd_location: String,
         out_dir: String

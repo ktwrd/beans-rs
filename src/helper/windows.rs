@@ -13,7 +13,6 @@ use winreg::{RegKey,
 use crate::{BeansError,
             helper::format_directory_path};
 
-/// TODO use windows registry to get the SourceModInstallPath
 /// HKEY_CURRENT_USER\Software\Value\Steam
 /// Key: SourceModInstallPath
 pub fn find_sourcemod_path() -> Result<String, BeansError>
