@@ -217,7 +217,7 @@ pub fn has_gui_support() -> bool
 /// User agent for downloading files or sending web requests.
 pub fn get_user_agent() -> String
 {
-    let mut result = String::from("beans-rs/");
+    let mut result = String::from("wings/");
     result.push_str(&VERSION);
     result
 }
@@ -225,10 +225,12 @@ pub fn get_user_agent() -> String
 pub fn staging_dir() -> String
 {
     let av = AppVarData::get();
-    #[cfg(not(target_os = "windows"))] {
+    #[cfg(not(target_os = "windows"))]
+    {
         format!("/butler-staging-{}", av.mod_info.short_name)
     }
-    #[cfg(target_os = "windows")] {
+    #[cfg(target_os = "windows")]
+    {
         format!("\\butler-staging-{}", av.mod_info.short_name)
     }
 }

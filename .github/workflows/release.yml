@@ -19,21 +19,23 @@ on:
 
 run-name: Release (${{ inputs.game_branch }})
 
+run-name: Release ${{ inputs.tag }}
+
 jobs:
   release:
-    name: release ${{ matrix.os }}
+    name: Release ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-22.04
-            filename: 'beans-rs'
+            filename: 'wings'
             target: x86_64-unknown-linux-gnu
 
           - os: windows-2022
             target: x86_64-pc-windows-msvc
-            filename: 'beans-rs.exe'
+            filename: 'wings.exe'
 
     steps:
       - uses: actions/checkout@master
@@ -85,7 +87,7 @@ jobs:
           certificate: '${{ secrets.CODESIGN }}'
           password: '${{ secrets.CODESIGN_PASSWORD }}'
           folder: 'target/${{ matrix.target }}/release'
-          description: 'beans-rs'
+          description: 'wings'
           certificatesha1: '${{ secrets.CODESIGN_HASH }}'
 
       - name: Upload binaries to release
