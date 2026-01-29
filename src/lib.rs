@@ -217,7 +217,7 @@ pub fn has_gui_support() -> bool
 /// User agent for downloading files or sending web requests.
 pub fn get_user_agent() -> String
 {
-    let mut result = String::from("beans-rs/");
+    let mut result = String::from("wings/");
     result.push_str(&VERSION);
     result
 }

@@ -1,6 +1,6 @@
 use std::str::FromStr;
 
-use beans_rs::{BeansError,
+use wings::{BeansError,
                PANIC_MSG_CONTENT,
                RunnerContext,
                SourceModDirectoryParam,
@@ -38,7 +38,7 @@ fn main()
     init_flags();
     // initialize sentry and custom panic handler for msgbox
     #[cfg(not(debug_assertions))]
-    let _guard = sentry::init((beans_rs::SENTRY_URL, sentry::ClientOptions {
+    let _guard = sentry::init((wings::SENTRY_URL, sentry::ClientOptions {
         release: sentry::release_name!(),
         debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
         max_breadcrumbs: 100,
@@ -61,7 +61,7 @@ fn main()
 fn init_console()
 {
     winconsole::window::show(true);
-    if let Err(e) = winconsole::console::set_title(format!("beans v{}", beans_rs::VERSION).as_str())
+    if let Err(e) = winconsole::console::set_title(format!("wings v{}", wings::VERSION).as_str())
     {
         trace!("[init_console] failed to set console title {:#?}", e);
     }
@@ -92,20 +92,20 @@ fn init_flags()
     flags::remove_flag(LaunchFlag::DEBUG_MODE);
     #[cfg(debug_assertions)]
     flags::add_flag(LaunchFlag::DEBUG_MODE);
-    if beans_rs::env_debug()
+    if wings::env_debug()
     {
         flags::add_flag(LaunchFlag::DEBUG_MODE);
     }
     flags::add_flag(LaunchFlag::STANDALONE_APP);
-    beans_rs::logger::set_filter(DEFAULT_LOG_LEVEL);
-    beans_rs::logger::log_to_stdout();
+    wings::logger::set_filter(DEFAULT_LOG_LEVEL);
+    wings::logger::log_to_stdout();
 }
 
 fn init_panic_handle()
 {
     std::panic::set_hook(Box::new(move |info| {
         debug!("[panic::set_hook] showing msgbox to notify user");
-        let msg = beans_rs::helper::payload_message(info);
+        let msg = wings::helper::payload_message(info);
         info!("[panic] Fatal error!\n{:#?}", msg);
         custom_panic_handle(msg);
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
@@ -121,7 +121,7 @@ fn init_panic_handle()
 fn custom_panic_handle(msg: String)
 {
     unsafe {
-        if !beans_rs::PAUSE_ONCE_DONE
+        if !wings::PAUSE_ONCE_DONE
         {
             return;
         }
@@ -131,8 +131,8 @@ fn custom_panic_handle(msg: String)
         .replace("$err_msg", &msg)
         .replace("\\n", "\n");
 
-    beans_rs::gui::DialogBuilder::new()
-        .with_title(String::from("beans - Fatal Error!"))
+    wings::gui::DialogBuilder::new()
+        .with_title(String::from("wings - Fatal Error!"))
         .with_icon(DialogIconKind::Error)
         .with_content(txt)
         .run();
@@ -143,7 +143,7 @@ fn custom_panic_handle(msg: String)
 fn logic_done()
 {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE
+        if wings::PAUSE_ONCE_DONE
         {
             let _ = helper::get_input("Press enter/return to exit");
         }
@@ -167,7 +167,7 @@ impl Launcher
     {
         Arg::new("location")
             .long("location")
-            .help("Manually specify sourcemods directory. When not provided, beans-rs will automatically detect the sourcemods directory.")
+            .help("Manually specify sourcemods directory. When not provided, wings will automatically detect the sourcemods directory.")
             .required(false)
     }
     fn create_confirm_arg() -> Arg
@@ -180,7 +180,7 @@ impl Launcher
     }
     pub async fn run()
     {
-        let cmd = Command::new("beans-rs")
+        let cmd = Command::new("wings")
             .version(clap::crate_version!())
             .bin_name(clap::crate_name!())
             .subcommand(Command::new("wizard")
@@ -206,7 +206,7 @@ impl Launcher
                 .about("Update your installation")
                 .arg(Launcher::create_location_arg()))
             .subcommand(Command::new("clean-tmp")
-                .about("Clean up temporary files used by beans"))
+                .about("Clean up temporary files used by wings"))
             .subcommand(Command::new("uninstall")
                 .about("Uninstall the target Source Mod.")
                 .args([Launcher::create_location_arg()]))
@@ -221,7 +221,7 @@ impl Launcher
                     .action(ArgAction::SetTrue),
                 Arg::new("no-pause")
                     .long("no-pause")
-                    .help("When provided, beans-rs will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts.")
+                    .help("When provided, wings will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts.")
                     .action(ArgAction::SetTrue),
                 Self::create_location_arg(),
                 Self::create_confirm_arg()
@@ -230,7 +230,7 @@ impl Launcher
         let mut i = Self::new(&cmd.get_matches());
         if let Ok(Some(v)) = helper::beans_has_update().await
         {
-            info!("A new version of beans-rs is available!");
+            info!("A new version of wings is available!");
             info!("{}", v.html_url);
         }
         i.subcommand_processor().await;
@@ -256,13 +256,13 @@ impl Launcher
         if self.root_matches.get_flag("no-debug")
         {
             flags::remove_flag(LaunchFlag::DEBUG_MODE);
-            beans_rs::logger::set_filter(DEFAULT_LOG_LEVEL_RELEASE);
+            wings::logger::set_filter(DEFAULT_LOG_LEVEL_RELEASE);
             info!("Disabled Debug Mode");
         }
         else if self.root_matches.get_flag("debug")
         {
             flags::add_flag(LaunchFlag::DEBUG_MODE);
-            beans_rs::logger::set_filter(LevelFilter::max());
+            wings::logger::set_filter(LevelFilter::max());
             trace!("Debug mode enabled");
         }
     }
@@ -271,7 +271,7 @@ impl Launcher
     pub fn set_no_pause(&mut self)
     {
         unsafe {
-            beans_rs::PAUSE_ONCE_DONE = !self.root_matches.get_flag("no-pause");
+            wings::PAUSE_ONCE_DONE = !self.root_matches.get_flag("no-pause");
         }
     }
 
@@ -345,7 +345,7 @@ impl Launcher
         if self.root_matches.get_flag("confirm")
         {
             unsafe {
-                beans_rs::PROMPT_DO_WHATEVER = true;
+                wings::PROMPT_DO_WHATEVER = true;
             }
         }
     }
@@ -388,7 +388,7 @@ impl Launcher
         if matches.get_flag("confirm")
         {
             unsafe {
-                beans_rs::PROMPT_DO_WHATEVER = true;
+                wings::PROMPT_DO_WHATEVER = true;
             }
         }
 
@@ -595,8 +595,8 @@ impl Launcher
 
 fn show_msgbox_error(text: String)
 {
-    beans_rs::gui::DialogBuilder::new()
-        .with_title(String::from("beans - Fatal Error!"))
+    wings::gui::DialogBuilder::new()
+        .with_title(String::from("wings - Fatal Error!"))
         .with_icon(DialogIconKind::Error)
         .with_content(text.replace("\\n", "\n"))
         .run();

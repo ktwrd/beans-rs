@@ -30,7 +30,7 @@ impl Default for DialogBuilder
     fn default() -> Self
     {
         Self {
-            title: format!("beans v{}", crate::VERSION),
+            title: format!("wings v{}", crate::VERSION),
             content: String::new(),
             icon: None
         }

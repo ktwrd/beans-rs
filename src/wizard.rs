@@ -130,7 +130,7 @@ impl WizardContext
         println!("1 - Install or reinstall the game");
         println!("2 - Check for and apply any available updates");
         println!("3 - Verify and repair game files");
-        println!("c - Clean up temporary files used by beans.");
+        println!("c - Clean up temporary files used by wings.");
         println!("u - Uninstall {}", av.mod_info.name_stylized);
         println!();
         println!("q - Quit");

@@ -219,7 +219,7 @@ pub enum BeansError
         backtrace: Backtrace
     },
 
-    #[error("{name:} ({pid:}) is still running. Please close it and restart beans.")]
+    #[error("{name:} ({pid:}) is still running. Please close it and restart wings.")]
     GameStillRunning
     {
         name: String, pid: String

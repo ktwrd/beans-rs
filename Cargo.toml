@@ -1,5 +1,5 @@
 [package]
-name = "beans-rs"
+name = "wings"
 version = "1.7.4"
 edition = "2024"
 authors = [
@@ -9,7 +9,7 @@ authors = [
     "dead_thing (https://github.com/rawra89)"
 ]
 description = "Open-Source Installer for Sourcemods"
-repository = "https://github.com/ktwrd/beans-rs"
+repository = "https://github.com/Pre-Fortress-2/wings"
 license = "GPL-3.0"
 
 [dependencies]
