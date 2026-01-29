@@ -59,6 +59,7 @@ impl AppVarData
             .replace("$MOD_NAME", &self.mod_info.sourcemod_name)
             .replace("$URL_BASE", &self.remote_info.base_url)
             .replace("$URL_VERSIONS", &self.remote_info.versions_url)
+            .replace("$URL_FILEMAP", &self.remote_info.filemap_url)
     }
 
     /// Try and read the data from `AVD_INSTANCE` and return when some.
@@ -174,5 +175,8 @@ pub struct AppVarRemote
     pub base_url: String,
     /// url where the version details are stored.
     /// e.g; `https://beans.adastral.net/versions.json`
-    pub versions_url: String
+    pub versions_url: String,
+    /// optional: url where the file mapping details are stored for upgrading
+    /// game versions from previous systems. e.g; `https://beans.adastral.net/filemap.json`
+    pub filemap_url: String
 }

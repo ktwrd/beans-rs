@@ -8,9 +8,11 @@ on:
         description: 'Github Release Tag'
         required: true
 
+run-name: Release ${{ inputs.tag }}
+
 jobs:
   release:
-    name: release ${{ matrix.os }}
+    name: Release ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false

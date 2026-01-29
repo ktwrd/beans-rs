@@ -75,7 +75,8 @@ impl RunnerContext
         Ok(Self {
             sourcemod_path: parse_location(sourcemod_path.clone()),
             remote_version_list: version_list,
-            current_version: crate::version::get_current_version(Some(sourcemod_path.clone())),
+            current_version: crate::version::get_current_version(Some(sourcemod_path.clone()))
+                .await,
             appvar: AppVarData::get()
         })
     }
@@ -97,13 +98,13 @@ impl RunnerContext
     }
 
     /// Get staging location for butler.
-    /// {sourcemod_dir}{crate::STAGING_DIR}
+    /// {sourcemod_dir}{crate::staging_dir()}
     /// e.g; /home/kate/.var/app/com.valvesoftware.Steam/.local/share/Steam/
     /// steamapps/sourcemods/butler-staging      C:\Games\Steam\steamapps\
     /// sourcemods\butler-staging
     pub fn get_staging_location(&mut self) -> String
     {
-        helper::join_path(self.sourcemod_path.clone(), crate::STAGING_DIR.to_string())
+        helper::join_path(self.sourcemod_path.clone(), crate::staging_dir())
     }
 
     /// Get the latest item in `remote_version_list`
@@ -280,7 +281,6 @@ impl RunnerContext
     }
 
     /// Extract zstd_location to the detected sourcemods directory.
-    /// TODO replace unwrap/expect with match error handling
     pub fn extract_package(
         zstd_location: String,
         out_dir: String
