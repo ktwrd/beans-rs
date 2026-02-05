@@ -1,7 +1,9 @@
 use std::{backtrace::Backtrace,
           collections::HashMap,
-          fs::read_to_string,
-          io::Write};
+          fs::{read_to_string,
+               File},
+          io::{BufWriter,
+               Write}};
 
 use log::{debug,
           error,
@@ -39,6 +41,69 @@ pub fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
             Some(parsed)
         }
         None => None
+    }
+}
+
+/// set the version in the `.adastral` file in the sourcemod folder.
+/// will silently fail when install_state is not InstallType::Adastral, or the
+/// sourcemod isn't installed.
+pub fn set_current_version(
+    sourcemods_location: Option<String>,
+    new_version: usize
+) -> Result<(), BeansError>
+{
+    let install_state = helper::install_state(sourcemods_location.clone());
+    if install_state != InstallType::Adastral
+    {
+        return Ok(());
+    }
+    match get_mod_location(sourcemods_location)
+    {
+        Some(smp_x) =>
+        {
+            // TODO generate BeansError instead of using panic
+            let location = format!("{}.adastral", smp_x);
+            let file = match helper::file_exists(location.clone())
+            {
+                false => match File::create(&location)
+                {
+                    Ok(v) => v,
+                    Err(e) =>
+                    {
+                        return Err(BeansError::VersionFileWriteFailure {
+                            location: location.clone(),
+                            error: e
+                        });
+                    }
+                },
+                true => match File::open(&location)
+                {
+                    Ok(v) => v,
+                    Err(e) =>
+                    {
+                        return Err(BeansError::VersionFileOpenFailure {
+                            location: location.clone(),
+                            error: e
+                        });
+                    }
+                }
+            };
+            let data = AdastralVersionFile {
+                version: format!("{new_version}")
+            };
+            debug!("[set_current_version] location: {location:}, content: {data:?}");
+            let mut writer = BufWriter::new(file);
+            match serde_json::to_writer(&mut writer, &data)
+            {
+                Ok(_) => Ok(()),
+                Err(e) => Err(BeansError::VersionFileSerializeFailure {
+                    location: location.clone(),
+                    instance: data.clone(),
+                    error: e
+                })
+            }
+        }
+        None => Ok(()) // silently fail
     }
 }
 
