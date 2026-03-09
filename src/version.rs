@@ -1,7 +1,7 @@
 use std::{backtrace::Backtrace,
           collections::HashMap,
-          fs::{read_to_string,
-               File},
+          fs::{File,
+               read_to_string},
           io::{BufWriter,
                Write}};
 
