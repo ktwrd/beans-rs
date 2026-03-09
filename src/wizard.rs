@@ -138,7 +138,11 @@ impl WizardContext
         match user_input.to_lowercase().as_str()
         {
             "1" | "install" => WizardContext::menu_error_catch(self.task_install().await),
-            "2" | "update" => WizardContext::menu_error_catch(self.task_update().await),
+            "2" | "update" =>
+            {
+                WizardContext::menu_error_catch(self.task_update().await);
+                Self::menu_error_catch(CleanWorkflow::wizard(&mut self.context));
+            }
             "3" | "verify" => WizardContext::menu_error_catch(self.task_verify().await),
             "c" | "clean" => Self::menu_error_catch(CleanWorkflow::wizard(&mut self.context)),
             "u" | "uninstall" =>

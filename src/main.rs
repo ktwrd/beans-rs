@@ -319,6 +319,7 @@ impl Launcher
             Some(("update", u_matches)) =>
             {
                 self.task_update(u_matches).await;
+                self.task_clean_tmp().await;
             }
             Some(("uninstall", ui_matches)) =>
             {
