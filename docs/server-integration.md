@@ -42,6 +42,14 @@ In `versions.json` there are numerous variables that relate to different compone
 - `postsz`: "Post-Size" is the file of the contents of `file` component in bytes after extraction.
 - `tempreq`: The size required to temporarily store the `file` patch.
 
+You can use the following commands on linux to determine the `presz` and `postsz` values of your version:
+```sh
+du -s -B1 of-21.tar.zstd # presz
+du -s -B1 open_fortress # postsz
+```
+
+For `tempreq` it is recommended you approximate the value based on how much space would be required for both the patch file and the extracted files.
+
 ### Versions File Formatting
 
 Here is an example of how to format a `versions.json` file. 
