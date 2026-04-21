@@ -47,10 +47,10 @@ image = { version = "0.25.8", features = ["png"] }
 fl2rust = "0.7.1"
 
 [target.'cfg(target_os = "windows")'.dependencies]
-winconsole = { version = "0.11.1", features = ["window"] }
 winreg = "0.55.0"
 widestring = "1.2.1"
-windows = { version = "0.62.2", features = ["Win32_System_IO", "Win32_Storage_FileSystem"] }
+windows = { version = "0.62.2", features = ["Win32_Storage_FileSystem", "Win32_System_Console", "Win32_UI_WindowsAndMessaging"] }
+windows-result = "0.4.1"
 dunce = "1.0.5"
 
 [dependencies.sentry]

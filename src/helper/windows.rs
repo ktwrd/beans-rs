@@ -5,12 +5,24 @@ use std::{backtrace::Backtrace,
 use bitflags::bitflags;
 use log::debug;
 use widestring::U16String;
-use windows::{Win32::Storage::FileSystem::*,
+use windows::{Win32::{Storage::FileSystem::*,
+                      System::Console::{CONSOLE_MODE,
+                                        ENABLE_EXTENDED_FLAGS,
+                                        ENABLE_QUICK_EDIT_MODE,
+                                        GetConsoleMode,
+                                        GetConsoleWindow,
+                                        GetStdHandle,
+                                        STD_INPUT_HANDLE,
+                                        SetConsoleMode,
+                                        SetConsoleTitleW},
+                      UI::WindowsAndMessaging::{SW_SHOW,
+                                                ShowWindow}},
               core::PCWSTR};
 use winreg::{RegKey,
              enums::HKEY_CURRENT_USER};
 
 use crate::{BeansError,
+            BeansInternalError,
             helper::format_directory_path};
 
 /// TODO use windows registry to get the SourceModInstallPath
@@ -124,6 +136,109 @@ fn set_file_attributes_win<P: AsRef<OsStr>>(
         }
     }
     Ok(())
+}
+
+pub fn window_show() -> bool
+{
+    unsafe {
+        let handle = GetConsoleWindow();
+        ShowWindow(handle, SW_SHOW).into()
+    }
+}
+pub fn window_set_title(value: &str) -> Result<(), BeansInternalError>
+{
+    let value_str = U16String::from_str(value);
+    unsafe {
+        let lp_title = PCWSTR(value_str.as_ptr());
+        if let Err(error) = SetConsoleTitleW(lp_title)
+        {
+            return Err(BeansInternalError::WindowsError {
+                error,
+                message: format!("Failed to update console window title"),
+                backtrace: std::backtrace::Backtrace::capture()
+            });
+        }
+    }
+    Ok(())
+}
+pub fn window_get_input_mode() -> Result<u32, BeansInternalError>
+{
+    let mut mode = CONSOLE_MODE(0);
+    let stdin_handle = STD_INPUT_HANDLE;
+    unsafe {
+        let handle = match GetStdHandle(stdin_handle)
+        {
+            Ok(v) => v,
+            Err(error) =>
+            {
+                return Err(BeansInternalError::WindowsError {
+                    error,
+                    message: format!("Failed to get StdHandle {:#010x}", stdin_handle.0),
+                    backtrace: std::backtrace::Backtrace::capture()
+                });
+            }
+        };
+        if let Err(error) = GetConsoleMode(handle, &mut mode)
+        {
+            return Err(BeansInternalError::WindowsError {
+                error,
+                message: format!("Failed to get input mode for {:?}", handle.0),
+                backtrace: std::backtrace::Backtrace::capture()
+            });
+        }
+    }
+    Ok(mode.0)
+}
+pub fn window_set_input_mode(mode: CONSOLE_MODE) -> Result<(), BeansInternalError>
+{
+    unsafe {
+        let stdin_handle = STD_INPUT_HANDLE;
+        let handle = match GetStdHandle(stdin_handle)
+        {
+            Ok(v) => v,
+            Err(error) =>
+            {
+                return Err(BeansInternalError::WindowsError {
+                    error,
+                    message: format!("Failed to get StdHandle {:#010x}", stdin_handle.0),
+                    backtrace: std::backtrace::Backtrace::capture()
+                });
+            }
+        };
+        if let Err(error) = SetConsoleMode(handle, mode)
+        {
+            return Err(BeansInternalError::WindowsError {
+                error,
+                message: format!("Failed to set input mode to {:#010x} for stdin", mode.0),
+                backtrace: std::backtrace::Backtrace::capture()
+            });
+        }
+    }
+    Ok(())
+}
+pub fn console_disable_quick_input() -> Result<(), BeansError>
+{
+    let mut input_mode = match window_get_input_mode()
+    {
+        Ok(value) => CONSOLE_MODE(value),
+        Err(error) =>
+        {
+            return Err(BeansError::WindowsDisableQuickEdit {
+                error,
+                backtrace: std::backtrace::Backtrace::capture()
+            });
+        }
+    };
+    input_mode &= !ENABLE_QUICK_EDIT_MODE;
+    input_mode |= ENABLE_EXTENDED_FLAGS;
+    match window_set_input_mode(input_mode)
+    {
+        Ok(_) => Ok(()),
+        Err(error) => Err(BeansError::WindowsDisableQuickEdit {
+            error,
+            backtrace: std::backtrace::Backtrace::capture()
+        })
+    }
 }
 
 fn get_windows_file_attributes<P: AsRef<std::path::Path>>(

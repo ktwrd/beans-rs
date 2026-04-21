@@ -60,25 +60,16 @@ fn main()
 #[cfg(target_os = "windows")]
 fn init_console()
 {
-    winconsole::window::show(true);
-    if let Err(e) = winconsole::console::set_title(format!("beans v{}", beans_rs::VERSION).as_str())
+    beans_rs::helper::window_show();
+
+    if let Err(e) =
+        beans_rs::helper::window_set_title(format!("beans v{}", beans_rs::VERSION).as_str())
     {
         trace!("[init_console] failed to set console title {:#?}", e);
     }
-    if let Ok(mut input_mode) = winconsole::console::get_input_mode()
+    if let Err(error) = beans_rs::helper::console_disable_quick_input()
     {
-        if input_mode.QuickEditMode
-        {
-            input_mode.QuickEditMode = false;
-            if let Err(e) = winconsole::console::set_input_mode(input_mode)
-            {
-                debug!(
-                    "[init_console] failed to disable console flag QuickEditMode {:#?}",
-                    e
-                );
-                warn!("[init_console] failed to disable Quick Edit mode ({:})", e);
-            }
-        }
+        warn!("[init_console] {:}", error);
     }
 }
 #[cfg(not(target_os = "windows"))]

@@ -267,8 +267,30 @@ pub enum BeansError
         hresult_msg: String,
         location: String,
         backtrace: Backtrace
+    },
+
+    #[cfg(target_os = "windows")]
+    #[error("Failed to disable QuickEdit: {error}")]
+    WindowsDisableQuickEdit
+    {
+        error: BeansInternalError,
+        backtrace: Backtrace
     }
 }
+
+#[derive(Debug, Error)]
+pub enum BeansInternalError
+{
+    #[cfg(target_os = "windows")]
+    #[error("{message} ({error:})")]
+    WindowsError
+    {
+        error: windows_result::Error,
+        message: String,
+        backtrace: Backtrace
+    }
+}
+
 #[derive(Debug)]
 pub enum Aria2cExitCodeReason
 {
