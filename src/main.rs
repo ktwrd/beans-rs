@@ -319,7 +319,6 @@ impl Launcher
             Some(("update", u_matches)) =>
             {
                 self.task_update(u_matches).await;
-                self.task_clean_tmp().await;
             }
             Some(("uninstall", ui_matches)) =>
             {
@@ -512,6 +511,10 @@ impl Launcher
         if let Err(e) = UpdateWorkflow::wizard(&mut ctx).await
         {
             panic!("Failed to run UpdateWorkflow {:#?}", e);
+        }
+        else if let Err(e) = CleanWorkflow::wizard(&mut ctx)
+        {
+            panic!("Failed to run CleanWorkflow {:#?}", e);
         }
         else
         {
