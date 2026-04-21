@@ -225,10 +225,12 @@ pub fn get_user_agent() -> String
 pub fn staging_dir() -> String
 {
     let av = AppVarData::get();
-    #[cfg(not(target_os = "windows"))] {
+    #[cfg(not(target_os = "windows"))]
+    {
         format!("/butler-staging-{}", av.mod_info.short_name)
     }
-    #[cfg(target_os = "windows")] {
+    #[cfg(target_os = "windows")]
+    {
         format!("\\butler-staging-{}", av.mod_info.short_name)
     }
 }
