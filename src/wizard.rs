@@ -183,21 +183,18 @@ impl WizardContext
     /// Check for any updates, and if there are any, we install them.
     pub async fn task_update(&mut self) -> Result<(), BeansError>
     {
-        let mut result = UpdateWorkflow::wizard(&mut self.context).await;
-        
-        if let Err(e) = &result
+        if let Err(e) = UpdateWorkflow::wizard(&mut self.context).await
         {
             error!("Failed to run UpdateWorkflow {:#?}", e);
-            return result;
+            return Err(e);
         }
-        
-        result = CleanWorkflow::wizard(&mut self.context);
-        if let Err(e) = &result
+
+        if let Err(e) = CleanWorkflow::wizard(&mut self.context)
         {
             error!("Failed to run CleanWorkflow {:#?}", e);
-            return result
+            return Err(e);
         }
-        return result;
+        Ok(())
     }
     /// Verify the current data for the target sourcemod.
     pub async fn task_verify(&mut self) -> Result<(), BeansError>
