@@ -228,7 +228,7 @@ impl Launcher
             ]);
         println!("{} v{} ({})", env!("CARGO_PKG_NAME"), beans_rs::VERSION, COMPILED_ON);
         println!("Copyright (c) 2024 Kate Ward");
-        println!("License {}-only", env!("CARGO_PKG_LICENSE"));
+        println!("License {}", env!("CARGO_PKG_LICENSE"));
         println!();
         println!("For a full list of contributors visit:");
         println!("<{}/graphs/contributors>", env!("CARGO_PKG_REPOSITORY"));

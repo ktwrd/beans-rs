@@ -10,7 +10,7 @@ authors = [
 ]
 description = "Open-Source Installer for Sourcemods"
 repository = "https://github.com/ktwrd/beans-rs"
-license = "GPL-3.0"
+license = "GPL-3.0-only"
 
 [dependencies]
 async-recursion = "1.1.1"
