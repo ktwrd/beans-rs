@@ -226,7 +226,19 @@ impl Launcher
                 Self::create_location_arg(),
                 Self::create_confirm_arg()
             ]);
-
+        print!("beans-rs v{} ", beans_rs::VERSION );
+        #[cfg(not(target_os = "windows"))] {
+            print!("(x86_64 Linux) ");
+        }
+        #[cfg(target_os = "windows")] {
+            print!("(x86_64 Windows) ");
+        }
+        println!("Copyright (c) 2024 Kate Ward");
+        println!("License GPLv3-only\n");
+        println!("For a full list of contributors visit:");
+        println!("<https://github.com/ktwrd/beans-rs/graphs/contributors>");
+        println!();
+        
         let mut i = Self::new(&cmd.get_matches());
         if let Ok(Some(v)) = helper::beans_has_update().await
         {
