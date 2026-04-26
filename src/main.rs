@@ -226,8 +226,10 @@ impl Launcher
                 Self::create_location_arg(),
                 Self::create_confirm_arg()
             ]);
-        println!("beans-rs v{} ({}) Copyright (c) 2024 Kate Ward", beans_rs::VERSION, COMPILED_ON);
-        println!("License GPLv3-only\n");
+        println!("beans-rs v{} ({})", beans_rs::VERSION, COMPILED_ON);
+        println!("Copyright (c) 2024 Kate Ward");
+        println!("License GPLv3-only");
+        println!();
         println!("For a full list of contributors visit:");
         println!("<https://github.com/ktwrd/beans-rs/graphs/contributors>");
         println!();
