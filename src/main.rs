@@ -1,5 +1,5 @@
 use std::str::FromStr;
-
+use current_platform::COMPILED_ON;
 use beans_rs::{BeansError,
                PANIC_MSG_CONTENT,
                RunnerContext,
@@ -226,14 +226,7 @@ impl Launcher
                 Self::create_location_arg(),
                 Self::create_confirm_arg()
             ]);
-        print!("beans-rs v{} ", beans_rs::VERSION );
-        #[cfg(not(target_os = "windows"))] {
-            print!("(x86_64 Linux) ");
-        }
-        #[cfg(target_os = "windows")] {
-            print!("(x86_64 Windows) ");
-        }
-        println!("Copyright (c) 2024 Kate Ward");
+        println!("beans-rs v{} ({}) Copyright (c) 2024 Kate Ward", beans_rs::VERSION, COMPILED_ON);
         println!("License GPLv3-only\n");
         println!("For a full list of contributors visit:");
         println!("<https://github.com/ktwrd/beans-rs/graphs/contributors>");
