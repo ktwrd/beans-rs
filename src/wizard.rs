@@ -123,10 +123,10 @@ impl WizardContext
                         "======== A new update for {} is available! (latest: v{}, current: v{}) ========",
                         av.mod_info.name_stylized, rv, cv
                     );
+                    println!();
                 }
             }
         }
-        println!();
         println!("1 - Install or reinstall the game");
         println!("2 - Check for and apply any available updates");
         println!("3 - Verify and repair game files");
