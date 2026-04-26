@@ -226,12 +226,12 @@ impl Launcher
                 Self::create_location_arg(),
                 Self::create_confirm_arg()
             ]);
-        println!("beans-rs v{} ({})", beans_rs::VERSION, COMPILED_ON);
+        println!("{} v{} ({})", env!("CARGO_PKG_NAME"), beans_rs::VERSION, COMPILED_ON);
         println!("Copyright (c) 2024 Kate Ward");
-        println!("License GPLv3-only");
+        println!("License {}-only", env!("CARGO_PKG_LICENSE"));
         println!();
         println!("For a full list of contributors visit:");
-        println!("<https://github.com/ktwrd/beans-rs/graphs/contributors>");
+        println!("<{}/graphs/contributors>", env!("CARGO_PKG_REPOSITORY"));
         println!();
         
         let mut i = Self::new(&cmd.get_matches());
