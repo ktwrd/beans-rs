@@ -519,6 +519,10 @@ impl Launcher
         {
             panic!("Failed to run UpdateWorkflow {:#?}", e);
         }
+        else if let Err(e) = CleanWorkflow::wizard(&mut ctx)
+        {
+            panic!("Failed to run CleanWorkflow {:#?}", e);
+        }
         else
         {
             logic_done();
