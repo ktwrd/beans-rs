@@ -20,7 +20,7 @@ use log::{debug,
           error,
           trace,
           warn};
-use rand::{Rng,
+use rand::{RngExt,
            distr::Alphanumeric};
 use reqwest::header::USER_AGENT;
 #[cfg(target_os = "windows")]
