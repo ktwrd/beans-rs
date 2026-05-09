@@ -32,10 +32,17 @@ pub fn get_current_version(sourcemods_location: Option<String>) -> Option<usize>
             let location = format!("{}.adastral", smp_x);
             let content =
                 read_to_string(&location).unwrap_or_else(|_| panic!("Failed to open {}", location));
-            let data: AdastralVersionFile = serde_json::from_str(&content)
-                .unwrap_or_else(|_| panic!("Failed to deserialize data at {}", location));
+            let data: AdastralVersionFile = serde_json::from_str(&content).unwrap_or_else(|_| {
+                panic!(
+                    "Failed to deserialize data at \"{:}\" with content:\n{:#?}",
+                    location, content
+                )
+            });
             let parsed = data.version.parse::<usize>().unwrap_or_else(|_| {
-                panic!("Failed to convert version to usize! ({})", data.version)
+                panic!(
+                    "Failed to convert version ({}) to usize!\nLocation:{}\nContent: {}",
+                    data.version, location, content
+                );
             });
 
             Some(parsed)
@@ -268,20 +275,46 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
 pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
 {
     let av = AppVarData::get();
-    let response = match reqwest::get(&av.remote_info.versions_url).await
+    let user_agent = crate::get_user_agent();
+    let client = match reqwest::Client::builder().user_agent(&user_agent).build()
     {
         Ok(v) => v,
         Err(e) =>
         {
-            error!(
-                "[version::get_version_list] Failed to get available versions! {:}",
-                e
+            let message = format!(
+                "Failed to create reqwest client (with user agent: {:})",
+                user_agent
             );
-            sentry::capture_error(&e);
-            return Err(BeansError::Reqwest {
+            error!("[version::get_version_list] {message:} {:}", e);
+            let error = BeansError::Reqwest {
+                error_message: message,
                 error: e,
                 backtrace: Backtrace::capture()
-            });
+            };
+            trace!("[version::get_version_list] {:#?}", error);
+            sentry::capture_error(&error);
+            return Err(error);
+        }
+    };
+
+    let response = match client.get(&av.remote_info.versions_url).send().await
+    {
+        Ok(v) => v,
+        Err(e) =>
+        {
+            let message = format!(
+                "Failed to get available versions from URL {:}",
+                av.remote_info.versions_url
+            );
+            error!("[version::get_version_list] {message} {:}", e);
+            let error = BeansError::Reqwest {
+                error_message: message,
+                error: e,
+                backtrace: Backtrace::capture()
+            };
+            trace!("[version::get_version_list] {:#?}", error);
+            sentry::capture_error(&error);
+            return Err(error);
         }
     };
     let response_text = response.text().await?;
@@ -291,7 +324,23 @@ pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
     );
 
     let data: RemoteVersionResponse = serde_json::from_str(&response_text)?;
-    Ok(data)
+    match serde_json::from_str(&response_text)
+    {
+        Ok(v) => Ok(v),
+        Err(e) =>
+        {
+            let error = BeansError::SerdeJson {
+                content: Some(response_text),
+                error: e,
+                backtrace: Backtrace::capture()
+            };
+            trace!(
+                "[version::get_version_list] failed to deserialize response from {:}\nerror: {:#?}",
+                av.remote_info.versions_url, error
+            );
+            Err(error)
+        }
+    }
 }
 
 /// Version file that is used as `.adastral` in the sourcemod mod folder.

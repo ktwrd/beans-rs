@@ -1,5 +1,5 @@
 use std::str::FromStr;
-use current_platform::COMPILED_ON;
+
 use beans_rs::{BeansError,
                PANIC_MSG_CONTENT,
                RunnerContext,
@@ -19,6 +19,7 @@ use clap::{Arg,
            ArgAction,
            ArgMatches,
            Command};
+use current_platform::COMPILED_ON;
 use log::{LevelFilter,
           debug,
           error,
@@ -226,14 +227,19 @@ impl Launcher
                 Self::create_location_arg(),
                 Self::create_confirm_arg()
             ]);
-        println!("{} v{} ({})", env!("CARGO_PKG_NAME"), beans_rs::VERSION, COMPILED_ON);
+        println!(
+            "{} v{} ({})",
+            env!("CARGO_PKG_NAME"),
+            beans_rs::VERSION,
+            COMPILED_ON
+        );
         println!("Copyright (c) 2024 Kate Ward");
         println!("License {}", env!("CARGO_PKG_LICENSE"));
         println!();
         println!("For a full list of contributors visit:");
         println!("<{}/graphs/contributors>", env!("CARGO_PKG_REPOSITORY"));
         println!();
-        
+
         let mut i = Self::new(&cmd.get_matches());
         if let Ok(Some(v)) = helper::beans_has_update().await
         {
