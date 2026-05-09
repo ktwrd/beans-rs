@@ -45,6 +45,7 @@ fn main()
         max_breadcrumbs: 100,
         auto_session_tracking: true,
         attach_stacktrace: true,
+        enable_logs: true,
         ..Default::default()
     }));
     init_panic_handle();
