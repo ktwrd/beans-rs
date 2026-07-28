@@ -20,7 +20,7 @@ use log::{debug,
           error,
           trace,
           warn};
-use rand::{Rng,
+use rand::{RngExt,
            distr::Alphanumeric};
 use reqwest::header::USER_AGENT;
 #[cfg(target_os = "windows")]
@@ -782,9 +782,10 @@ pub fn get_tmp_file(filename: String) -> String
 /// the current release.
 pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
 {
+    let user_agent = crate::get_user_agent();
     let rs = reqwest::Client::new()
         .get(GITHUB_RELEASES_URL)
-        .header(USER_AGENT, &format!("beans-rs/{}", crate::VERSION))
+        .header(USER_AGENT, &user_agent)
         .send()
         .await;
     let response = match rs
@@ -792,11 +793,15 @@ pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
         Ok(v) => v,
         Err(e) =>
         {
-            trace!("Failed get latest release from github \nerror: {:#?}", e);
-            return Err(BeansError::Reqwest {
+            let message =
+                format!("Failed to get latest release from github: {GITHUB_RELEASES_URL:}");
+            let err = BeansError::Reqwest {
+                error_message: message,
                 error: e,
                 backtrace: Backtrace::capture()
-            });
+            };
+            trace!("[helper::beans_has_update] {:#?}", err);
+            return Err(err);
         }
     };
     let response_text = response.text().await?;
@@ -805,17 +810,18 @@ pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
         Ok(v) => v,
         Err(e) =>
         {
-            trace!(
-                "Failed to deserialize GithubReleaseItem\nerror: {:#?}\ncontent: {:#?}",
-                e, response_text
-            );
-            return Err(BeansError::SerdeJson {
+            let error = BeansError::SerdeJson {
                 error: e,
+                content: Some(response_text),
                 backtrace: Backtrace::capture()
-            });
+            };
+            trace!(
+                "[beans_rs::beans_has_update] Failed to deserialize GithubReleaseItem from URL {GITHUB_RELEASES_URL:}\n{error:#?}"
+            );
+            return Err(error);
         }
     };
-    trace!("{:#?}", data);
+    trace!("[beans_rs::beans_has_update] response data from URL {GITHUB_RELEASES_URL:}\n{data:#?}");
     if !data.draft && !data.prerelease && data.tag_name != format!("v{}", crate::VERSION)
     {
         return Ok(Some(data.clone()));

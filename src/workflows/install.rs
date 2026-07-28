@@ -130,7 +130,8 @@ impl InstallWorkflow
         .await?;
         if helper::file_exists(presz_loc.clone())
         {
-            std::fs::remove_file(presz_loc)?;
+            std::fs::remove_file(presz_loc.clone())?;
+            debug!("[InstallWorkflow::install_with_remote_version] removed package {presz_loc:?}");
         }
         Ok(())
     }

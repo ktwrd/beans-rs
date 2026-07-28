@@ -19,6 +19,7 @@ use clap::{Arg,
            ArgAction,
            ArgMatches,
            Command};
+use current_platform::COMPILED_ON;
 use log::{LevelFilter,
           debug,
           error,
@@ -226,6 +227,18 @@ impl Launcher
                 Self::create_location_arg(),
                 Self::create_confirm_arg()
             ]);
+        println!(
+            "{} v{} ({})",
+            env!("CARGO_PKG_NAME"),
+            beans_rs::VERSION,
+            COMPILED_ON
+        );
+        println!("Copyright (c) 2024 Kate Ward");
+        println!("License {}", env!("CARGO_PKG_LICENSE"));
+        println!();
+        println!("For a full list of contributors visit:");
+        println!("<{}/graphs/contributors>", env!("CARGO_PKG_REPOSITORY"));
+        println!();
 
         let mut i = Self::new(&cmd.get_matches());
         if let Ok(Some(v)) = helper::beans_has_update().await
@@ -511,6 +524,10 @@ impl Launcher
         if let Err(e) = UpdateWorkflow::wizard(&mut ctx).await
         {
             panic!("Failed to run UpdateWorkflow {:#?}", e);
+        }
+        else if let Err(e) = CleanWorkflow::wizard(&mut ctx)
+        {
+            panic!("Failed to run CleanWorkflow {:#?}", e);
         }
         else
         {

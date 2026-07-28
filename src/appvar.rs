@@ -1,4 +1,5 @@
-use std::sync::RwLock;
+use std::{backtrace::Backtrace,
+          sync::RwLock};
 
 use lazy_static::lazy_static;
 use log::{debug,
@@ -33,17 +34,33 @@ impl AppVarData
     pub fn parse() -> Self
     {
         debug!("[AppVarData::parse] trying to get JSON_DATA");
-        let x = JSON_DATA.read();
-        if let Ok(data) = x
+        match JSON_DATA.read()
         {
-            debug!("[AppVarData::parse] JSON_DATA= {:#?}", data);
-            return serde_json::from_str(&data).expect("Failed to deserialize JSON_DATA");
+            Ok(data) =>
+            {
+                debug!("[AppVarData::parse] JSON_DATA= {:#?}", data);
+                match serde_json::from_str(&data)
+                {
+                    Ok(v) => v,
+                    Err(e) =>
+                    {
+                        let error = BeansError::SerdeJson {
+                            content: Some(format!("{data}")),
+                            error: e,
+                            backtrace: Backtrace::capture()
+                        };
+                        panic!(
+                            "Failed to deserialize embedded appvar.json!!!\n{:#?}",
+                            error
+                        );
+                    }
+                }
+            }
+            Err(e) =>
+            {
+                panic!("[AppVarData::parse] Failed to read JSON_DATA {:#?}", e);
+            }
         }
-        if let Err(e) = x
-        {
-            panic!("[AppVarData::parse] Failed to read JSON_DATA {:#?}", e);
-        }
-        unreachable!();
     }
 
     /// Substitute values in the `source` string for what is defined in here.

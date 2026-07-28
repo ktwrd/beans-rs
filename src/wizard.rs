@@ -123,10 +123,10 @@ impl WizardContext
                         "======== A new update for {} is available! (latest: v{}, current: v{}) ========",
                         av.mod_info.name_stylized, rv, cv
                     );
+                    println!();
                 }
             }
         }
-        println!();
         println!("1 - Install or reinstall the game");
         println!("2 - Check for and apply any available updates");
         println!("3 - Verify and repair game files");
@@ -183,7 +183,18 @@ impl WizardContext
     /// Check for any updates, and if there are any, we install them.
     pub async fn task_update(&mut self) -> Result<(), BeansError>
     {
-        UpdateWorkflow::wizard(&mut self.context).await
+        if let Err(e) = UpdateWorkflow::wizard(&mut self.context).await
+        {
+            error!("Failed to run UpdateWorkflow {:#?}", e);
+            return Err(e);
+        }
+
+        if let Err(e) = CleanWorkflow::wizard(&mut self.context)
+        {
+            error!("Failed to run CleanWorkflow {:#?}", e);
+            return Err(e);
+        }
+        Ok(())
     }
     /// Verify the current data for the target sourcemod.
     pub async fn task_verify(&mut self) -> Result<(), BeansError>

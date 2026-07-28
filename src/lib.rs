@@ -217,9 +217,8 @@ pub fn has_gui_support() -> bool
 /// User agent for downloading files or sending web requests.
 pub fn get_user_agent() -> String
 {
-    let mut result = String::from("beans-rs/");
-    result.push_str(&VERSION);
-    result
+    let av = crate::AppVarData::get();
+    format!("beans-rs/{:} ({:})", VERSION, av.mod_info.sourcemod_name)
 }
 
 pub fn staging_dir() -> String

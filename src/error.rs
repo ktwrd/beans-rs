@@ -62,16 +62,18 @@ pub enum BeansError
         error: std::io::Error,
         backtrace: Backtrace
     },
-    #[error("Failed to send request ({error:})")]
+    #[error("Failed to send request: {error_message:} ({error:})")]
     Reqwest
     {
+        error_message: String,
         error: reqwest::Error,
         backtrace: Backtrace
     },
-    #[error("Failed to serialize or deserialize data ({error:})")]
+    #[error("Failed to serialize or deserialize data ({error:})\n{content:?}")]
     SerdeJson
     {
         error: serde_json::Error,
+        content: Option<String>,
         backtrace: Backtrace
     },
 
@@ -478,6 +480,7 @@ impl From<reqwest::Error> for BeansError
     fn from(e: reqwest::Error) -> Self
     {
         BeansError::Reqwest {
+            error_message: String::from("Failed to process request"),
             error: e,
             backtrace: Backtrace::capture()
         }
@@ -489,6 +492,7 @@ impl From<serde_json::Error> for BeansError
     {
         BeansError::SerdeJson {
             error: e,
+            content: None,
             backtrace: Backtrace::capture()
         }
     }
