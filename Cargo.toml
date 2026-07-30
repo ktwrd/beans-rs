@@ -65,7 +65,10 @@ features = [
     "release-health",
     
     "reqwest",
-    "rustls"
+    "rustls",
+
+    "logs",
+    "log"
 ]
 
 
