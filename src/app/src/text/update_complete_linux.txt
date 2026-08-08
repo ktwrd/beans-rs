@@ -1,0 +1,13 @@
+
+Update complete! Make sure that the following is done;
+  1. Make sure that Source SDK Base 2013 Multiplayer is updated
+  2. Use the "previous2021" branch for Source SDK Base 2013 Multiplayer
+  3. Make sure that Team Fortress 2 has been updated
+  4. Make sure that Open Fortress AND Source SDK Base 2013 Multiplayer
+     is using Proton Experimental.
+  5. Launch $MOD_NAME_STYLIZED
+
+-- Important --
+Make sure that Proton Experimental is enabled for Source SDK Base 2013 Multiplayer!
+
+Use the "previous2021" branch for Source SDK Base 2013 Multiplayer
