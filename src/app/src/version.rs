@@ -6,6 +6,14 @@ use std::{backtrace::Backtrace,
                Read,
                Write}};
 
+use beans_core::{BeansError,
+                 appvar::AppVarData,
+                 data_dir,
+                 get_user_agent,
+                 path::{file_exists,
+                        join_path,
+                        path_exists},
+                 version::AdastralVersionFile};
 use log::{debug,
           error,
           trace};
@@ -13,11 +21,9 @@ use serde_json::{self};
 use valve_pak::{VPK,
                 VPKFile};
 
-use crate::{BeansError,
-            appvar::AppVarData,
-            helper::{self,
-                     InstallType,
-                     find_sourcemod_path}};
+use crate::helper::{self,
+                    InstallType,
+                    find_sourcemod_path};
 
 /// get the current version installed via the .adastral file in the sourcemod
 /// mod folder. will parse the value of `version` as usize.
@@ -148,7 +154,7 @@ async fn read_mod_version_file(
     let mod_pak_full_path = mod_path.clone() + &files.pack_file;
 
     // Check regular sourcemod directory
-    if helper::path_exists(mod_version_full_path.clone())
+    if path_exists(mod_version_full_path.clone())
     {
         let mut mod_version_file = File::open(mod_version_full_path.clone())?;
         let version_content = &mut String::new();
@@ -173,7 +179,7 @@ async fn read_mod_version_file(
         return Ok(version_content.trim().to_owned().clone());
     }
     // else check inside vpk
-    else if helper::path_exists(mod_pak_full_path.clone())
+    else if path_exists(mod_pak_full_path.clone())
     {
         let mod_pack_file: VPK = match VPK::open(mod_pak_full_path.clone())
         {
@@ -303,7 +309,7 @@ async fn generate_version_file(
         // Things no longer blow up :) -Dani
         version: adastral_value.clone()
     };
-    match mod_version_translation.write(Some(sourcemods_location.clone()))
+    match adastral_version_write(&mod_version_translation, Some(sourcemods_location.clone()))
     {
         Ok(v) => v,
         Err(e) =>
@@ -348,7 +354,7 @@ pub fn set_current_version(
         {
             // TODO generate BeansError instead of using panic
             let location = format!("{}.adastral", smp_x);
-            let file = match helper::file_exists(location.clone())
+            let file = match file_exists(location.clone())
             {
                 false => match File::create(&location)
                 {
@@ -418,7 +424,7 @@ fn get_mod_location(sourcemods_location: Option<String>) -> Option<String>
             }
         }
     };
-    Some(helper::join_path(smp_x, crate::data_dir()))
+    Some(join_path(smp_x, data_dir()))
 }
 
 /// migrate from old file (.revision) to new file (.adastral) in sourcemod mod
@@ -472,7 +478,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                 }
             };
 
-            let data_dir = helper::join_path(smp_x, crate::data_dir());
+            let data_dir = join_path(smp_x, data_dir());
 
             let old_version_file_location = format!("{}.revision", &data_dir);
             let old_version_file_content = match read_to_string(&old_version_file_location)
@@ -553,7 +559,7 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
 pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
 {
     let av = AppVarData::get();
-    let user_agent = crate::get_user_agent();
+    let user_agent = get_user_agent();
     let client = match reqwest::Client::builder().user_agent(&user_agent).build()
     {
         Ok(v) => v,
@@ -650,51 +656,43 @@ pub async fn get_file_map() -> Result<RemoteFileMapResponse, BeansError>
     Ok(data)
 }
 
-/// Version file that is used as `.adastral` in the sourcemod mod folder.
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct AdastralVersionFile
+pub fn adastral_version_write(
+    instance: &AdastralVersionFile,
+    sourcemods_location: Option<String>
+) -> Result<(), BeansError>
 {
-    pub version: String
-}
-
-impl AdastralVersionFile
-{
-    pub fn write(
-        &self,
-        sourcemods_location: Option<String>
-    ) -> Result<(), BeansError>
+    let version_location = match get_version_location(sourcemods_location)
     {
-        match get_version_location(sourcemods_location)
+        Some(v) => v,
+        None =>
         {
-            Some(vl) =>
-            {
-                let f = match helper::file_exists(vl.clone())
-                {
-                    true => std::fs::File::create(vl.clone()),
-                    false => std::fs::File::create_new(vl.clone())
-                };
-                match f
-                {
-                    Ok(mut file) => match serde_json::to_string(self)
-                    {
-                        Ok(ser) => match file.write_all(ser.as_bytes())
-                        {
-                            Ok(_) => Ok(()),
-                            Err(e) => Err(BeansError::FileWriteFailure {
-                                location: vl,
-                                error: e
-                            })
-                        },
-                        Err(e) => Err(e.into())
-                    },
-                    Err(e) => Err(BeansError::FileOpenFailure {
-                        location: vl,
-                        error: e
-                    })
-                }
-            }
-            None => Err(BeansError::SourceModLocationNotFound)
+            return Err(BeansError::SourceModLocationNotFound);
         }
+    };
+
+    let f = match file_exists(version_location.clone())
+    {
+        true => File::create(version_location.clone()),
+        false => File::create_new(version_location.clone())
+    };
+    match f
+    {
+        Ok(mut file) => match serde_json::to_string(instance)
+        {
+            Ok(ser) => match file.write_all(ser.as_bytes())
+            {
+                Ok(_) => Ok(()),
+                Err(e) => Err(BeansError::FileWriteFailure {
+                    location: version_location,
+                    error: e
+                })
+            },
+            Err(e) => Err(e.into())
+        },
+        Err(e) => Err(BeansError::FileOpenFailure {
+            location: version_location,
+            error: e
+        })
     }
 }
 

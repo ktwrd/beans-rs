@@ -1,13 +1,15 @@
 use std::{backtrace::Backtrace,
           process::ExitStatus};
 
+use beans_core::{BeansError,
+                 DownloadFailureReason,
+                 path::{file_exists,
+                        get_tmp_file}};
 use log::{debug,
           error,
           info};
 
-use crate::{BeansError,
-            DownloadFailureReason,
-            depends,
+use crate::{depends,
             helper};
 
 pub fn verify(
@@ -56,15 +58,15 @@ pub async fn patch_dl(
     gamedir: String
 ) -> Result<ExitStatus, BeansError>
 {
-    if helper::file_exists(staging_dir.clone())
+    if file_exists(staging_dir.clone())
     {
         std::fs::remove_dir_all(&staging_dir)?;
     }
-    let tmp_file = helper::get_tmp_file(patch_filename);
+    let tmp_file = get_tmp_file(patch_filename);
     info!("[butler::patch_dl] downloading {} to {}", dl_url, tmp_file);
     helper::download_with_progress(dl_url, tmp_file.clone()).await?;
 
-    if !helper::file_exists(tmp_file.clone())
+    if !file_exists(tmp_file.clone())
     {
         return Err(BeansError::DownloadFailure {
             reason: DownloadFailureReason::FileNotFound {

@@ -1,12 +1,19 @@
 use std::process::ExitStatus;
 
+use beans_core::{Aria2cExitCodeReason,
+                 BeansError,
+                 DownloadFailureReason,
+                 env::{get_aria2c_extra_args,
+                       get_aria2c_override_args},
+                 get_user_agent,
+                 path::{file_exists,
+                        get_filename,
+                        remove_path_head}};
 use log::{debug,
           error,
           info};
 
-use crate::{BeansError,
-            DownloadFailureReason,
-            depends,
+use crate::{depends,
             helper};
 
 pub fn can_use_aria2() -> bool
@@ -24,7 +31,7 @@ pub fn get_executable_location() -> Option<String>
         return Some(r);
     }
     if let Some(x) = depends::get_aria2c_location()
-        && helper::file_exists(x.clone())
+        && file_exists(x.clone())
     {
         return Some(x);
     }
@@ -50,8 +57,8 @@ pub async fn download_file(
     };
     let mut cmd = std::process::Command::new(exe_location);
     info!("[aria2::download_file] URL: {}", url);
-    let output_directory = helper::remove_path_head(out_location.clone());
-    let output_filename = helper::get_filename(out_location.clone());
+    let output_directory = remove_path_head(out_location.clone());
+    let output_filename = get_filename(out_location.clone());
     debug!(
         "[aria2::download_file] output_directory: {}",
         output_directory
@@ -61,8 +68,8 @@ pub async fn download_file(
         output_filename
     );
 
-    let user_agent = crate::get_user_agent();
-    if let Some(over) = crate::env_aria2c_override_args()
+    let user_agent = get_user_agent();
+    if let Some(over) = get_aria2c_override_args()
     {
         let repl = over
             .replace("%OUT_DIR%", &output_directory)
@@ -77,7 +84,7 @@ pub async fn download_file(
     }
     else
     {
-        if let Some(extra) = crate::env_aria2c_extra_args()
+        if let Some(extra) = get_aria2c_extra_args()
         {
             debug!(
                 "[aria2::download_file] (prepend) extra arguments: {}",
@@ -95,7 +102,7 @@ pub async fn download_file(
             &output_directory,
             format!("--out={}", output_filename).as_str(),
             "-c",
-            format!("--user-agent={}", crate::get_user_agent()).as_str(),
+            format!("--user-agent={}", get_user_agent()).as_str(),
             &url
         ]);
     }
@@ -122,7 +129,7 @@ pub async fn download_file(
             debug!("[aria2::download_file] exited status {:#?}", wait_status);
             if let Some(code) = wait_status.code()
             {
-                if let Some(error_code) = crate::error::Aria2cExitCodeReason::from_exit_code(code)
+                if let Some(error_code) = Aria2cExitCodeReason::from_exit_code(code)
                 {
                     return Err(BeansError::Aria2cExitCode {
                         reason: error_code,

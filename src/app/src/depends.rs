@@ -3,17 +3,19 @@ use std::backtrace::Backtrace;
 #[cfg(not(target_os = "windows"))]
 use std::os::unix::fs::PermissionsExt;
 
-use log::{debug,
-          error};
-
-use crate::{BeansError,
-            helper};
-
 #[cfg(target_os = "windows")]
 use beans_bins::ARIA2C_BINARY;
 use beans_bins::{BUTLER_BINARY,
                  BUTLER_LIB_1,
                  BUTLER_LIB_2};
+use beans_core::{BeansError,
+                 path::{file_exists,
+                        format_directory_path,
+                        join_path}};
+use log::{debug,
+          error};
+
+use crate::helper;
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
@@ -28,7 +30,7 @@ pub fn try_write_deps()
         safe_write_file(s.as_str(), &ARIA2C_BINARY);
     }
     #[cfg(not(target_os = "windows"))]
-    if helper::file_exists(get_butler_location())
+    if file_exists(get_butler_location())
     {
         let p = std::fs::Permissions::from_mode(0o0744_u32);
         if let Err(e) = std::fs::set_permissions(get_butler_location(), p)
@@ -51,7 +53,7 @@ fn safe_write_file(
     data: &[u8]
 )
 {
-    if !helper::file_exists(location.to_string())
+    if !file_exists(location.to_string())
     {
         if let Err(e) = std::fs::write(location, data)
         {
@@ -95,8 +97,8 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
     }
 
     log::info!("Installing Visual C++ Redistributable");
-    let mut out_loc = helper::get_tmp_dir();
-    out_loc = helper::join_path(out_loc, "vc_redist.exe".to_string());
+    let mut out_loc = get_tmp_dir();
+    out_loc = join_path(out_loc, "vc_redist.exe".to_string());
 
     helper::download_with_progress(
         String::from("https://aka.ms/vs/17/release/vc_redist.x86.exe"),
@@ -118,7 +120,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
         .expect("Failed to install vsredist!")
         .wait()?;
 
-    if helper::file_exists(out_loc.clone())
+    if file_exists(out_loc.clone())
     {
         if let Err(e) = std::fs::remove_file(&out_loc)
         {
@@ -135,9 +137,9 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
 
 pub fn butler_exists() -> bool
 {
-    helper::file_exists(get_butler_location())
-        && helper::file_exists(get_butler_1_location())
-        && helper::file_exists(get_butler_2_location())
+    file_exists(get_butler_location())
+        && file_exists(get_butler_1_location())
+        && file_exists(get_butler_2_location())
 }
 
 pub fn get_butler_location() -> String
@@ -171,8 +173,8 @@ pub fn get_aria2c_location() -> Option<String>
 }
 fn get_tmp_dir() -> String
 {
-    let path = helper::get_tmp_dir();
-    helper::format_directory_path(path)
+    let path = get_tmp_dir();
+    format_directory_path(path)
 }
 
 #[cfg(target_os = "windows")]

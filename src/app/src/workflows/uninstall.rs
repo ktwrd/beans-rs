@@ -1,11 +1,10 @@
+use beans_core::{BeansError,
+                 appvar::AppVarData};
 use log::{error,
           info,
           trace};
 
-use crate::{BeansError,
-            RunnerContext,
-            appvar::AppVarData,
-            helper};
+use crate::RunnerContext;
 
 #[derive(Debug, Clone)]
 pub struct UninstallWorkflow
@@ -24,7 +23,7 @@ impl UninstallWorkflow
         }
 
         let mod_location = ctx.get_mod_location();
-        if let Some(pid) = helper::is_game_running(mod_location.clone())
+        if let Some(pid) = crate::helper::is_game_running(mod_location.clone())
         {
             info!(
                 "{} (pid: {:}) is running! Can't uninstall since the game files are being used.",

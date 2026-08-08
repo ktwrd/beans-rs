@@ -4,5 +4,6 @@ resolver = "3"
 members = [
     "src/app",
     "src/beans-bins",
+    "src/beans-core",
     "src/beans-lib",
 ]

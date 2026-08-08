@@ -2,6 +2,8 @@ use std::{backtrace::Backtrace,
           ffi::OsStr,
           os::windows::fs::MetadataExt};
 
+use beans_core::{BeansError,
+                 path::format_directory_path};
 use bitflags::bitflags;
 use log::debug;
 use widestring::U16String;
@@ -9,9 +11,6 @@ use windows::{Win32::Storage::FileSystem::*,
               core::PCWSTR};
 use winreg::{RegKey,
              enums::HKEY_CURRENT_USER};
-
-use crate::{BeansError,
-            helper::format_directory_path};
 
 /// HKEY_CURRENT_USER\Software\Value\Steam
 /// Key: SourceModInstallPath

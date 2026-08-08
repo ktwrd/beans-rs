@@ -1,14 +1,17 @@
 use std::str::FromStr;
 
-use beans_rs::{BeansError,
-               PANIC_MSG_CONTENT,
-               RunnerContext,
+use beans_core::{BeansError,
+                 PANIC_MSG_CONTENT,
+                 PAUSE_ONCE_DONE,
+                 PROMPT_DO_WHATEVER,
+                 path::{dir_exists,
+                        parse_location}};
+use beans_rs::{RunnerContext,
                SourceModDirectoryParam,
                flags,
                flags::LaunchFlag,
                gui::DialogIconKind,
                helper,
-               helper::parse_location,
                wizard,
                workflows::{CleanWorkflow,
                            InstallWorkflow,
@@ -63,7 +66,8 @@ fn main()
 fn init_console()
 {
     winconsole::window::show(true);
-    if let Err(e) = winconsole::console::set_title(format!("beans v{}", beans_rs::VERSION).as_str())
+    if let Err(e) =
+        winconsole::console::set_title(format!("beans v{}", beans_core::VERSION).as_str())
     {
         trace!("[init_console] failed to set console title {:#?}", e);
     }
@@ -94,7 +98,7 @@ fn init_flags()
     flags::remove_flag(LaunchFlag::DEBUG_MODE);
     #[cfg(debug_assertions)]
     flags::add_flag(LaunchFlag::DEBUG_MODE);
-    if beans_rs::env_debug()
+    if beans_core::env::get_debug()
     {
         flags::add_flag(LaunchFlag::DEBUG_MODE);
     }
@@ -123,7 +127,7 @@ fn init_panic_handle()
 fn custom_panic_handle(msg: String)
 {
     unsafe {
-        if !beans_rs::PAUSE_ONCE_DONE
+        if !PAUSE_ONCE_DONE
         {
             return;
         }
@@ -145,7 +149,7 @@ fn custom_panic_handle(msg: String)
 fn logic_done()
 {
     unsafe {
-        if beans_rs::PAUSE_ONCE_DONE
+        if PAUSE_ONCE_DONE
         {
             let _ = helper::get_input("Press enter/return to exit");
         }
@@ -231,7 +235,7 @@ impl Launcher
         println!(
             "{} v{} ({})",
             env!("CARGO_PKG_NAME"),
-            beans_rs::VERSION,
+            beans_core::VERSION,
             COMPILED_ON
         );
         println!("Copyright (c) 2024 Kate Ward");
@@ -285,7 +289,7 @@ impl Launcher
     pub fn set_no_pause(&mut self)
     {
         unsafe {
-            beans_rs::PAUSE_ONCE_DONE = !self.root_matches.get_flag("no-pause");
+            PAUSE_ONCE_DONE = !self.root_matches.get_flag("no-pause");
         }
     }
 
@@ -295,7 +299,7 @@ impl Launcher
         let mut sml_dir_manual: Option<String> = None;
         if let Some(x) = matches.get_one::<String>("location")
         {
-            if !helper::dir_exists(x.clone())
+            if !dir_exists(x.clone())
             {
                 if let Err(e) = std::fs::create_dir(x)
                 {
@@ -359,7 +363,7 @@ impl Launcher
         if self.root_matches.get_flag("confirm")
         {
             unsafe {
-                beans_rs::PROMPT_DO_WHATEVER = true;
+                PROMPT_DO_WHATEVER = true;
             }
         }
     }
@@ -402,7 +406,7 @@ impl Launcher
         if matches.get_flag("confirm")
         {
             unsafe {
-                beans_rs::PROMPT_DO_WHATEVER = true;
+                PROMPT_DO_WHATEVER = true;
             }
         }
 

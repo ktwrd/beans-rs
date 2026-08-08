@@ -119,7 +119,7 @@ pub fn wait_for_quit(
         if let Some(GUIAppStatus::Quit) = receive_action.recv()
         {
             unsafe {
-                crate::PAUSE_ONCE_DONE = false;
+                beans_core::PAUSE_ONCE_DONE = false;
             }
             app.quit();
         }

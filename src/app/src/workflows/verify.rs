@@ -1,11 +1,10 @@
+use beans_core::{BeansError,
+                 appvar::AppVarData};
 use log::{debug,
           error};
 
-use crate::{BeansError,
-            RunnerContext,
-            appvar::AppVarData,
+use crate::{RunnerContext,
             butler,
-            helper,
             version::RemoteVersion};
 
 pub struct VerifyWorkflow
@@ -51,7 +50,7 @@ impl VerifyWorkflow
             return Ok(());
         }
 
-        helper::backup_gameinfo(ctx)?;
+        crate::helper::backup_gameinfo(ctx)?;
         let mod_dir_location = ctx.get_mod_location();
         butler::verify(
             format!(

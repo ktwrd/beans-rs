@@ -1,15 +1,17 @@
+use beans_core::{BeansError,
+                 DownloadFailureReason,
+                 PROMPT_DO_WHATEVER,
+                 appvar::AppVarData,
+                 version::AdastralVersionFile};
 use log::{debug,
           error,
           info,
           warn};
 
-use crate::{BeansError,
-            DownloadFailureReason,
-            RunnerContext,
-            appvar::AppVarData,
+use crate::{RunnerContext,
             helper,
-            version::{AdastralVersionFile,
-                      RemoteVersion}};
+            version::{RemoteVersion,
+                      adastral_version_write}};
 
 #[derive(Debug, Clone)]
 pub struct InstallWorkflow
@@ -41,7 +43,7 @@ impl InstallWorkflow
     pub fn prompt_confirm(current_version: Option<usize>) -> bool
     {
         unsafe {
-            if crate::PROMPT_DO_WHATEVER
+            if PROMPT_DO_WHATEVER
             {
                 info!(
                     "[InstallWorkflow::prompt_confirm] skipping since PROMPT_DO_WHATEVER is true"
@@ -128,7 +130,7 @@ impl InstallWorkflow
             Some(version_id)
         )
         .await?;
-        if helper::file_exists(presz_loc.clone())
+        if beans_core::path::file_exists(presz_loc.clone())
         {
             std::fs::remove_file(presz_loc.clone())?;
             debug!("[InstallWorkflow::install_with_remote_version] removed package {presz_loc:?}");
@@ -151,7 +153,7 @@ impl InstallWorkflow
         debug!("[InstallWorkflow::install_from] package_loc={package_loc:}");
         debug!("[InstallWorkflow::install_from] out_dir={out_dir:}");
         debug!("[InstallWorkflow::install_from] version_id={version_id:?}");
-        if !helper::file_exists(package_loc.clone())
+        if !beans_core::path::file_exists(package_loc.clone())
         {
             error!("[InstallWorkflow::Wizard] Failed to find package! (location: {package_loc})");
             return Err(BeansError::DownloadFailure {
@@ -161,7 +163,7 @@ impl InstallWorkflow
                 backtrace: std::backtrace::Backtrace::capture()
             });
         }
-        if !helper::dir_exists(out_dir.clone())
+        if !beans_core::path::dir_exists(out_dir.clone())
         {
             if let Err(e) = std::fs::create_dir(&out_dir)
             {
@@ -181,11 +183,10 @@ impl InstallWorkflow
         RunnerContext::extract_package(package_loc, out_dir.clone())?;
         if let Some(lri) = version_id
         {
-            let x = AdastralVersionFile {
+            let xdat = AdastralVersionFile {
                 version: lri.to_string()
-            }
-            .write(Some(out_dir.clone()));
-            if let Err(e) = x
+            };
+            if let Err(e) = adastral_version_write(&xdat, Some(out_dir.clone()))
             {
                 warn!(
                     "[InstallWorkflow::install_from] Failed to set version to {} in .adastral",

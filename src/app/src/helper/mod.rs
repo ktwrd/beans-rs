@@ -13,6 +13,27 @@ use std::{collections::HashMap,
           io::Write,
           path::PathBuf};
 
+use beans_core::{BeansError,
+                 DownloadFailureReason,
+                 GameinfoBackupCreateDirectoryFail,
+                 GameinfoBackupFailureReason,
+                 GameinfoBackupReadContentFail,
+                 GameinfoBackupWriteFail,
+                 appvar::AppVarData,
+                 data_dir,
+                 env::get_disable_aria2c,
+                 get_user_agent,
+                 path::{canonicalize,
+                        dir_exists,
+                        file_exists,
+                        format_directory_path,
+                        get_filename,
+                        is_directory,
+                        is_symlink,
+                        join_path,
+                        parse_location,
+                        path_exists,
+                        remove_path_head}};
 use futures::StreamExt;
 use indicatif::{ProgressBar,
                 ProgressStyle};
@@ -20,20 +41,11 @@ use log::{debug,
           error,
           trace,
           warn};
-use rand::{RngExt,
-           distr::Alphanumeric};
 use reqwest::header::USER_AGENT;
 #[cfg(target_os = "windows")]
 pub use windows::*;
 
-use crate::{BeansError,
-            DownloadFailureReason,
-            GameinfoBackupCreateDirectoryFail,
-            GameinfoBackupFailureReason,
-            GameinfoBackupReadContentFail,
-            GameinfoBackupWriteFail,
-            RunnerContext,
-            appvar::AppVarData};
+use crate::RunnerContext;
 
 #[derive(Clone, Debug)]
 pub enum InstallType
@@ -120,7 +132,7 @@ pub fn install_state(sourcemods_location: Option<String>) -> InstallType
         smp_x.pop();
     }
 
-    let data_dir = join_path(smp_x, crate::data_dir());
+    let data_dir = join_path(smp_x, data_dir());
 
     if file_exists(format!("{}.adastral", data_dir))
     {
@@ -153,178 +165,6 @@ pub fn get_input(prompt: &str) -> String
     input.trim().to_string()
 }
 
-/// check if a file exists
-pub fn file_exists(location: String) -> bool
-{
-    std::path::Path::new(&location).exists()
-}
-
-/// Check if the location provided exists and it's a directory.
-pub fn dir_exists(location: String) -> bool
-{
-    file_exists(location.clone()) && is_directory(location.clone())
-}
-
-/// check if a path location exists
-pub fn path_exists(path: String) -> bool
-{
-    std::path::Path::new(&path).exists()
-}
-
-pub fn is_directory(location: String) -> bool
-{
-    let x = PathBuf::from(&location);
-    x.is_dir()
-}
-
-/// Check if the file at the location provided is a symlink.
-pub fn is_symlink(location: String) -> bool
-{
-    match std::fs::symlink_metadata(&location)
-    {
-        Ok(meta) => meta.file_type().is_symlink(),
-        Err(_) => false
-    }
-}
-
-pub fn generate_rand_str(length: usize) -> String
-{
-    let s: String = rand::rng()
-        .sample_iter(Alphanumeric)
-        .take(length)
-        .map(char::from)
-        .collect();
-    s.to_uppercase()
-}
-
-/// Join the path, using `tail` as the base, and `head` as the thing to add on
-/// top of it.
-///
-/// This will also convert backslashes/forwardslashes to the compiled separator
-/// in `crate::PATH_SEP`
-pub fn join_path(
-    tail: String,
-    head: String
-) -> String
-{
-    let mut h = head
-        .to_string()
-        .replace("/", crate::PATH_SEP)
-        .replace("\\", crate::PATH_SEP);
-    while h.starts_with(crate::PATH_SEP)
-    {
-        h.remove(0);
-    }
-
-    format!("{}{}", format_directory_path(tail), h)
-}
-
-pub fn remove_path_head(location: String) -> String
-{
-    if let Some(Some(m)) = std::path::Path::new(&location).parent().map(|p| p.to_str())
-    {
-        return m.to_string();
-    }
-    String::new()
-}
-
-/// Make sure that the location provided is formatted as a directory (ends with
-/// `crate::PATH_SEP`).
-pub fn format_directory_path(location: String) -> String
-{
-    let mut x = location.to_string().replace(['/', '\\'], crate::PATH_SEP);
-
-    while x.ends_with(crate::PATH_SEP)
-    {
-        x.pop();
-    }
-    if !x.ends_with(crate::PATH_SEP)
-    {
-        x.push_str(crate::PATH_SEP);
-    }
-    x
-}
-
-/// Get the filename of the location provided.
-///
-/// If the result is an empty string, then the location provided is invalid, and
-/// you should check that yourself :3
-pub fn get_filename(location: String) -> String
-{
-    let x = location.to_string().replace(['/', '\\'], crate::PATH_SEP);
-    let xr = x.split(crate::PATH_SEP);
-    if let Some(p) = xr.last()
-    {
-        p.to_string()
-    }
-    else
-    {
-        String::new()
-    }
-}
-
-#[cfg(not(target_os = "windows"))]
-pub fn canonicalize(location: &str) -> Result<PathBuf, std::io::Error>
-{
-    std::fs::canonicalize(location)
-}
-
-#[cfg(target_os = "windows")]
-pub fn canonicalize(location: &str) -> Result<PathBuf, std::io::Error>
-{
-    dunce::canonicalize(location)
-}
-
-pub fn parse_location(location: String) -> String
-{
-    let path = std::path::Path::new(&location);
-    let real_location = match path.to_str()
-    {
-        Some(v) =>
-        {
-            let p = canonicalize(v);
-            match p
-            {
-                Ok(x) => match x.clone().to_str()
-                {
-                    Some(m) => m.to_string(),
-                    None =>
-                    {
-                        debug!(
-                            "[helper::parse_location] Failed to parse location to string {}",
-                            location
-                        );
-                        return location;
-                    }
-                },
-                Err(e) =>
-                {
-                    if format!("{:}", e).starts_with("No such file or directory")
-                    {
-                        return location;
-                    }
-                    sentry::capture_error(&e);
-                    eprintln!(
-                        "[helper::parse_location] Failed to canonicalize location {}",
-                        location
-                    );
-                    eprintln!("[helper::parse_location] {:}", e);
-                    debug!("{:#?}", e);
-                    return location;
-                }
-            }
-        }
-        None =>
-        {
-            debug!(
-                "[helper::parse_location] Failed to parse location {}",
-                location
-            );
-            return location;
-        }
-    };
-    real_location
-}
 /// Check if a process is running
 ///
 /// name: Executable name (from `Process.name(&self)`)
@@ -476,7 +316,7 @@ pub async fn download_with_progress(
         "[helper::download_with_progress] url: {}, out_location: {}",
         url, out_location
     );
-    if crate::aria2::can_use_aria2() && !crate::env_disable_aria2c()
+    if crate::aria2::can_use_aria2() && !get_disable_aria2c()
     {
         debug!("[helper::download_with_progress] using aria2c");
         crate::aria2::download_file(url, out_location).await?;
@@ -612,177 +452,11 @@ pub fn format_size(i: usize) -> String
     format!("{}{}", whole, dec_x)
 }
 
-/// Check if we should use the custom temporary directory, which is stored in
-/// the environment variable defined in `CUSTOM_TMPDIR_NAME`.
-///
-/// ## Return
-/// `Some` when the environment variable is set, and the directory exist.
-/// Otherwise `None` is returned.
-pub fn use_custom_tmpdir() -> Option<String>
-{
-    if let Some(x) = crate::env_custom_tmpdir()
-    {
-        let s = x.to_string();
-        if dir_exists(s.clone())
-        {
-            return Some(s);
-        }
-        else
-        {
-            warn!(
-                "[use_custom_tmp_dir] Custom temporary directory \"{}\" doesn't exist",
-                s
-            );
-        }
-    }
-    None
-}
-
-/// Create directory in temp directory with name of "beans-rs"
-pub fn get_tmp_dir() -> String
-{
-    let mut dir = std::env::temp_dir().to_str().unwrap_or("").to_string();
-    if let Some(x) = use_custom_tmpdir()
-    {
-        dir = x;
-    }
-    else if is_steamdeck()
-    {
-        trace!(
-            "[helper::get_tmp_dir] Detected that we are running on a steam deck. Using ~/.tmp/beans-rs"
-        );
-        match simple_home_dir::home_dir()
-        {
-            Some(v) => match v.to_str()
-            {
-                Some(k) =>
-                {
-                    dir = format_directory_path(k.to_string());
-                    dir = join_path(dir, String::from(".tmp"));
-                }
-                None =>
-                {
-                    trace!("[helper::get_tmp_dir] Failed to convert PathBuf to &str");
-                }
-            },
-            None =>
-            {
-                trace!("[helper::get_tmp_dir] Failed to get home directory.");
-            }
-        };
-    }
-    else if cfg!(target_os = "android")
-    {
-        dir = String::from("/data/var/tmp");
-    }
-    else if cfg!(not(target_os = "windows"))
-    {
-        dir = String::from("/var/tmp");
-    }
-    dir = format_directory_path(dir);
-    if !dir_exists(dir.clone())
-    {
-        if let Err(e) = std::fs::create_dir(&dir)
-        {
-            trace!("[helper::get_tmp_dir] {:#?}", e);
-            warn!(
-                "[helper::get_tmp_dir] failed to make tmp directory at {} ({:})",
-                dir, e
-            );
-        }
-    }
-    dir = join_path(dir, String::from("beans-rs"));
-    dir = format_directory_path(dir);
-
-    if !dir_exists(dir.clone())
-    {
-        if let Err(e) = std::fs::create_dir(&dir)
-        {
-            trace!("[helper::get_tmp_dir] {:#?}", e);
-            warn!(
-                "[helper::get_tmp_dir] failed to make tmp directory at {} ({:})",
-                dir, e
-            );
-            sentry::capture_error(&e);
-        }
-        else
-        {
-            trace!("[helper::get_tmp_dir] created directory {}", dir);
-        }
-    }
-
-    dir
-}
-
-/// Check if the content of `uname -r` contains `valve` (Linux Only)
-///
-/// ## Returns
-/// - `true` when;
-///   - The output of `uname -r` contains `valve`
-/// - `false` when;
-///   - `target_os` is not `linux`
-///   - Failed to run `uname -r`
-///   - Failed to parse the stdout of `uname -r` as a String.
-///
-/// ## Note
-/// Will always return `false` when `cfg!(not(target_os = "linux"))`.
-///
-/// This function will write to `log::trace` with the full error details before
-/// writing it to `log::warn` or `log::error`. Since errors from this
-/// aren't significant, `sentry::capture_error` will not be called.
-pub fn is_steamdeck() -> bool
-{
-    if cfg!(not(target_os = "linux"))
-    {
-        return false;
-    }
-
-    match std::process::Command::new("uname").arg("-r").output()
-    {
-        Ok(cmd) =>
-        {
-            trace!("[helper::is_steamdeck] exit status: {}", &cmd.status);
-            let stdout = &cmd.stdout.to_vec();
-            let stderr = &cmd.stderr.to_vec();
-            if let Ok(x) = String::from_utf8(stderr.clone())
-            {
-                trace!("[helper::is_steamdeck] stderr: {}", x);
-            }
-            match String::from_utf8(stdout.clone())
-            {
-                Ok(x) =>
-                {
-                    trace!("[helper::is_steamdeck] stdout: {}", x);
-                    x.contains("valve")
-                }
-                Err(e) =>
-                {
-                    trace!("[helper::is_steamdeck] Failed to parse as utf8 {:#?}", e);
-                    false
-                }
-            }
-        }
-        Err(e) =>
-        {
-            trace!("[helper::is_steamdeck] {:#?}", e);
-            warn!("[helper::is_steamdeck] Failed to detect {:}", e);
-            false
-        }
-    }
-}
-
-/// Generate a full file location for a temporary file.
-pub fn get_tmp_file(filename: String) -> String
-{
-    let head = format!("{}_{}", generate_rand_str(8), filename);
-    join_path(get_tmp_dir(), head)
-}
-
 /// Check if there is an update available. When the latest release doesn't match
 /// the current release.
 pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
 {
-    let user_agent = crate::get_user_agent();
+    let user_agent = get_user_agent();
     let rs = reqwest::Client::new()
         .get(GITHUB_RELEASES_URL)
         .header(USER_AGENT, &user_agent)
@@ -822,7 +496,7 @@ pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
         }
     };
     trace!("[beans_rs::beans_has_update] response data from URL {GITHUB_RELEASES_URL:}\n{data:#?}");
-    if !data.draft && !data.prerelease && data.tag_name != format!("v{}", crate::VERSION)
+    if !data.draft && !data.prerelease && data.tag_name != format!("v{}", beans_core::VERSION)
     {
         return Ok(Some(data.clone()));
     }

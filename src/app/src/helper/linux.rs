@@ -1,10 +1,9 @@
 use std::fs::read_to_string;
 
+use beans_core::{BeansError,
+                 path::format_directory_path};
 use log::{debug,
           error};
-
-use crate::{BeansError,
-            helper::format_directory_path};
 
 /// all possible known directory where steam *might* be
 /// only is used on linux, since windows will use the registry.

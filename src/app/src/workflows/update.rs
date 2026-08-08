@@ -1,12 +1,12 @@
+use beans_core::{BeansError,
+                 appvar::AppVarData};
 use log::{debug,
           info};
 
-use crate::{BeansError,
-            RunnerContext,
-            appvar::AppVarData,
+use crate::{RunnerContext,
             butler,
-            helper,
-            version};
+            helper::{format_size,
+                     has_free_space}};
 
 pub struct UpdateWorkflow
 {
@@ -48,11 +48,11 @@ impl UpdateWorkflow
 
         ctx.gameinfo_perms()?;
 
-        if !helper::has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq)?
+        if !has_free_space(ctx.sourcemod_path.clone(), patch.clone().tempreq)?
         {
             println!(
                 "[UpdateWorkflow::wizard] Not enough free space! Requires {}",
-                helper::format_size(patch.tempreq)
+                format_size(patch.tempreq)
             );
         }
         debug!("remote_version: {:#?}", remote_version);
@@ -79,7 +79,7 @@ impl UpdateWorkflow
         let mod_dir_location = ctx.get_mod_location();
         let staging_dir_location = ctx.get_staging_location();
 
-        helper::backup_gameinfo(ctx)?;
+        crate::helper::backup_gameinfo(ctx)?;
 
         ctx.gameinfo_perms()?;
         info!("[UpdateWorkflow] Verifying game");
@@ -115,7 +115,10 @@ impl UpdateWorkflow
         }
 
         info!("[UpdateWorkflow] Updating version file (.adastral)");
-        version::set_current_version(Some(ctx.sourcemod_path.clone()), remote_version_ident)?;
+        crate::version::set_current_version(
+            Some(ctx.sourcemod_path.clone()),
+            remote_version_ident
+        )?;
 
         ctx.gameinfo_perms()?;
 

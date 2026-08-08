@@ -1,3 +1,4 @@
+use beans_core::has_gui_support;
 use fltk::{image::PngImage,
            prelude::*,
            text::TextBuffer,
@@ -30,7 +31,7 @@ impl Default for DialogBuilder
     fn default() -> Self
     {
         Self {
-            title: format!("beans v{}", crate::VERSION),
+            title: format!("beans v{}", beans_core::VERSION),
             content: String::new(),
             icon: None
         }
@@ -89,7 +90,7 @@ impl DialogBuilder
     }
     pub fn run(&self)
     {
-        if !crate::has_gui_support()
+        if !has_gui_support()
         {
             println!("============ {} ============", self.title);
             println!("{}", self.content);

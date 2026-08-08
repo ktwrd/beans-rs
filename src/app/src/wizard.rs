@@ -1,22 +1,25 @@
 use std::backtrace::Backtrace;
 
 use async_recursion::async_recursion;
+use beans_core::{BeansError,
+                 appvar::AppVarData,
+                 env::get_disable_aria2c,
+                 path::{file_exists,
+                        is_directory,
+                        parse_location}};
 use log::{debug,
           error,
           info,
           trace};
 
-use crate::{BeansError,
-            RunnerContext,
+use crate::{RunnerContext,
             SourceModDirectoryParam,
-            appvar::AppVarData,
             depends,
             flags,
             flags::LaunchFlag,
             helper,
             helper::{InstallType,
-                     find_sourcemod_path,
-                     parse_location},
+                     find_sourcemod_path},
             workflows::{CleanWorkflow,
                         InstallWorkflow,
                         UninstallWorkflow,
@@ -90,7 +93,7 @@ impl WizardContext
 
     fn check_aria()
     {
-        if !crate::env_disable_aria2c()
+        if !get_disable_aria2c()
         {
             if crate::aria2::get_executable_location().is_none()
             {
@@ -100,7 +103,7 @@ impl WizardContext
             }
         }
 
-        if crate::env_disable_aria2c() && crate::aria2::get_executable_location().is_some()
+        if get_disable_aria2c() && crate::aria2::get_executable_location().is_some()
         {
             info!("== aria2c support disabled, even though it's available ==");
         }
@@ -111,7 +114,7 @@ impl WizardContext
     #[async_recursion]
     pub async fn menu<'a>(&'a mut self)
     {
-        let av = crate::appvar::AppVarData::get();
+        let av = AppVarData::get();
         if self.menu_trigger_count == 0
         {
             if let Some(cv) = self.context.current_version
@@ -215,12 +218,12 @@ fn get_path() -> String
 fn prompt_sourcemod_location() -> String
 {
     let res = helper::get_input("Please provide your sourcemods folder, then press enter.");
-    if !helper::file_exists(res.clone())
+    if !file_exists(res.clone())
     {
         eprintln!("The location you provided doesn't exist. Try again.");
         prompt_sourcemod_location()
     }
-    else if !helper::is_directory(res.clone())
+    else if !is_directory(res.clone())
     {
         eprintln!("The location you provided isn't a folder. Try again.");
         prompt_sourcemod_location()

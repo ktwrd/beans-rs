@@ -7,13 +7,6 @@ use log::{debug,
 
 use crate::BeansError;
 
-/// Default `appvar.json` to use.
-pub const JSON_DATA_DEFAULT: &str = include_str!("appvar.json");
-lazy_static! {
-    static ref JSON_DATA: RwLock<String> = RwLock::new(JSON_DATA_DEFAULT.to_string());
-    static ref AVD_INSTANCE: RwLock<Option<AppVarData>> = RwLock::new(None);
-}
-
 /// Configuration for the compiled application.
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub struct AppVarData
@@ -23,6 +16,41 @@ pub struct AppVarData
     #[serde(rename = "remote")]
     pub remote_info: AppVarRemote
 }
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AppVarMod
+{
+    /// name of the mod to use.
+    /// e.g; `open_fortress`
+    #[serde(rename = "sm_name")]
+    pub sourcemod_name: String,
+    /// two-letter abbreviation that is used in `versions.json` for the game.
+    /// e.g; `of`
+    pub short_name: String,
+    /// stylized name of the sourcemod.
+    /// e.g; `Open Fortress`
+    pub name_stylized: String
+}
+#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
+pub struct AppVarRemote
+{
+    /// base URL for the versioning.
+    /// e.g; `https://beans.adastral.net/`
+    pub base_url: String,
+    /// url where the version details are stored.
+    /// e.g; `https://beans.adastral.net/versions.json`
+    pub versions_url: String,
+    /// optional: url where the file mapping details are stored for upgrading
+    /// game versions from previous systems. e.g; `https://beans.adastral.net/filemap.json`
+    pub filemap_url: String
+}
+
+/// Default `appvar.json` to use.
+pub const JSON_DATA_DEFAULT: &str = include_str!("appvar.json");
+lazy_static! {
+    static ref JSON_DATA: RwLock<String> = RwLock::new(JSON_DATA_DEFAULT.to_string());
+    static ref AVD_INSTANCE: RwLock<Option<AppVarData>> = RwLock::new(None);
+}
+
 impl AppVarData
 {
     /// Parse `JSON_DATA` to AppVarData. Should only be called by
@@ -169,31 +197,4 @@ impl AppVarData
             }
         }
     }
-}
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct AppVarMod
-{
-    /// name of the mod to use.
-    /// e.g; `open_fortress`
-    #[serde(rename = "sm_name")]
-    pub sourcemod_name: String,
-    /// two-letter abbreviation that is used in `versions.json` for the game.
-    /// e.g; `of`
-    pub short_name: String,
-    /// stylized name of the sourcemod.
-    /// e.g; `Open Fortress`
-    pub name_stylized: String
-}
-#[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
-pub struct AppVarRemote
-{
-    /// base URL for the versioning.
-    /// e.g; `https://beans.adastral.net/`
-    pub base_url: String,
-    /// url where the version details are stored.
-    /// e.g; `https://beans.adastral.net/versions.json`
-    pub versions_url: String,
-    /// optional: url where the file mapping details are stored for upgrading
-    /// game versions from previous systems. e.g; `https://beans.adastral.net/filemap.json`
-    pub filemap_url: String
 }

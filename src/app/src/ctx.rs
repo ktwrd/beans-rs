@@ -2,17 +2,24 @@ use std::backtrace::Backtrace;
 #[cfg(target_os = "linux")]
 use std::os::unix::fs::PermissionsExt;
 
+use beans_core::{BeansError,
+                 appvar::AppVarData,
+                 data_dir,
+                 helper::generate_rand_str,
+                 path::{file_exists,
+                        get_tmp_dir,
+                        get_tmp_file,
+                        join_path,
+                        parse_location},
+                 staging_dir};
 use log::{debug,
           error,
           info};
 
-use crate::{BeansError,
-            appvar::AppVarData,
-            depends,
+use crate::{depends,
             helper,
             helper::{InstallType,
-                     find_sourcemod_path,
-                     parse_location},
+                     find_sourcemod_path},
             version,
             version::{RemotePatch,
                       RemoteVersion,
@@ -24,7 +31,7 @@ pub struct RunnerContext
     pub sourcemod_path: String,
     pub remote_version_list: RemoteVersionResponse,
     pub current_version: Option<usize>,
-    pub appvar: crate::appvar::AppVarData
+    pub appvar: beans_core::appvar::AppVarData
 }
 
 impl RunnerContext
@@ -94,7 +101,7 @@ impl RunnerContext
     /// sourcemods\open_fortress\
     pub fn get_mod_location(&mut self) -> String
     {
-        helper::join_path(self.sourcemod_path.clone(), crate::data_dir())
+        join_path(self.sourcemod_path.clone(), data_dir())
     }
 
     /// Get staging location for butler.
@@ -104,7 +111,7 @@ impl RunnerContext
     /// sourcemods\butler-staging
     pub fn get_staging_location(&mut self) -> String
     {
-        helper::join_path(self.sourcemod_path.clone(), crate::staging_dir())
+        join_path(self.sourcemod_path.clone(), staging_dir())
     }
 
     /// Get the latest item in `remote_version_list`
@@ -180,7 +187,7 @@ impl RunnerContext
     {
         self.gameinfo_perms()?;
         let location = self.gameinfo_location();
-        if !helper::file_exists(location.clone())
+        if !file_exists(location.clone())
         {
             return Ok(None);
         }
@@ -215,7 +222,7 @@ impl RunnerContext
     pub fn gameinfo_perms(&mut self) -> Result<(), BeansError>
     {
         let location = self.gameinfo_location();
-        if helper::file_exists(location.clone())
+        if file_exists(location.clone())
         {
             let perm = std::fs::Permissions::from_mode(0o644_u32);
             if let Err(e) = std::fs::set_permissions(&location, perm.clone())
@@ -249,7 +256,7 @@ impl RunnerContext
     ) -> Result<String, BeansError>
     {
         let av = AppVarData::get();
-        let mut out_loc = helper::get_tmp_dir();
+        let mut out_loc = get_tmp_dir();
 
         if let Some(size) = version.pre_sz
         {
@@ -262,9 +269,9 @@ impl RunnerContext
         let out_filename = match crate::aria2::can_use_aria2()
         {
             true => format!("{}_{}.pkg", av.mod_info.sourcemod_name, version_id),
-            false => format!("presz_{}", helper::generate_rand_str(12))
+            false => format!("presz_{}", generate_rand_str(12))
         };
-        out_loc = helper::join_path(out_loc, out_filename);
+        out_loc = join_path(out_loc, out_filename);
 
         info!("[RunnerContext::download_package] writing to {}", out_loc);
         helper::download_with_progress(
@@ -286,7 +293,7 @@ impl RunnerContext
         out_dir: String
     ) -> Result<(), BeansError>
     {
-        let tar_tmp_location = helper::get_tmp_file("data.tar".to_string());
+        let tar_tmp_location = get_tmp_file("data.tar".to_string());
 
         if let Err(e) =
             crate::extract::decompress_zstd(zstd_location.clone(), tar_tmp_location.clone(), true)
@@ -307,7 +314,7 @@ impl RunnerContext
             );
             return Err(e);
         }
-        if helper::file_exists(tar_tmp_location.clone())
+        if file_exists(tar_tmp_location.clone())
         {
             if let Err(e) = std::fs::remove_file(tar_tmp_location.clone())
             {

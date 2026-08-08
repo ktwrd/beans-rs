@@ -15,37 +15,35 @@ license = "GPL-3.0-only"
 [dependencies]
 async-recursion = "1.1.1"
 async-stream = "0.3.6"
-const_format = "0.2.35"
-futures = "0.3.31"
-futures-util = "0.3.31"
-indicatif = "0.18.2"
-rand = "0.10.1"
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.145"
-sysinfo = "0.39.0"
-tar = "0.4.44"
+const_format = "0.2.36"
+futures = "0.3.33"
+futures-util = "0.3.33"
+indicatif = "0.18.6"
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+sysinfo = "0.39.6"
+tar = "0.4.46"
 tokio-util = { version= "0.7.17", features = ["io"] }
 zstd = "0.13.3"
-thiserror = "2.0.17"
-include-flate = "0.3.1"
+include-flate = "0.3.4"
 simple-home-dir = "0.5.2"
-clap = { version = "4.5.51", features = ["cargo"] }
-bitflags = "2.10.0"
-log = "0.4.28"
+clap = { version = "4.6.6", features = ["cargo"] }
+bitflags = "2.13.1"
+log = "0.4.33"
 lazy_static = "1.5.0"
-thread-id = "5.0.0"
-colored = "3.0.0"
-sentry-log = "0.48.1"
-chrono = "0.4.42"
+thread-id = "5.1.0"
+colored = "3.1.1"
+sentry-log = "0.49.1"
+chrono = "0.4.45"
 
-fltk = { version = "1.5.21", features = ["fltk-bundled"] }
+fltk = { version = "1.5.23", features = ["fltk-bundled"] }
 fltk-theme = "0.7.9"
 dark-light = "2.0.0"
-image = { version = "0.25.8", features = ["png"] }
+image = { version = "0.25.10", features = ["png"] }
 valve_pak = "0.1.0"
-anyhow = "1.0.100"
 current_platform = "0.2.0"
 beans-bins = { path = "../beans-bins" }
+beans-core = { path = "../beans-core" }
 
 [build-dependencies]
 fl2rust = "0.7.1"
@@ -57,33 +55,15 @@ widestring = "1.2.1"
 windows = { version = "0.62.2", features = ["Win32_System_IO", "Win32_Storage_FileSystem"] }
 dunce = "1.0.5"
 
-[dependencies.sentry]
-version = "0.48.1"
-default-features = false
-features = [
-    "backtrace",
-    "contexts",
-    "debug-images",
-    "panic",
-    "release-health",
-    
-    "reqwest",
-    "rustls",
-
-    "logs",
-    "log"
-]
-
-
 [dependencies.tokio]
-version = "1.48.0"
+version = "1.53.1"
 features = [
     "macros",
     "rt-multi-thread"
 ]
 
 [dependencies.reqwest]
-version = "0.13.3"
+version = "0.13.4"
 features = [
     "multipart",
     "stream",
@@ -93,6 +73,23 @@ features = [
     "http2"
 ]
 default-features = false
+
+[dependencies.sentry]
+version = "0.49.1"
+default-features = false
+features = [
+    "backtrace",
+    "contexts",
+    "debug-images",
+    "panic",
+    "release-health",
+
+    "reqwest",
+    "rustls",
+
+    "logs",
+    "log"
+]
 
 [target.'cfg(target_os = "windows")'.build-dependencies]
 winres = "0.1.12"

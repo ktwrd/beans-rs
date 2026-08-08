@@ -1,6 +1,9 @@
 use std::{backtrace::Backtrace,
           fs::File};
 
+use beans_core::{BeansError,
+                 path::{file_exists,
+                        join_path}};
 use indicatif::{ProgressBar,
                 ProgressStyle};
 use log::{debug,
@@ -8,9 +11,6 @@ use log::{debug,
           info,
           warn};
 use zstd::stream::read::Decoder as ZstdDecoder;
-
-use crate::{BeansError,
-            helper::join_path};
 
 fn unpack_tarball_getfile(
     tarball_location: String,
@@ -167,7 +167,7 @@ pub fn unpack_tarball(
                     {
                         let ep = ep_str.to_string();
                         let target_path = join_path(output_directory.clone(), ep);
-                        if crate::helper::file_exists(target_path.clone())
+                        if file_exists(target_path.clone())
                         {
                             if let Err(e) = crate::helper::unmark_readonly(target_path.clone())
                             {
