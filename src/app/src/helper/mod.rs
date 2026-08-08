@@ -10,11 +10,11 @@ pub use linux::*;
 mod windows;
 
 use std::{collections::HashMap,
-          io::Write,
-          path::PathBuf};
+          io::Write};
 
 use beans_core::{BeansError,
                  DownloadFailureReason,
+                 GITHUB_RELEASES_URL,
                  GameinfoBackupCreateDirectoryFail,
                  GameinfoBackupFailureReason,
                  GameinfoBackupReadContentFail,
@@ -23,16 +23,10 @@ use beans_core::{BeansError,
                  data_dir,
                  env::get_disable_aria2c,
                  get_user_agent,
-                 path::{canonicalize,
-                        dir_exists,
-                        file_exists,
+                 path::{file_exists,
                         format_directory_path,
-                        get_filename,
-                        is_directory,
-                        is_symlink,
                         join_path,
                         parse_location,
-                        path_exists,
                         remove_path_head}};
 use futures::StreamExt;
 use indicatif::{ProgressBar,
@@ -648,7 +642,6 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
 }
 
 const GAMEINFO_BACKUP_DIRNAME: &str = "gameinfo_backup";
-const GITHUB_RELEASES_URL: &str = "https://api.github.com/repositories/805393469/releases/latest";
 
 #[derive(Clone, Debug, serde::Deserialize, serde::Serialize)]
 pub struct GithubReleaseItem

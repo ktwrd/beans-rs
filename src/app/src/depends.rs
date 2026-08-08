@@ -11,6 +11,7 @@ use beans_bins::{BUTLER_BINARY,
 use beans_core::{BeansError,
                  path::{file_exists,
                         format_directory_path,
+                        get_tmp_dir,
                         join_path}};
 use log::{debug,
           error};
@@ -97,7 +98,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
     }
 
     log::info!("Installing Visual C++ Redistributable");
-    let mut out_loc = get_tmp_dir();
+    let mut out_loc = get_fmt_tmp_dir();
     out_loc = join_path(out_loc, "vc_redist.exe".to_string());
 
     helper::download_with_progress(
@@ -144,19 +145,19 @@ pub fn butler_exists() -> bool
 
 pub fn get_butler_location() -> String
 {
-    let mut path = get_tmp_dir();
+    let mut path = get_fmt_tmp_dir();
     path.push_str(BUTLER_LOCATION);
     path
 }
 pub fn get_butler_1_location() -> String
 {
-    let mut path = get_tmp_dir();
+    let mut path = get_fmt_tmp_dir();
     path.push_str(BUTLER_1);
     path
 }
 pub fn get_butler_2_location() -> String
 {
-    let mut path = get_tmp_dir();
+    let mut path = get_fmt_tmp_dir();
     path.push_str(BUTLER_2);
     path
 }
@@ -165,13 +166,13 @@ pub fn get_aria2c_location() -> Option<String>
 {
     if cfg!(target_os = "windows")
     {
-        let mut path = get_tmp_dir();
+        let mut path = get_fmt_tmp_dir();
         path.push_str(ARIA2C_LOCATION);
         return Some(path);
     }
     None
 }
-fn get_tmp_dir() -> String
+fn get_fmt_tmp_dir() -> String
 {
     let path = get_tmp_dir();
     format_directory_path(path)
