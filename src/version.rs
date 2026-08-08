@@ -93,6 +93,7 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
                 Err(e) =>
                 {
                     let ex = BeansError::SerdeJson {
+                        content: Some(content),
                         error: e,
                         backtrace: Backtrace::capture()
                     };
@@ -629,12 +630,14 @@ pub async fn get_file_map() -> Result<RemoteFileMapResponse, BeansError>
         Ok(v) => v,
         Err(e) =>
         {
-            error!(
-                "[version::get_file_map] Failed to get available versions! {:}",
-                e
+            let message = format!(
+                "Failed to get available versions! {:}",
+                av.remote_info.versions_url
             );
+            error!("[version::get_file_map] {message} {:}", e);
             sentry::capture_error(&e);
             return Err(BeansError::Reqwest {
+                error_message: message,
                 error: e,
                 backtrace: Backtrace::capture()
             });
