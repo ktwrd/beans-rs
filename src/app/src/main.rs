@@ -1,10 +1,6 @@
 use std::str::FromStr;
 
-use beans_core::{BeansError,
-                 PANIC_MSG_CONTENT,
-                 PAUSE_ONCE_DONE,
-                 PROMPT_DO_WHATEVER,
-                 path::{dir_exists,
+use beans_core::{BeansError, PANIC_MSG_CONTENT, PAUSE_ONCE_DONE, PROMPT_DO_WHATEVER, appvar::AppVarData, path::{dir_exists,
                         parse_location}};
 use beans_rs::{RunnerContext,
                SourceModDirectoryParam,
@@ -41,17 +37,26 @@ fn main()
     init_console();
     init_flags();
     // initialize sentry and custom panic handler for msgbox
-    #[cfg(not(debug_assertions))]
-    let _guard = sentry::init((beans_rs::SENTRY_URL, sentry::ClientOptions {
-        release: sentry::release_name!(),
-        debug: flags::has_flag(LaunchFlag::DEBUG_MODE),
-        max_breadcrumbs: 100,
-        auto_session_tracking: true,
-        attach_stacktrace: true,
-        enable_logs: true,
-        ..Default::default()
-    }));
-    init_panic_handle();
+    if cfg!(not(debug_assertions))
+    {
+        init_panic_handle();
+        let sentry_opts = sentry::ClientOptions::new()
+            .dsn(beans_core::SENTRY_URL)
+            .maybe_release(sentry::release_name!())
+            .debug(flags::has_flag(LaunchFlag::DEBUG_MODE))
+            .max_breadcrumbs(200)
+            .auto_session_tracking(true)
+            .attach_stacktrace(true)
+            .enable_logs(true)
+            .send_default_pii(true);
+        let _guard = sentry::init(sentry_opts);
+        sentry::configure_scope(|scope| {
+            let av = AppVarData::get();
+            scope.set_tag("appvar.mod.mod_name", &av.mod_info.sourcemod_name);
+            scope.set_tag("appvar.remote.base_url", &av.remote_info.base_url);
+            scope.set_tag("appvar.remote.versions_url", &av.remote_info.versions_url);
+        });
+    }
 
     tokio::runtime::Builder::new_multi_thread()
         .enable_all()
@@ -107,6 +112,7 @@ fn init_flags()
     beans_rs::logger::log_to_stdout();
 }
 
+#[allow(dead_code)]
 fn init_panic_handle()
 {
     std::panic::set_hook(Box::new(move |info| {
@@ -123,7 +129,7 @@ fn init_panic_handle()
         logic_done();
     }));
 }
-
+#[allow(dead_code)]
 fn custom_panic_handle(msg: String)
 {
     unsafe {
@@ -143,7 +149,7 @@ fn custom_panic_handle(msg: String)
         .with_content(txt)
         .run();
 }
-
+#[warn(dead_code)]
 /// should called once the logic flow is done!
 /// will call `helper::get_input` when `PAUSE_ONCE_DONE` is `true`.
 fn logic_done()
