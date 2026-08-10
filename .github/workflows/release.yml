@@ -7,8 +7,23 @@ on:
       tag:
         description: 'Github Release Tag'
         required: true
+        type: string
+      game_branch:
+        description: 'Game branch to compile'
+        required: false
+        default: 'main'
+        type: choice
+        options:
+          - main
+          - game/tf2c
+          # - game/pf2
+      name:
+        description: 'Name of the program (default: beans)'
+        required: false
+        default: 'beans'
+        type: string
 
-run-name: Release ${{ inputs.tag }}
+run-name: Release ${{ inputs.tag }} (${{ inputs.game_branch }})
 
 jobs:
   release:
@@ -19,15 +34,18 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            filename: 'beans-rs'
+            filename: '${{ inputs.name}}'
             target: x86_64-unknown-linux-gnu
 
           - os: windows-2022
             target: x86_64-pc-windows-msvc
-            filename: 'beans-rs.exe'
+            filename: '${{ inputs.name}}.exe'
 
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ inputs.game_branch }}
+
       - name: Install Build Dependencies (ubuntu)
         if: ${{ matrix.os == 'ubuntu-22.04' }}
         run: |
@@ -73,7 +91,7 @@ jobs:
           certificate: '${{ secrets.CODESIGN }}'
           password: '${{ secrets.CODESIGN_PASSWORD }}'
           folder: 'target/${{ matrix.target }}/release'
-          description: 'beans-rs'
+          description: '${{ inputs.name}}'
           certificatesha1: '${{ secrets.CODESIGN_HASH }}'
 
       - name: Upload binaries to release
@@ -84,6 +102,7 @@ jobs:
           draft: false
           prerelease: true
           target_commitish: ${{ github.sha }}
+
       #- name: Create Sentry release
       #  if: ${{ matrix.os == 'ubuntu-latest' }}
       #  uses: getsentry/action-release@v3
