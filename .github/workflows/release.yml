@@ -20,7 +20,7 @@ on:
       name:
         description: 'Name of the program (default: beans)'
         required: false
-        default: 'beans'
+        default: 'beans-rs'
         type: string
 
 run-name: Release ${{ inputs.tag }} (${{ inputs.game_branch }})
@@ -82,8 +82,6 @@ jobs:
       - name: Compile ${{ matrix.filename }}
         run: |
           cargo build --release --target ${{ matrix.target }}
-          mv target/${{ matrix.target }}/debug/beans* target/${{ matrix.target }}/debug/${{ matrix.filename }}
-
 
       - name: Code Signing (Windows)
         if: ${{ matrix.os == 'windows-2022' }}

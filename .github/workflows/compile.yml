@@ -16,11 +16,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-22.04
-            filename: 'beans'
+            filename: 'beans-rs'
             target: x86_64-unknown-linux-gnu
           - os: windows-2022
             target: x86_64-pc-windows-msvc
-            filename: 'beans.exe'
+            filename: 'beans-rs.exe'
     runs-on: ${{ matrix.os }}
     
     steps:
@@ -62,7 +62,6 @@ jobs:
       - name: Compile ${{ matrix.filename }}
         run: |
           cargo build --verbose --target ${{ matrix.target }}
-          mv target/${{ matrix.target }}/debug/beans* target/${{ matrix.target }}/debug/${{ matrix.filename }}
 
       - name: Code Signing (Windows)
         if: ${{ matrix.os == 'windows-2022' }}
@@ -71,7 +70,7 @@ jobs:
           certificate: '${{ secrets.CODESIGN }}'
           password: '${{ secrets.CODESIGN_PASSWORD }}'
           folder: 'target/${{ matrix.target }}/debug'
-          description: 'beans'
+          description: 'beans-rs'
           certificatesha1: '${{ secrets.CODESIGN_HASH }}'
 
       - name: Upload artifact
