@@ -4,7 +4,7 @@ A Sourcemod Installer written with Rust, using the Kachemak versioning system (b
 
 This is a complete rewrite of the original [beans](https://github.com/int-72h/ofinstaller-beans) installer, but with rust, and extended support.
 
-`beans-rs` is licensed under `GPLv3-only`, so please respect it!
+`beans-rs` is licensed under `GPL-3.0-only`, so please respect it!
 
 ## Developing
 ### Requirements:
@@ -16,7 +16,7 @@ This is a complete rewrite of the original [beans](https://github.com/int-72h/of
 - fltk ([Please read "FLTK Linux Dependencies"](#fltk-linux-dependencies))
     - (Optional) `fluid` for creating `.fl` files.
 - Steam Installed (Only required for testing)
-    - Source SDK Base 2013 Multiplayer ([install](steam://instal/243750))
+    - Source SDK Base 2013 Multiplayer ([install](https://steamre.direct/install/243750))
 
 ## FLTK Linux Dependencies
 When building `beans-rs`, some dependencies are required to build it since we need the build dependencies for fltk.
