@@ -18,7 +18,7 @@ on:
           - game/tf2c
           # - game/pf2
       name:
-        description: 'Name of the program (default: beans)'
+        description: 'Name of the program (default: beans-rs)'
         required: false
         default: 'beans-rs'
         type: string
