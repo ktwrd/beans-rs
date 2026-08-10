@@ -4,7 +4,7 @@ When developing software for Windows, it is important to code sign the applicati
 
 ## Sign Tool GitHub Action
 
-This repo uses [`skymatic/code-sign-action@v1`](https://github.com/marketplace/actions/windows-signtool-exe-code-sign-action) to sign the latest builds of `beans-rs`. The most important components of this action are `certificate`, `certificatesha1` and `password`.
+This repo uses [`skymatic/code-sign-action`](https://github.com/marketplace/actions/windows-signtool-exe-code-sign-action) to sign the latest builds of `beans-rs`. The most important components of this action are `certificate`, `certificatesha1` and `password`.
 
 ## Generating a Self Signed Certificate on Windows
 

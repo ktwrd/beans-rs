@@ -27,7 +27,7 @@ jobs:
             filename: 'beans-rs.exe'
 
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v7
       - name: Install Build Dependencies (ubuntu)
         if: ${{ matrix.os == 'ubuntu-22.04' }}
         run: |
@@ -68,7 +68,7 @@ jobs:
 
       - name: Code Signing (Windows)
         if: ${{ matrix.os == 'windows-2022' }}
-        uses: skymatic/code-sign-action@v1
+        uses: skymatic/code-sign-action@v3
         with:
           certificate: '${{ secrets.CODESIGN }}'
           password: '${{ secrets.CODESIGN_PASSWORD }}'
@@ -86,7 +86,7 @@ jobs:
           target_commitish: ${{ github.sha }}
       #- name: Create Sentry release
       #  if: ${{ matrix.os == 'ubuntu-latest' }}
-      #  uses: getsentry/action-release@v1
+      #  uses: getsentry/action-release@v3
       #  env:
       #    SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       #    SENTRY_ORG: ${{ secrets.SENTRY_ORG }}

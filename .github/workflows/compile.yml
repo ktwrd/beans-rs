@@ -22,8 +22,9 @@ jobs:
             target: x86_64-pc-windows-msvc
             filename: 'beans-rs.exe'
     runs-on: ${{ matrix.os }}
+    
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
       - name: Install Build Dependencies (ubuntu)
         if: ${{ matrix.os == 'ubuntu-22.04' }}
         run: |
@@ -57,21 +58,20 @@ jobs:
           toolchain: nightly-2025-01-10
           targets: ${{ matrix.target }}
 
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --verbose --target ${{ matrix.target }}
+      - run: cargo build --verbose --target ${{ matrix.target }}
+
       - name: Code Signing (Windows)
         if: ${{ matrix.os == 'windows-2022' }}
-        uses: skymatic/code-sign-action@v1
+        uses: skymatic/code-sign-action@v3
         with:
           certificate: '${{ secrets.CODESIGN }}'
           password: '${{ secrets.CODESIGN_PASSWORD }}'
           folder: 'target/${{ matrix.target }}/debug'
           description: 'beans-rs'
           certificatesha1: '${{ secrets.CODESIGN_HASH }}'
+
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: binary-${{ matrix.os }}-${{ matrix.target }}
           path: target/${{ matrix.target }}/debug/${{ matrix.filename }}
