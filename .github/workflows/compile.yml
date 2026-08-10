@@ -59,7 +59,10 @@ jobs:
           toolchain: nightly-2025-01-10
           targets: ${{ matrix.target }}
 
-      - run: cargo build --verbose --target ${{ matrix.target }}
+      - name: Compile ${{ matrix.filename }}
+        run: |
+          cargo build --verbose --target ${{ matrix.target }}
+          mv target/${{ matrix.target }}/debug/beans* target/${{ matrix.target }}/debug/${{ matrix.filename }}
 
       - name: Code Signing (Windows)
         if: ${{ matrix.os == 'windows-2022' }}
