@@ -7,22 +7,13 @@ on:
         description: 'Github Release Tag'
         required: true
         type: string
-      game_branch:
-        description: 'Game branch to compile'
-        required: false
-        default: 'main'
-        type: choice
-        options:
-          - main
-          - game/tf2c
-          # - game/pf2
       name:
         description: 'Name of the program (default: beans-rs)'
         required: false
         default: 'beans-rs'
         type: string
 
-run-name: Release ${{ inputs.tag }} (${{ inputs.game_branch }})
+run-name: Release ${{ inputs.tag }}
 
 jobs:
   release:
@@ -42,8 +33,6 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-        with:
-          ref: ${{ inputs.game_branch }}
 
       - name: Install Build Dependencies (ubuntu)
         if: ${{ matrix.os == 'ubuntu-22.04' }}
