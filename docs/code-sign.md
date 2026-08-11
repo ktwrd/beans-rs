@@ -4,11 +4,11 @@ When developing software for Windows, it is important to code sign the applicati
 
 ## Sign Tool GitHub Action
 
-This repo uses [`skymatic/code-sign-action@v1`](https://github.com/marketplace/actions/windows-signtool-exe-code-sign-action) to sign the latest builds of `beans-rs`. The most important components of this action are `certificate`, `certificatesha1` and `password`.
+This repo uses [`skymatic/code-sign-action@v1`](https://github.com/marketplace/actions/windows-signtool-exe-code-sign-action) to sign the latest builds of `beans`. The most important components of this action are `certificate`, `certificatesha1` and `password`.
 
 ## Generating a Self Signed Certificate on Windows
 
-There is [extensive Microsoft documentation about code signing certificates](https://learn.microsoft.com/en-us/entra/identity-platform/howto-create-self-signed-certificate), however `beans-rs` relies on a script inspired by [this guide](https://archi-lab.net/creating-a-self-signed-code-signing-certificate/).
+There is [extensive Microsoft documentation about code signing certificates](https://learn.microsoft.com/en-us/entra/identity-platform/howto-create-self-signed-certificate), however `beans` relies on a script inspired by [this guide](https://archi-lab.net/creating-a-self-signed-code-signing-certificate/).
 
 Before starting the generating certificate process, ensure you have 3 passwords:
 - Certificate Authority Password

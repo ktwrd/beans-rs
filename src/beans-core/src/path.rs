@@ -178,7 +178,7 @@ pub fn get_tmp_file(filename: String) -> String
     join_path(get_tmp_dir(), head)
 }
 
-/// Create directory in temp directory with name of "beans-rs"
+/// Create directory in temp directory with name of "beans"
 pub fn get_tmp_dir() -> String
 {
     let mut dir = std::env::temp_dir().to_str().unwrap_or("").to_string();
@@ -189,7 +189,7 @@ pub fn get_tmp_dir() -> String
     else if is_steamdeck()
     {
         trace!(
-            "[core::path::get_tmp_dir] Detected that we are running on a steam deck. Using ~/.tmp/beans-rs"
+            "[core::path::get_tmp_dir] Detected that we are running on a steam deck. Using ~/.tmp/beans"
         );
         match simple_home_dir::home_dir()
         {
@@ -231,7 +231,7 @@ pub fn get_tmp_dir() -> String
             );
         }
     }
-    dir = join_path(dir, String::from("beans-rs"));
+    dir = join_path(dir, String::from("beans"));
     dir = format_directory_path(dir);
 
     if !dir_exists(dir.clone())

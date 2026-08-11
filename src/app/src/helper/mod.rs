@@ -218,7 +218,7 @@ where
 /// - If there are any processes called `hl2.exe` that contain the
 ///   `mod_directory` provided
 /// - If there are any processes that contain the `mod_directory` in the
-///   arguments  *that aren't* beans-rs.
+///   arguments  *that aren't* beans.
 ///
 /// Otherwise, `false` is returned.
 pub fn is_game_running(mod_directory: String) -> Option<sysinfo::Pid>
@@ -247,7 +247,7 @@ pub fn is_game_running(mod_directory: String) -> Option<sysinfo::Pid>
                     if let Some(proc_name_str) = proc.name().to_str()
                     {
                         let proc_name = proc_name_str.to_string().to_lowercase();
-                        if proc_name != *"beans" && proc_name != *"beans-rs"
+                        if proc_name != *"beans" && proc_name != *"beans"
                         {
                             return true;
                         }
@@ -484,12 +484,12 @@ pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
                 backtrace: Backtrace::capture()
             };
             trace!(
-                "[beans_rs::beans_has_update] Failed to deserialize GithubReleaseItem from URL {GITHUB_RELEASES_URL:}\n{error:#?}"
+                "[beans::beans_has_update] Failed to deserialize GithubReleaseItem from URL {GITHUB_RELEASES_URL:}\n{error:#?}"
             );
             return Err(error);
         }
     };
-    trace!("[beans_rs::beans_has_update] response data from URL {GITHUB_RELEASES_URL:}\n{data:#?}");
+    trace!("[beans::beans_has_update] response data from URL {GITHUB_RELEASES_URL:}\n{data:#?}");
     if !data.draft && !data.prerelease && data.tag_name != format!("v{}", beans_core::VERSION)
     {
         return Ok(Some(data.clone()));

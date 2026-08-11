@@ -1,8 +1,13 @@
 use std::str::FromStr;
 
-use beans_core::{BeansError, PANIC_MSG_CONTENT, PAUSE_ONCE_DONE, PROMPT_DO_WHATEVER, appvar::AppVarData, path::{dir_exists,
+use beans_core::{BeansError,
+                 PANIC_MSG_CONTENT,
+                 PAUSE_ONCE_DONE,
+                 PROMPT_DO_WHATEVER,
+                 appvar::AppVarData,
+                 path::{dir_exists,
                         parse_location}};
-use beans_rs::{RunnerContext,
+use beans::{RunnerContext,
                SourceModDirectoryParam,
                flags,
                flags::LaunchFlag,
@@ -108,8 +113,8 @@ fn init_flags()
         flags::add_flag(LaunchFlag::DEBUG_MODE);
     }
     flags::add_flag(LaunchFlag::STANDALONE_APP);
-    beans_rs::logger::set_filter(DEFAULT_LOG_LEVEL);
-    beans_rs::logger::log_to_stdout();
+    beans::logger::set_filter(DEFAULT_LOG_LEVEL);
+    beans::logger::log_to_stdout();
 }
 
 #[allow(dead_code)]
@@ -117,7 +122,7 @@ fn init_panic_handle()
 {
     std::panic::set_hook(Box::new(move |info| {
         debug!("[panic::set_hook] showing msgbox to notify user");
-        let msg = beans_rs::helper::payload_message(info);
+        let msg = beans::helper::payload_message(info);
         info!("[panic] Fatal error!\n{:#?}", msg);
         custom_panic_handle(msg);
         debug!("[panic::set_hook] calling sentry_panic::panic_handler");
@@ -143,7 +148,7 @@ fn custom_panic_handle(msg: String)
         .replace("$err_msg", &msg)
         .replace("\\n", "\n");
 
-    beans_rs::gui::DialogBuilder::new()
+    beans::gui::DialogBuilder::new()
         .with_title(String::from("beans - Fatal Error!"))
         .with_icon(DialogIconKind::Error)
         .with_content(txt)
@@ -179,7 +184,7 @@ impl Launcher
     {
         Arg::new("location")
             .long("location")
-            .help("Manually specify sourcemods directory. When not provided, beans-rs will automatically detect the sourcemods directory.")
+            .help("Manually specify sourcemods directory. When not provided, beans will automatically detect the sourcemods directory.")
             .required(false)
     }
     fn create_confirm_arg() -> Arg
@@ -192,7 +197,7 @@ impl Launcher
     }
     pub async fn run()
     {
-        let cmd = Command::new("beans-rs")
+        let cmd = Command::new("beans")
             .version(clap::crate_version!())
             .bin_name(clap::crate_name!())
             .subcommand(Command::new("wizard")
@@ -233,7 +238,7 @@ impl Launcher
                     .action(ArgAction::SetTrue),
                 Arg::new("no-pause")
                     .long("no-pause")
-                    .help("When provided, beans-rs will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts.")
+                    .help("When provided, beans will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts.")
                     .action(ArgAction::SetTrue),
                 Self::create_location_arg(),
                 Self::create_confirm_arg()
@@ -254,7 +259,7 @@ impl Launcher
         let mut i = Self::new(&cmd.get_matches());
         if let Ok(Some(v)) = helper::beans_has_update().await
         {
-            info!("A new version of beans-rs is available!");
+            info!("A new version of beans is available!");
             info!("{}", v.html_url);
         }
         i.subcommand_processor().await;
@@ -280,13 +285,13 @@ impl Launcher
         if self.root_matches.get_flag("no-debug")
         {
             flags::remove_flag(LaunchFlag::DEBUG_MODE);
-            beans_rs::logger::set_filter(DEFAULT_LOG_LEVEL_RELEASE);
+            beans::logger::set_filter(DEFAULT_LOG_LEVEL_RELEASE);
             info!("Disabled Debug Mode");
         }
         else if self.root_matches.get_flag("debug")
         {
             flags::add_flag(LaunchFlag::DEBUG_MODE);
-            beans_rs::logger::set_filter(LevelFilter::max());
+            beans::logger::set_filter(LevelFilter::max());
             trace!("Debug mode enabled");
         }
     }
@@ -623,7 +628,7 @@ impl Launcher
 
 fn show_msgbox_error(text: String)
 {
-    beans_rs::gui::DialogBuilder::new()
+    beans::gui::DialogBuilder::new()
         .with_title(String::from("beans - Fatal Error!"))
         .with_icon(DialogIconKind::Error)
         .with_content(text.replace("\\n", "\n"))
