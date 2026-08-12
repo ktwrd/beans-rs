@@ -20,8 +20,6 @@ jobs:
           - os: windows-2022
             target: x86_64-pc-windows-msvc
     runs-on: ${{ matrix.os }}
-    outputs:
-      binary: ${{ steps.build.outputs.binary }}
     steps:
       - uses: actions/checkout@v7
         with:
@@ -61,6 +59,7 @@ jobs:
           targets: ${{ matrix.target }}
 
       - name: Build
+        shell: bash
         id: build
         run: |
           json=$(cargo build --verbose --target ${{ matrix.target }} --message-format=json-render-diagnostics "$@") && \
