@@ -8,13 +8,17 @@ use beans_bins::ARIA2C_BINARY;
 use beans_bins::{BUTLER_BINARY,
                  BUTLER_LIB_1,
                  BUTLER_LIB_2};
+#[cfg(target_os = "windows")]
+use beans_core::path::join_path;
 use beans_core::{BeansError,
                  path::{file_exists,
                         format_directory_path,
                         get_tmp_dir}};
 use log::{debug,
           error};
-
+          
+#[cfg(target_os = "windows")]
+use crate::helper;
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
