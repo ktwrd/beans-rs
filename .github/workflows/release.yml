@@ -33,7 +33,9 @@ jobs:
 
     steps:
       - uses: actions/checkout@v7
-
+        with:
+          lfs: true
+      
       - name: Install Build Dependencies (ubuntu)
         if: ${{ matrix.os == 'ubuntu-22.04' }}
         run: |
@@ -64,7 +66,7 @@ jobs:
 
       - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly-2025-01-10
+          toolchain: nightly-2026-05-09
           targets: ${{ matrix.target }}
 
       - name: Compile ${{ matrix.filename }}
