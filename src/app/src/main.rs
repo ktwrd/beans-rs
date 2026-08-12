@@ -1,3 +1,6 @@
+use rust_i18n::t;
+rust_i18n::i18n!();
+
 use std::str::FromStr;
 
 use beans_core::{BeansError, PANIC_MSG_CONTENT, PAUSE_ONCE_DONE, PROMPT_DO_WHATEVER, appvar::AppVarData, path::{dir_exists,
@@ -192,6 +195,7 @@ impl Launcher
     }
     pub async fn run()
     {
+
         let cmd = Command::new("beans-rs")
             .version(clap::crate_version!())
             .bin_name(clap::crate_name!())
@@ -247,14 +251,14 @@ impl Launcher
         println!("Copyright (c) 2024 Kate Ward");
         println!("License {}", env!("CARGO_PKG_LICENSE"));
         println!();
-        println!("For a full list of contributors visit:");
+        println!("{}", t!("menu.contributor_list"));
         println!("<{}/graphs/contributors>", env!("CARGO_PKG_REPOSITORY"));
         println!();
 
         let mut i = Self::new(&cmd.get_matches());
         if let Ok(Some(v)) = helper::beans_has_update().await
         {
-            info!("A new version of beans-rs is available!");
+            info!("{}", t!("menu.new_version"));
             info!("{}", v.html_url);
         }
         i.subcommand_processor().await;

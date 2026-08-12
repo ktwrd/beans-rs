@@ -44,6 +44,7 @@ valve_pak = "0.1.0"
 current_platform = "0.2.0"
 beans-bins = { path = "../beans-bins" }
 beans-core = { path = "../beans-core" }
+rust-i18n = "4"
 
 [build-dependencies]
 fl2rust = "0.7.1"
@@ -101,3 +102,6 @@ codegen-units = 1   # Reduce number of codegen units to increase optimizations
 panic = 'abort'     # Abort on panic
 strip = false
 
+[package.metadata.i18n]
+default-locale = "en"
+load-path = "locales"

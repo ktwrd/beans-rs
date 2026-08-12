@@ -1,0 +1,6 @@
+_version: 2
+
+menu.contributor_list:
+  en: "For a full list of contributors visit:"
+menu.new_version:
+  en: "A new version of beans-rs is available!"
