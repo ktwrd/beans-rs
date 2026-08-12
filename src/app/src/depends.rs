@@ -11,12 +11,10 @@ use beans_bins::{BUTLER_BINARY,
 use beans_core::{BeansError,
                  path::{file_exists,
                         format_directory_path,
-                        get_tmp_dir,
-                        join_path}};
+                        get_tmp_dir}};
 use log::{debug,
           error};
 
-use crate::helper;
 
 /// try and write aria2c and butler if it doesn't exist
 /// paths that are used will be fetched from binary_locations()
