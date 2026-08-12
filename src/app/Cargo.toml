@@ -12,6 +12,11 @@ description = "Open-Source Installer for Sourcemods"
 repository = "https://github.com/ktwrd/beans-rs"
 license = "GPL-3.0-only"
 
+# Modify to change the name of the compiled binary
+[[bin]]
+name = "beans"
+path = "src/main.rs"
+
 [dependencies]
 async-recursion = "1.1.1"
 async-stream = "0.3.6"
