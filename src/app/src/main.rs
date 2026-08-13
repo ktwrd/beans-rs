@@ -82,7 +82,11 @@ fn init_console()
     if let Err(e) =
         winconsole::console::set_title(format!("beans v{}", beans_core::VERSION).as_str())
     {
-        trace!("[init_console] failed to set console title {:#?}", e);
+        trace!(
+            "[init_console] {} {:#?}",
+            t!("error.console.title.failure"),
+            e
+        );
     }
     if let Ok(mut input_mode) = winconsole::console::get_input_mode()
     {
@@ -92,10 +96,15 @@ fn init_console()
             if let Err(e) = winconsole::console::set_input_mode(input_mode)
             {
                 debug!(
-                    "[init_console] failed to disable console flag QuickEditMode {:#?}",
+                    "[init_console] {} {:#?}",
+                    t!("error.console.flag.failure", flag = "QuickEditMode"),
                     e
                 );
-                warn!("[init_console] failed to disable Quick Edit mode ({:})", e);
+                warn!(
+                    "[init_console] {} QuickEditMode ({:})",
+                    t!("error.console.flag.failure", flag = "QuickEditMode"),
+                    e
+                );
             }
         }
     }
@@ -124,11 +133,17 @@ fn init_flags()
 fn init_panic_handle()
 {
     std::panic::set_hook(Box::new(move |info| {
-        debug!("[panic::set_hook] showing msgbox to notify user");
+        debug!("[panic::set_hook] {}", t!("error.msgbox"));
         let msg = beans_rs::helper::payload_message(info);
-        info!("[panic] Fatal error!\n{:#?}", msg);
+        info!("[panic] {}\n{:#?}", t!("error.fatal"), msg);
         custom_panic_handle(msg);
-        debug!("[panic::set_hook] calling sentry_panic::panic_handler");
+        debug!(
+            "[panic::set_hook] {}",
+            t!(
+                "error.calling.handler",
+                handler = "sentry_panic::panic_handler"
+            )
+        );
         sentry::integrations::panic::panic_handler(info);
         if flags::has_flag(LaunchFlag::DEBUG_MODE)
         {
@@ -152,7 +167,11 @@ fn custom_panic_handle(msg: String)
         .replace("\\n", "\n");
 
     beans_rs::gui::DialogBuilder::new()
-        .with_title(String::from("beans - Fatal Error!"))
+        .with_title(format!(
+            "{} - {}",
+            env!("CARGO_BIN_NAME"),
+            t!("error.fatal")
+        ))
         .with_icon(DialogIconKind::Error)
         .with_content(txt)
         .run();
@@ -165,7 +184,7 @@ fn logic_done()
     unsafe {
         if PAUSE_ONCE_DONE
         {
-            let _ = helper::get_input("Press enter/return to exit");
+            let _ = helper::get_input(&t!("info.press_enter"));
         }
     }
 }
@@ -187,50 +206,59 @@ impl Launcher
     {
         Arg::new("location")
             .long("location")
-            .help("Manually specify sourcemods directory. When not provided, beans-rs will automatically detect the sourcemods directory.")
+            .help(t!("args.location.about", program = env!("CARGO_BIN_NAME")))
             .required(false)
     }
     fn create_confirm_arg() -> Arg
     {
         Arg::new("confirm")
             .long("confirm")
-            .help("When prompted to do something (as a multi-choice option), the default option will be automatically chosen when this switch is provided, and there is a default multi-choice option available.")
+            .help(t!("args.confirm.about"))
             .required(false)
             .action(ArgAction::SetTrue)
     }
     pub async fn run()
     {
-
-        let cmd = Command::new("beans-rs")
+        let cmd = Command::new(env!("CARGO_BIN_NAME"))
             .version(clap::crate_version!())
             .bin_name(clap::crate_name!())
-            .subcommand(Command::new("wizard")
-                .about(t!("commands.wizard.about"))
-                .arg(Launcher::create_location_arg()))
-            .subcommand(Command::new("install")
-                .about(t!("commands.install.about"))
-                .args([
-                    Launcher::create_location_arg(),
-                    Arg::new("from")
-                        .long("from")
-                        .help(t!("commands.install.from"))
-                        .required(false),
-                    Arg::new("target-version")
-                        .long("target-version")
-                        .help(t!("commands.install.target"))
-                        .required(false),
-                    Self::create_confirm_arg()]))
-            .subcommand(Command::new("verify")
-                .about(t!("commands.verify.about"))
-                .arg(Launcher::create_location_arg()))
-            .subcommand(Command::new("update")
-                .about(t!("commands.update.about"))
-                .arg(Launcher::create_location_arg()))
-            .subcommand(Command::new("clean-tmp")
-                .about(t!("commands.clean.about")))
-            .subcommand(Command::new("uninstall")
-                .about(t!("commands.uninstall.about"))
-                .args([Launcher::create_location_arg()]))
+            .subcommand(
+                Command::new("wizard")
+                    .about(t!("commands.wizard.about"))
+                    .arg(Launcher::create_location_arg())
+            )
+            .subcommand(
+                Command::new("install")
+                    .about(t!("commands.install.about"))
+                    .args([
+                        Launcher::create_location_arg(),
+                        Arg::new("from")
+                            .long("from")
+                            .help(t!("commands.install.from"))
+                            .required(false),
+                        Arg::new("target-version")
+                            .long("target-version")
+                            .help(t!("commands.install.target"))
+                            .required(false),
+                        Self::create_confirm_arg()
+                    ])
+            )
+            .subcommand(
+                Command::new("verify")
+                    .about(t!("commands.verify.about"))
+                    .arg(Launcher::create_location_arg())
+            )
+            .subcommand(
+                Command::new("update")
+                    .about(t!("commands.update.about"))
+                    .arg(Launcher::create_location_arg())
+            )
+            .subcommand(Command::new("clean-tmp").about(t!("commands.clean.about")))
+            .subcommand(
+                Command::new("uninstall")
+                    .about(t!("commands.uninstall.about"))
+                    .args([Launcher::create_location_arg()])
+            )
             .args([
                 Arg::new("debug")
                     .long("debug")
@@ -249,7 +277,7 @@ impl Launcher
             ]);
         println!(
             "{} v{} ({})",
-            env!("CARGO_PKG_NAME"),
+            env!("CARGO_BIN_NAME"),
             beans_core::VERSION,
             COMPILED_ON
         );
@@ -290,13 +318,13 @@ impl Launcher
         {
             flags::remove_flag(LaunchFlag::DEBUG_MODE);
             beans_rs::logger::set_filter(DEFAULT_LOG_LEVEL_RELEASE);
-            info!("Disabled Debug Mode");
+            info!("{}", t!("debug.disabled"));
         }
         else if self.root_matches.get_flag("debug")
         {
             flags::add_flag(LaunchFlag::DEBUG_MODE);
             beans_rs::logger::set_filter(LevelFilter::max());
-            trace!("Debug mode enabled");
+            trace!("{}", t!("debug.enabled"));
         }
     }
     /// Set `PAUSE_ONCE_DONE` to `false` when `--no-pause` is provided.
@@ -320,17 +348,23 @@ impl Launcher
                 {
                     debug!("{:#?}", e);
                     error!(
-                        "[Launcher::find_arg_sourcemods_location] Failed to create directory {x:?} ({e:})"
+                        "[Launcher::find_arg_sourcemods_location] {} {:?} ({:})",
+                        t!("error.directory.create.failure"),
+                        x,
+                        e
                     );
                     panic!(
-                        "[Launcher::find_arg_sourcemods_location] Failed to create directory {x:?}\n\n{e:#?}"
+                        "[Launcher::find_arg_sourcemods_location] {} {:?}\n\n{:#?}",
+                        t!("error.directory.create.failure"),
+                        x,
+                        e
                     )
                 }
             }
             sml_dir_manual = Some(parse_location(x.to_string()));
             info!(
-                "[Launcher::find_arg_sourcemods_location] Found in arguments! {}",
-                x
+                "[Launcher::find_arg_sourcemods_location] {}",
+                t!("info.found.args", item = x)
             );
         }
         sml_dir_manual
@@ -400,7 +434,7 @@ impl Launcher
         let x = self.try_get_smdp();
         if let Err(e) = wizard::WizardContext::run(x).await
         {
-            panic!("Failed to run WizardContext {:#?}", e);
+            panic!("{} {:#?}", t!("run.failure", task = "WizardContext"), e);
         }
         else
         {
@@ -442,14 +476,20 @@ impl Launcher
         else if let Some(x) = matches.get_one::<String>("from")
         {
             info!(
-                "Manually installing from {} to {}",
-                x.clone(),
-                ctx.sourcemod_path.clone()
+                "{}",
+                t!(
+                    "tasks.install.from_to",
+                    previous = x.clone(),
+                    current = ctx.sourcemod_path.clone()
+                )
             );
             if let Err(e) =
                 InstallWorkflow::install_from(x.clone(), ctx.sourcemod_path.clone(), None).await
             {
-                error!("Failed to run InstallWorkflow::install_from");
+                error!(
+                    "{}",
+                    t!("error.run.failure", task = "InstallWorkflow::install_from")
+                );
                 sentry::capture_error(&e);
                 panic!("{:#?}", e);
             }
@@ -460,7 +500,11 @@ impl Launcher
         }
         else if let Err(e) = InstallWorkflow::wizard(&mut ctx).await
         {
-            panic!("Failed to run InstallWorkflow {:#?}", e);
+            panic!(
+                "{} {:#?}",
+                t!("error.run.failure", task = "InstallWorkflow"),
+                e
+            );
         }
         else
         {
@@ -485,7 +529,8 @@ impl Launcher
             {
                 sentry::capture_error(&e);
                 error!(
-                    "Failed to parse version argument \"{version_str}\": {:#?}",
+                    "{} \"{version_str}\": {:#?}",
+                    t!("error.parse.version.failure"),
                     e
                 );
                 logic_done();
@@ -497,7 +542,13 @@ impl Launcher
         };
         if let Err(e) = wf.install_version(version).await
         {
-            error!("Failed to run InstallWorkflow::install_version");
+            error!(
+                "{}",
+                t!(
+                    "error.run.failure",
+                    task = "InstallWorkflow::install_version"
+                )
+            );
             sentry::capture_error(&e);
             panic!("{:#?}", e);
         }
@@ -521,7 +572,11 @@ impl Launcher
 
         if let Err(e) = VerifyWorkflow::wizard(&mut ctx).await
         {
-            panic!("Failed to run VerifyWorkflow {:#?}", e);
+            panic!(
+                "{} {:#?}",
+                t!("error.run.failure", task = "VerifyWorkflow"),
+                e
+            );
         }
         else
         {
@@ -543,11 +598,19 @@ impl Launcher
 
         if let Err(e) = UpdateWorkflow::wizard(&mut ctx).await
         {
-            panic!("Failed to run UpdateWorkflow {:#?}", e);
+            panic!(
+                "{} {:#?}",
+                t!("error.run.failure", task = "UpdateWorkflow"),
+                e
+            );
         }
         else if let Err(e) = CleanWorkflow::wizard(&mut ctx)
         {
-            panic!("Failed to run CleanWorkflow {:#?}", e);
+            panic!(
+                "{} {:#?}",
+                t!("error.run.failure", task = "CleanWorkflow"),
+                e
+            );
         }
         else
         {
@@ -564,7 +627,11 @@ impl Launcher
         let mut ctx = self.try_create_context().await;
         if let Err(e) = CleanWorkflow::wizard(&mut ctx)
         {
-            panic!("Failed to run CleanWorkflow {:#?}", e);
+            panic!(
+                "{} {:#?}",
+                t!("error.run.failure", task = "CleanWorkflow"),
+                e
+            );
         }
         else
         {
@@ -586,7 +653,11 @@ impl Launcher
 
         if let Err(e) = UninstallWorkflow::wizard(&mut ctx).await
         {
-            panic!("Failed to run UninstallWorkflow {:#?}", e);
+            panic!(
+                "{} {:#?}",
+                t!("error.run.failure", task = "UninstallWorkflow"),
+                e
+            );
         }
         else
         {
@@ -608,7 +679,7 @@ impl Launcher
             Err(e) =>
             {
                 error!("[try_create_context] {:}", e);
-                trace!("======== Full Error ========");
+                trace!("======== {} ========", t!("error.full"));
                 trace!("{:#?}", &e);
                 show_msgbox_error(format!("{:}", &e));
 
@@ -633,7 +704,11 @@ impl Launcher
 fn show_msgbox_error(text: String)
 {
     beans_rs::gui::DialogBuilder::new()
-        .with_title(String::from("beans - Fatal Error!"))
+        .with_title(format!(
+            "{} - {}",
+            env!("CARGO_BIN_NAME"),
+            t!("error.fatal")
+        ))
         .with_icon(DialogIconKind::Error)
         .with_content(text.replace("\\n", "\n"))
         .run();

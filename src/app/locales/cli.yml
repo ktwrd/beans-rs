@@ -1,4 +1,5 @@
 _version: 2
+
 commands:
   wizard.about:
       en: "Use the wizard to install. (Default subcommand)"
@@ -17,6 +18,12 @@ commands:
     en: "Clean up temporary files used by beans"
   uninstall.about:
       en: "Uninstall the target Source Mod."
+
+tasks:
+  install:
+    from_to:
+      en: "Manually installing from %{previous} to %{current}"
+      
 args:
   debug.about:
     en: "Enable debug logging"
@@ -24,6 +31,11 @@ args:
     en: "Disable mode. Mainly used for debug builds to not spew into the console."
   no-pause.about:
     en: "When provided, beans-rs will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts."
+  location.about:
+    en: "Manually specify sourcemods directory. When not provided, %{program} will automatically detect the sourcemods directory."
+  confirm.about:
+    en: |
+      "When prompted to do something (as a multi-choice option), the default option will be automatically chosen when this switch is provided, and there is a default multi-choice option available."
     
 intro:
   contributor_list:
@@ -31,3 +43,40 @@ intro:
   new_version:
     en: "A new version of beans-rs is available!"
     
+debug:
+  enabled:
+    en: "Enabled Debug Mode"
+  disabled:
+    en: "Disabled Debug Mode"
+
+info:
+  found:
+    args:
+      en: "Found in arguments! %{item}"
+  press_enter:
+    en: "Press enter/return to exit"
+
+error:
+  directory:
+    create.failure:
+      en: "Failed to create directory"
+  console:
+    title.failure:
+      en: "Failed to set console title"
+    flag.failure:
+      en: "Failed to disable console flag %{flag}"
+  msgbox:
+    en: "Showing MsgBox to notify user"
+  fatal:
+    en: "Fatal error!"
+  calling.handler:
+    en: "Calling panic handler %{handler}"
+  full:
+    en: "Full Error"
+  run.failure:
+    en: "Failed to run %{task}"
+  parse:
+    version.failure: 
+      en: "Failed to parse version argument"
+    any:
+      en: "Failed to parse %{item}"
