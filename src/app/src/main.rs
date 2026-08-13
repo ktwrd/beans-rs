@@ -200,44 +200,44 @@ impl Launcher
             .version(clap::crate_version!())
             .bin_name(clap::crate_name!())
             .subcommand(Command::new("wizard")
-                .about("Use the wizard to install. (Default subcommand)")
+                .about(t!("commands.wizard.about"))
                 .arg(Launcher::create_location_arg()))
             .subcommand(Command::new("install")
-                .about("Install to a custom location.")
+                .about(t!("commands.install.about"))
                 .args([
                     Launcher::create_location_arg(),
                     Arg::new("from")
                         .long("from")
-                        .help("Location to where the .tar.zstd file is that you want to install from.")
+                        .help(t!("commands.install.from"))
                         .required(false),
                     Arg::new("target-version")
                         .long("target-version")
-                        .help("Specify the version to install. Ignored when [--from] is used.")
+                        .help(t!("commands.install.target"))
                         .required(false),
                     Self::create_confirm_arg()]))
             .subcommand(Command::new("verify")
-                .about("Verify your current installation")
+                .about(t!("commands.verify.about"))
                 .arg(Launcher::create_location_arg()))
             .subcommand(Command::new("update")
-                .about("Update your installation")
+                .about(t!("commands.update.about"))
                 .arg(Launcher::create_location_arg()))
             .subcommand(Command::new("clean-tmp")
-                .about("Clean up temporary files used by beans"))
+                .about(t!("commands.clean.about")))
             .subcommand(Command::new("uninstall")
-                .about("Uninstall the target Source Mod.")
+                .about(t!("commands.uninstall.about"))
                 .args([Launcher::create_location_arg()]))
             .args([
                 Arg::new("debug")
                     .long("debug")
-                    .help("Enable debug logging")
+                    .help(t!("args.debug.about"))
                     .action(ArgAction::SetTrue),
                 Arg::new("no-debug")
                     .long("no-debug")
-                    .help("Disable mode. Mainly used for debug builds to not spew into the console.")
+                    .help(t!("args.no-debug.about"))
                     .action(ArgAction::SetTrue),
                 Arg::new("no-pause")
                     .long("no-pause")
-                    .help("When provided, beans-rs will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts.")
+                    .help(t!("args.no-pause.about"))
                     .action(ArgAction::SetTrue),
                 Self::create_location_arg(),
                 Self::create_confirm_arg()
@@ -251,14 +251,14 @@ impl Launcher
         println!("Copyright (c) 2024 Kate Ward");
         println!("License {}", env!("CARGO_PKG_LICENSE"));
         println!();
-        println!("{}", t!("menu.contributor_list"));
+        println!("{}", t!("intro.contributor_list"));
         println!("<{}/graphs/contributors>", env!("CARGO_PKG_REPOSITORY"));
         println!();
 
         let mut i = Self::new(&cmd.get_matches());
         if let Ok(Some(v)) = helper::beans_has_update().await
         {
-            info!("{}", t!("menu.new_version"));
+            info!("{}", t!("intro.new_version"));
             info!("{}", v.html_url);
         }
         i.subcommand_processor().await;
