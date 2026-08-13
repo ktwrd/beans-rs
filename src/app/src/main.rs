@@ -3,7 +3,12 @@ rust_i18n::i18n!();
 
 use std::str::FromStr;
 
-use beans_core::{BeansError, PANIC_MSG_CONTENT, PAUSE_ONCE_DONE, PROMPT_DO_WHATEVER, appvar::AppVarData, path::{dir_exists,
+use beans_core::{BeansError,
+                 PANIC_MSG_CONTENT,
+                 PAUSE_ONCE_DONE,
+                 PROMPT_DO_WHATEVER,
+                 appvar::AppVarData,
+                 path::{dir_exists,
                         parse_location}};
 use beans_rs::{RunnerContext,
                SourceModDirectoryParam,
