@@ -253,10 +253,16 @@ impl Launcher
                     .about(t!("commands.update.about"))
                     .arg(Launcher::create_location_arg())
             )
-            .subcommand(Command::new("clean-tmp").about(t!("commands.clean.about")))
+            .subcommand(
+                Command::new("clean-tmp")
+                    .about(t!("commands.clean.about", program = env!("CARGO_BIN_NAME")))
+            )
             .subcommand(
                 Command::new("uninstall")
-                    .about(t!("commands.uninstall.about"))
+                    .about(t!(
+                        "commands.uninstall.about",
+                        game = AppVarData::get().mod_info.name_stylized
+                    ))
                     .args([Launcher::create_location_arg()])
             )
             .args([
@@ -270,7 +276,7 @@ impl Launcher
                     .action(ArgAction::SetTrue),
                 Arg::new("no-pause")
                     .long("no-pause")
-                    .help(t!("args.no-pause.about"))
+                    .help(t!("args.no-pause.about", program = env!("CARGO_BIN_NAME")))
                     .action(ArgAction::SetTrue),
                 Self::create_location_arg(),
                 Self::create_confirm_arg()
@@ -291,7 +297,10 @@ impl Launcher
         let mut i = Self::new(&cmd.get_matches());
         if let Ok(Some(v)) = helper::beans_has_update().await
         {
-            info!("{}", t!("intro.new_version"));
+            info!(
+                "{}",
+                t!("intro.new_version", program = env!("CARGO_BIN_NAME"))
+            );
             info!("{}", v.html_url);
         }
         i.subcommand_processor().await;

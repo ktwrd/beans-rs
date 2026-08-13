@@ -1,4 +1,5 @@
 _version: 2
+# IMPORTANT: Do not translate any values inside of %{}
 
 commands:
   wizard.about:
@@ -15,9 +16,9 @@ commands:
   update.about:
     en: "Update your installation"
   clean.about:
-    en: "Clean up temporary files used by beans"
+    en: "Clean up temporary files used by %{program}"
   uninstall.about:
-      en: "Uninstall the target Source Mod."
+      en: "Uninstall the target Source Mod (%{game})."
 
 tasks:
   install:
@@ -30,18 +31,17 @@ args:
   no-debug.about:
     en: "Disable mode. Mainly used for debug builds to not spew into the console."
   no-pause.about:
-    en: "When provided, beans-rs will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts."
+    en: "When provided, %{program} will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts."
   location.about:
     en: "Manually specify sourcemods directory. When not provided, %{program} will automatically detect the sourcemods directory."
   confirm.about:
-    en: |
-      "When prompted to do something (as a multi-choice option), the default option will be automatically chosen when this switch is provided, and there is a default multi-choice option available."
+    en: "When prompted to do something (as a multi-choice option), the default option will be automatically chosen when this switch is provided, and there is a default multi-choice option available."
     
 intro:
   contributor_list:
     en: "For a full list of contributors visit:"
   new_version:
-    en: "A new version of beans-rs is available!"
+    en: "A new version of %{program} is available!"
     
 debug:
   enabled:
