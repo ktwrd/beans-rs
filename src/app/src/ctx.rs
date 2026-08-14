@@ -340,7 +340,8 @@ impl RunnerContext
             let target: &str = pair[1];
             let mod_location = self.get_mod_location();
             let ln_location = format!("{}{}", mod_location, target);
-            if file_exists(ln_location.clone()) && !beans_core::path::is_symlink(ln_location.clone())
+            if file_exists(ln_location.clone())
+                && !beans_core::path::is_symlink(ln_location.clone())
             {
                 if let Err(e) = std::fs::remove_file(&ln_location)
                 {
