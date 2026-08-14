@@ -1,4 +1,3 @@
-# .github/workflows/release.yml
 name: Release
 
 on:
@@ -7,6 +6,7 @@ on:
       tag:
         description: 'Github Release Tag'
         required: true
+        type: string
 
 run-name: Release ${{ inputs.tag }}
 
@@ -64,14 +64,13 @@ jobs:
           toolchain: nightly-2026-05-09
           targets: ${{ matrix.target }}
 
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release --target ${{ matrix.target }}
+      - name: Compile ${{ matrix.filename }}
+        run: |
+          cargo build --release --target ${{ matrix.target }}
 
       - name: Code Signing (Windows)
         if: ${{ matrix.os == 'windows-2022' }}
-        uses: skymatic/code-sign-action@v1
+        uses: skymatic/code-sign-action@v3
         with:
           certificate: '${{ secrets.CODESIGN }}'
           password: '${{ secrets.CODESIGN_PASSWORD }}'
@@ -87,9 +86,10 @@ jobs:
           draft: false
           prerelease: true
           target_commitish: ${{ github.sha }}
+
       #- name: Create Sentry release
       #  if: ${{ matrix.os == 'ubuntu-latest' }}
-      #  uses: getsentry/action-release@v1
+      #  uses: getsentry/action-release@v3
       #  env:
       #    SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       #    SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
