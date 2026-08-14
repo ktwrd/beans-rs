@@ -87,7 +87,7 @@ fn find_steam_reg_path() -> Result<String, BeansError>
     Err(BeansError::SteamNotFound)
 }
 
-pub fn unmark_readonly(location: String) -> Result<(), BeansError>
+pub fn unmark_readonly(_location: String) -> Result<(), BeansError>
 {
     // does nothing since this function only
     // matters for windows

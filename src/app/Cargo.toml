@@ -1,5 +1,5 @@
 [package]
-name = "beans-rs"
+name = "beans"
 version = "1.7.4"
 edition = "2024"
 authors = [
