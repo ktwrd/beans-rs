@@ -80,3 +80,16 @@ error:
       en: "Failed to parse version argument"
     any:
       en: "Failed to parse %{item}"
+  aria2:
+    spawn:
+      en: "Failed to spawn process:"
+
+
+aria2:
+  args:
+    custom:
+      en: "Using customized arguments:"
+    extra:
+      en: "(Prepend) Extra arguments:"
+  spawn:
+    en: "Spawn process"

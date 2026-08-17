@@ -12,6 +12,7 @@ use beans_core::{Aria2cExitCodeReason,
 use log::{debug,
           error,
           info};
+use rust_i18n::t;
 
 use crate::{depends,
             helper};
@@ -77,7 +78,8 @@ pub async fn download_file(
             .replace("%USER_AGENT%", &user_agent)
             .replace("%URL%", &url);
         debug!(
-            "[aria2::download_file] using customized arguments: {}",
+            "[aria2::download_file] {} {}",
+            t!("aria2.args.custom"),
             repl
         );
         cmd.arg(repl);
@@ -87,7 +89,8 @@ pub async fn download_file(
         if let Some(extra) = get_aria2c_extra_args()
         {
             debug!(
-                "[aria2::download_file] (prepend) extra arguments: {}",
+                "[aria2::download_file] {} {}",
+                t!("aria2.args.extra"),
                 extra
             );
             cmd.arg(extra);
@@ -106,14 +109,22 @@ pub async fn download_file(
             &url
         ]);
     }
-    debug!("[aria2::download_file] spawn\n{:#?}", cmd);
+    debug!("[aria2::download_file] {}\n{:#?}", t!("aria2.spawn"), cmd);
     let cmd_string = format!("{:#?}", cmd);
     match cmd.spawn()
     {
         Err(e) =>
         {
-            debug!("[aria2::download_file] failed to spawn process: {:#?}", e);
-            error!("[aria2::download_file] Failed to spawn process ({e:})");
+            debug!(
+                "[aria2::download_file] {} {:#?}",
+                t!("error.aria2.spawn"),
+                e
+            );
+            error!(
+                "[aria2::download_file] {} ({:})",
+                t!("error.aria2.spawn"),
+                e
+            );
             Err(BeansError::DownloadFailure {
                 reason: DownloadFailureReason::Aria2cSpawnError {
                     url,
@@ -126,7 +137,7 @@ pub async fn download_file(
         Ok(mut child) =>
         {
             let wait_status = child.wait()?;
-            debug!("[aria2::download_file] exited status {:#?}", wait_status);
+            debug!("[aria2::download_file] {} {:#?}", t!(""), wait_status);
             if let Some(code) = wait_status.code()
             {
                 if let Some(error_code) = Aria2cExitCodeReason::from_exit_code(code)
