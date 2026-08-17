@@ -14,17 +14,16 @@ jobs:
   release:
     name: Release ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-22.04
-            filename: 'beans'
             target: x86_64-unknown-linux-gnu
-
           - os: windows-2022
             target: x86_64-pc-windows-msvc
-            filename: 'beans.exe'
 
     steps:
       - uses: actions/checkout@v7
@@ -63,10 +62,14 @@ jobs:
         with:
           toolchain: nightly-2026-05-09
           targets: ${{ matrix.target }}
-
-      - name: Compile ${{ matrix.filename }}
+          
+      - name: Build
+        shell: bash
+        id: build
         run: |
-          cargo build --release --target ${{ matrix.target }}
+          json=$(cargo build --release --target ${{ matrix.target }} --message-format=json-render-diagnostics "$@") && \
+          binary=$(printf "%s" "$json" | jq -js '[.[] | select(.reason == "compiler-artifact") | select(.executable != null)] | last | .executable')
+          echo "binary=$binary" >> "$GITHUB_OUTPUT"
 
       - name: Code Signing (Windows)
         if: ${{ matrix.os == 'windows-2022' }}
@@ -75,13 +78,13 @@ jobs:
           certificate: '${{ secrets.CODESIGN }}'
           password: '${{ secrets.CODESIGN_PASSWORD }}'
           folder: 'target/${{ matrix.target }}/release'
-          description: 'beans'
+          description: 'Open-Source Installer for Sourcemods'
           certificatesha1: '${{ secrets.CODESIGN_HASH }}'
 
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
         with:
-          files: target/${{ matrix.target }}/release/${{ matrix.filename }}
+          files: ${{ steps.build.outputs.binary }}
           tag_name: ${{ github.event.inputs.tag }}
           draft: false
           prerelease: true
