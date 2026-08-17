@@ -82,11 +82,7 @@ fn init_console()
     if let Err(e) =
         winconsole::console::set_title(format!("beans v{}", beans_core::VERSION).as_str())
     {
-        trace!(
-            "[init_console] {} {:#?}",
-            t!("error.console.title"),
-            e
-        );
+        trace!("[init_console] {} {:#?}", t!("error.console.title"), e);
     }
     if let Ok(mut input_mode) = winconsole::console::get_input_mode()
     {
@@ -509,11 +505,7 @@ impl Launcher
         }
         else if let Err(e) = InstallWorkflow::wizard(&mut ctx).await
         {
-            panic!(
-                "{} {:#?}",
-                t!("error.run", task = "InstallWorkflow"),
-                e
-            );
+            panic!("{} {:#?}", t!("error.run", task = "InstallWorkflow"), e);
         }
         else
         {
@@ -537,11 +529,7 @@ impl Launcher
             Err(e) =>
             {
                 sentry::capture_error(&e);
-                error!(
-                    "{} \"{version_str}\": {:#?}",
-                    t!("error.parse.version"),
-                    e
-                );
+                error!("{} \"{version_str}\": {:#?}", t!("error.parse.version"), e);
                 logic_done();
                 return;
             }
@@ -553,10 +541,7 @@ impl Launcher
         {
             error!(
                 "{}",
-                t!(
-                    "error.run",
-                    task = "InstallWorkflow::install_version"
-                )
+                t!("error.run", task = "InstallWorkflow::install_version")
             );
             sentry::capture_error(&e);
             panic!("{:#?}", e);
@@ -581,11 +566,7 @@ impl Launcher
 
         if let Err(e) = VerifyWorkflow::wizard(&mut ctx).await
         {
-            panic!(
-                "{} {:#?}",
-                t!("error.run", task = "VerifyWorkflow"),
-                e
-            );
+            panic!("{} {:#?}", t!("error.run", task = "VerifyWorkflow"), e);
         }
         else
         {
@@ -607,19 +588,11 @@ impl Launcher
 
         if let Err(e) = UpdateWorkflow::wizard(&mut ctx).await
         {
-            panic!(
-                "{} {:#?}",
-                t!("error.run", task = "UpdateWorkflow"),
-                e
-            );
+            panic!("{} {:#?}", t!("error.run", task = "UpdateWorkflow"), e);
         }
         else if let Err(e) = CleanWorkflow::wizard(&mut ctx)
         {
-            panic!(
-                "{} {:#?}",
-                t!("error.run", task = "CleanWorkflow"),
-                e
-            );
+            panic!("{} {:#?}", t!("error.run", task = "CleanWorkflow"), e);
         }
         else
         {
@@ -636,11 +609,7 @@ impl Launcher
         let mut ctx = self.try_create_context().await;
         if let Err(e) = CleanWorkflow::wizard(&mut ctx)
         {
-            panic!(
-                "{} {:#?}",
-                t!("error.run", task = "CleanWorkflow"),
-                e
-            );
+            panic!("{} {:#?}", t!("error.run", task = "CleanWorkflow"), e);
         }
         else
         {
@@ -662,11 +631,7 @@ impl Launcher
 
         if let Err(e) = UninstallWorkflow::wizard(&mut ctx).await
         {
-            panic!(
-                "{} {:#?}",
-                t!("error.run", task = "UninstallWorkflow"),
-                e
-            );
+            panic!("{} {:#?}", t!("error.run", task = "UninstallWorkflow"), e);
         }
         else
         {
