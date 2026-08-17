@@ -1,0 +1,43 @@
+_version: 2
+# IMPORTANT: Do not translate any values inside of %{}
+
+error:
+  directory:
+    create:
+      en: "Failed to create directory"
+  console:
+    title:
+      en: "Failed to set console title"
+    flag:
+      en: "Failed to disable console flag %{flag}"
+  msgbox:
+    en: "Showing MsgBox to notify user"
+  fatal:
+    en: "Fatal error!"
+  calling.handler:
+    en: "Calling panic handler %{handler}"
+  full:
+    en: "Full Error"
+  run:
+    en: "Failed to run %{task}"
+  parse:
+    version: 
+      en: "Failed to parse version argument"
+    any:
+      en: "Failed to parse %{item}"
+  aria2:
+    spawn:
+      en: "Failed to spawn process:"
+  permissions:
+    set:
+      en:
+        "Failed to set permissions for"
+  extract:
+    en: "Failed to extract:"
+  install:
+    en: "Failed to install %{item}!"
+  remove:
+    installer:
+      en: "Failed to remove installer" 
+    any:
+      en: "Failed to remove %{item}"

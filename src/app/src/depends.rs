@@ -15,6 +15,7 @@ use beans_core::{BeansError,
                         join_path}};
 use log::{debug,
           error};
+use rust_i18n::t;
 
 use crate::helper;
 
@@ -38,13 +39,15 @@ pub fn try_write_deps()
         {
             sentry::capture_error(&e);
             error!(
-                "[depends::try_write_deps] Failed to set permissions for {}",
+                "[depends::try_write_deps] {} {}",
+                t!("error.permissions.set"),
                 get_butler_location()
             );
             error!("[depends::try_write_deps] {:#?}", e);
         }
         debug!(
-            "[depends::try_write_deps] set perms on {}",
+            "[depends::try_write_deps] {} {}",
+            t!("info.permissions.set"),
             get_butler_location()
         );
     }
@@ -59,12 +62,20 @@ fn safe_write_file(
         if let Err(e) = std::fs::write(location, data)
         {
             sentry::capture_error(&e);
-            error!("[depends::try_write_deps] failed to extract {}", location);
+            error!(
+                "[depends::try_write_deps] {} {}",
+                t!("error.extract"),
+                location
+            );
             error!("[depends::try_write_deps] {:#?}", e);
         }
         else
         {
-            debug!("[depends::try_write_deps] extracted {}", location);
+            debug!(
+                "[depends::try_write_deps] {} {}",
+                t!("info.extracted"),
+                location
+            );
         }
     }
 }
@@ -93,11 +104,23 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
         Err(_) => true
     }
     {
-        debug!("[depends::try_install_vcredist] Seems like vcredist is already installed");
+        debug!(
+            "[depends::try_install_vcredist] {}",
+            t!(
+                "dependency.exists",
+                item = t!("dependency.software.vcredist")
+            )
+        );
         return Ok(());
     }
 
-    log::info!("Installing Visual C++ Redistributable");
+    log::info!(
+        "{}",
+        t!(
+            "dependency.install",
+            item = t!("dependency.software.vcredist")
+        )
+    );
     let mut out_loc = get_fmt_tmp_dir();
     out_loc = join_path(out_loc, "vc_redist.exe".to_string());
 
@@ -118,7 +141,10 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
     std::process::Command::new(&out_loc)
         .args(["/install", "/passive", "/norestart"])
         .spawn()
-        .expect("Failed to install vsredist!")
+        .expect(
+            "{}",
+            t!("error.install" item = t!("dependency.software.vcredist"))
+        )
         .wait()?;
 
     if file_exists(out_loc.clone())
@@ -127,7 +153,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
         {
             sentry::capture_error(&e);
             debug!(
-                "[depends::try_install_vcredist] Failed to remove installer {:#?}",
+                "[depends::try_install_vcredist] {} {:#?}", t!("error.remove.installer")
                 e
             );
         }

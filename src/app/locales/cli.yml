@@ -55,35 +55,11 @@ info:
       en: "Found in arguments! %{item}"
   press_enter:
     en: "Press enter/return to exit"
-
-error:
-  directory:
-    create:
-      en: "Failed to create directory"
-  console:
-    title:
-      en: "Failed to set console title"
-    flag:
-      en: "Failed to disable console flag %{flag}"
-  msgbox:
-    en: "Showing MsgBox to notify user"
-  fatal:
-    en: "Fatal error!"
-  calling.handler:
-    en: "Calling panic handler %{handler}"
-  full:
-    en: "Full Error"
-  run:
-    en: "Failed to run %{task}"
-  parse:
-    version: 
-      en: "Failed to parse version argument"
-    any:
-      en: "Failed to parse %{item}"
-  aria2:
-    spawn:
-      en: "Failed to spawn process:"
-
+  permissions:
+    set:
+      en: "Set perms on"
+  extracted:
+    en: "Extracted:"
 
 aria2:
   args:
@@ -93,3 +69,12 @@ aria2:
       en: "(Prepend) Extra arguments:"
   spawn:
     en: "Spawn process"
+
+dependency:
+  exists:
+    en: Seems like %{item} is already installed
+  install:
+    en: "Installing %{item}"
+  software:
+    vcredist:
+      en: "Visual C++ Redistributable"
