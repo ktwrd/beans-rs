@@ -18,3 +18,7 @@ pub mod gui;
 pub mod logger;
 
 pub mod aria2;
+
+#[macro_use]
+extern crate rust_i18n;
+i18n!();
