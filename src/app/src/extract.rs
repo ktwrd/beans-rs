@@ -66,7 +66,7 @@ pub fn unpack_tarball(
         }
     };
     let archive_entry_count = archive_entries.count() as u64;
-    info!("Extracting {} files", archive_entry_count);
+    info!("{}", t!("tasks.extract.count", count = archive_entry_count));
 
     tarball = unpack_tarball_getfile(tarball_location.clone(), output_directory.clone())?;
     archive = tar::Archive::new(&tarball);
@@ -78,7 +78,7 @@ pub fn unpack_tarball(
             .unwrap()
             .with_key("eta", |state: &indicatif::ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
             .progress_chars("#>-"));
-    pb.set_message("Extracting files");
+    pb.set_message(t!("info.extracting"));
 
     let entries = match archive.entries()
     {
@@ -102,7 +102,7 @@ pub fn unpack_tarball(
             Ok(mut x) =>
             {
                 x.set_preserve_permissions(false);
-                pb.set_message("Extracting files");
+                pb.set_message(t!("info.extracting"));
                 let mut filename = String::new();
 
                 if let Ok(Some(p)) = x.link_name()
@@ -141,15 +141,16 @@ pub fn unpack_tarball(
                         && error_str.contains("io: Os {")
                         && error_str.contains("code: 5")
                     {
-                        warn!(
-                            "Failed to unpack file {filename} (Permission Denied, might be read-only)"
-                        )
+                        warn!("{}", t!("error.permissions.unpack", file = filename))
                     }
                     else
                     {
                         pb.finish_and_clear();
                         error!(
-                            "[extract::unpack_tarball] Failed to unpack file {filename} ({error:})"
+                            "[extract::unpack_tarball] {} {} ({:})",
+                            t!("error.unpack"),
+                            filename,
+                            error
                         );
                         return Err(BeansError::TarUnpackItemFailure {
                             src_file: tarball_location,
@@ -171,7 +172,7 @@ pub fn unpack_tarball(
                         {
                             if let Err(e) = crate::helper::unmark_readonly(target_path.clone())
                             {
-                                debug!("Failed to unmark read-only on file: {target_path:} {e:#?}");
+                                debug!("{} {:} {:#?}", t!("error.unmark.readonly"), target_path, e);
                             }
                         }
                     }
@@ -181,8 +182,15 @@ pub fn unpack_tarball(
             Err(error) =>
             {
                 pb.finish_and_clear();
-                debug!("[extract::unpack_tarball] size={size:}, error={:#?}", error);
-                error!("[extract::unpack_tarball] Failed to unpack entry ({error:})");
+                debug!(
+                    "[extract::unpack_tarball] size={:}, error={:#?}",
+                    size, error
+                );
+                error!(
+                    "[extract::unpack_tarball] {} ({:})",
+                    t!("error.unpack"),
+                    error
+                );
                 return Err(BeansError::TarExtractFailure {
                     src_file: tarball_location,
                     target_dir: output_directory,
@@ -218,7 +226,7 @@ pub fn decompress_zstd(
             .progress_chars("#>-"));
 
         std::io::copy(&mut pb_decompress.wrap_read(decoder), &mut tar_tmp_file)
-            .expect("Failed to decompress file");
+            .expect(&t!("error.decompress"));
         pb_decompress.finish();
     }
     else

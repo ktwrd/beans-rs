@@ -26,7 +26,10 @@ tasks:
       en: "Manually installing from %{previous} to %{current}"
   download:
     en: "Downloading %{url} to %{file}"
-      
+  extract:
+    count:
+      en: "Extracting %{count} files"
+    
 args:
   debug.about:
     en: "Enable debug logging"
@@ -62,6 +65,8 @@ info:
       en: "Set perms on"
   extracted:
     en: "Extracted:"
+  extracting:
+    en: "Extracting files"
 
 aria2:
   args:

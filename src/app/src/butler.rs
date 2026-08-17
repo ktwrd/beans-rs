@@ -43,7 +43,12 @@ pub fn verify(
             {
                 if c != 0
                 {
-                    error!("[butler::verify] {} {}, {}", t!("error.butler.code"), c, t!("error.butler.panic"));
+                    error!(
+                        "[butler::verify] {} {}, {}",
+                        t!("error.butler.code"),
+                        c,
+                        t!("error.butler.panic")
+                    );
                     panic!("[butler::verify] {} {}", t!("error.butler.code"), c);
                 }
             }
@@ -63,7 +68,10 @@ pub async fn patch_dl(
         std::fs::remove_dir_all(&staging_dir)?;
     }
     let tmp_file = get_tmp_file(patch_filename);
-    info!("[butler::patch_dl] {}", t!("tasks.download", url = dl_url, file = tmp_file));
+    info!(
+        "[butler::patch_dl] {}",
+        t!("tasks.download", url = dl_url, file = tmp_file)
+    );
     helper::download_with_progress(dl_url, tmp_file.clone()).await?;
 
     if !file_exists(tmp_file.clone())
@@ -115,7 +123,12 @@ pub fn patch(
             {
                 if c != 0
                 {
-                    error!("[butler::patch] {} {}, {}", t!("error.butler.code"), c, t!("error.butler.panic"));
+                    error!(
+                        "[butler::patch] {} {}, {}",
+                        t!("error.butler.code"),
+                        c,
+                        t!("error.butler.panic")
+                    );
                     panic!("[butler::patch] {} {}", t!("error.butler.code"), c);
                 }
             }

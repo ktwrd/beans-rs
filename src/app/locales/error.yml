@@ -30,10 +30,13 @@ error:
       en: "Failed to spawn process:"
   permissions:
     set:
-      en:
-        "Failed to set permissions for"
+      en: "Failed to set permissions for"
+    unpack:
+      en: "Failed to unpack file %{file} (Permission Denied, might be read-only)"
   extract:
     en: "Failed to extract:"
+  unpack:
+    en: "Failed to unpack file"
   install:
     en: "Failed to install %{item}!"
   remove:
@@ -46,3 +49,8 @@ error:
       en: "Exited with code"
     panic:
       en: "Which isn't good!"
+  unmark:
+    readonly:
+      en: "Failed to unmark read-only on file:"
+  decompress:
+    en: "Failed to decompress file"
