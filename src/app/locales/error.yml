@@ -41,3 +41,8 @@ error:
       en: "Failed to remove installer" 
     any:
       en: "Failed to remove %{item}"
+  butler:
+    code:
+      en: "Exited with code"
+    panic:
+      en: "Which isn't good!"

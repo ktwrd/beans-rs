@@ -24,6 +24,8 @@ tasks:
   install:
     from_to:
       en: "Manually installing from %{previous} to %{current}"
+  download:
+    en: "Downloading %{url} to %{file}"
       
 args:
   debug.about:
@@ -78,3 +80,8 @@ dependency:
   software:
     vcredist:
       en: "Visual C++ Redistributable"
+
+butler:
+  exit:
+    en:
+      "Exited with"

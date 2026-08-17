@@ -38,13 +38,13 @@ pub fn verify(
         Ok(mut v) =>
         {
             let w = v.wait()?;
-            debug!("[butler::verify] Exited with {:#?}", w);
+            debug!("[butler::verify] {} {:#?}", t!("butler.exit"), w);
             if let Some(c) = w.code()
             {
                 if c != 0
                 {
-                    error!("[butler::verify] exited with code {c}, which isn't good!");
-                    panic!("[butler::verify] exited with code {c}");
+                    error!("[butler::verify] {} {}, {}", t!("error.butler.code"), c, t!("error.butler.panic"));
+                    panic!("[butler::verify] {} {}", t!("error.butler.code"), c);
                 }
             }
             Ok(w)
@@ -63,7 +63,7 @@ pub async fn patch_dl(
         std::fs::remove_dir_all(&staging_dir)?;
     }
     let tmp_file = get_tmp_file(patch_filename);
-    info!("[butler::patch_dl] downloading {} to {}", dl_url, tmp_file);
+    info!("[butler::patch_dl] {}", t!("tasks.download", url = dl_url, file = tmp_file));
     helper::download_with_progress(dl_url, tmp_file.clone()).await?;
 
     if !file_exists(tmp_file.clone())
@@ -115,8 +115,8 @@ pub fn patch(
             {
                 if c != 0
                 {
-                    error!("[butler::patch] exited with code {c}, which isn't good!");
-                    panic!("[butler::patch] exited with code {c}");
+                    error!("[butler::patch] {} {}, {}", t!("error.butler.code"), c, t!("error.butler.panic"));
+                    panic!("[butler::patch] {} {}", t!("error.butler.code"), c);
                 }
             }
             Ok(w)
