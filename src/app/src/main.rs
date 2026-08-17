@@ -84,7 +84,7 @@ fn init_console()
     {
         trace!(
             "[init_console] {} {:#?}",
-            t!("error.console.title.failure"),
+            t!("error.console.title"),
             e
         );
     }
@@ -97,12 +97,12 @@ fn init_console()
             {
                 debug!(
                     "[init_console] {} {:#?}",
-                    t!("error.console.flag.failure", flag = "QuickEditMode"),
+                    t!("error.console.flag", flag = "QuickEditMode"),
                     e
                 );
                 warn!(
                     "[init_console] {} QuickEditMode ({:})",
-                    t!("error.console.flag.failure", flag = "QuickEditMode"),
+                    t!("error.console.flag", flag = "QuickEditMode"),
                     e
                 );
             }
@@ -358,13 +358,13 @@ impl Launcher
                     debug!("{:#?}", e);
                     error!(
                         "[Launcher::find_arg_sourcemods_location] {} {:?} ({:})",
-                        t!("error.directory.create.failure"),
+                        t!("error.directory.create"),
                         x,
                         e
                     );
                     panic!(
                         "[Launcher::find_arg_sourcemods_location] {} {:?}\n\n{:#?}",
-                        t!("error.directory.create.failure"),
+                        t!("error.directory.create"),
                         x,
                         e
                     )
@@ -443,7 +443,7 @@ impl Launcher
         let x = self.try_get_smdp();
         if let Err(e) = wizard::WizardContext::run(x).await
         {
-            panic!("{} {:#?}", t!("run.failure", task = "WizardContext"), e);
+            panic!("{} {:#?}", t!("run", task = "WizardContext"), e);
         }
         else
         {
@@ -497,7 +497,7 @@ impl Launcher
             {
                 error!(
                     "{}",
-                    t!("error.run.failure", task = "InstallWorkflow::install_from")
+                    t!("error.run", task = "InstallWorkflow::install_from")
                 );
                 sentry::capture_error(&e);
                 panic!("{:#?}", e);
@@ -511,7 +511,7 @@ impl Launcher
         {
             panic!(
                 "{} {:#?}",
-                t!("error.run.failure", task = "InstallWorkflow"),
+                t!("error.run", task = "InstallWorkflow"),
                 e
             );
         }
@@ -539,7 +539,7 @@ impl Launcher
                 sentry::capture_error(&e);
                 error!(
                     "{} \"{version_str}\": {:#?}",
-                    t!("error.parse.version.failure"),
+                    t!("error.parse.version"),
                     e
                 );
                 logic_done();
@@ -554,7 +554,7 @@ impl Launcher
             error!(
                 "{}",
                 t!(
-                    "error.run.failure",
+                    "error.run",
                     task = "InstallWorkflow::install_version"
                 )
             );
@@ -583,7 +583,7 @@ impl Launcher
         {
             panic!(
                 "{} {:#?}",
-                t!("error.run.failure", task = "VerifyWorkflow"),
+                t!("error.run", task = "VerifyWorkflow"),
                 e
             );
         }
@@ -609,7 +609,7 @@ impl Launcher
         {
             panic!(
                 "{} {:#?}",
-                t!("error.run.failure", task = "UpdateWorkflow"),
+                t!("error.run", task = "UpdateWorkflow"),
                 e
             );
         }
@@ -617,7 +617,7 @@ impl Launcher
         {
             panic!(
                 "{} {:#?}",
-                t!("error.run.failure", task = "CleanWorkflow"),
+                t!("error.run", task = "CleanWorkflow"),
                 e
             );
         }
@@ -638,7 +638,7 @@ impl Launcher
         {
             panic!(
                 "{} {:#?}",
-                t!("error.run.failure", task = "CleanWorkflow"),
+                t!("error.run", task = "CleanWorkflow"),
                 e
             );
         }
@@ -664,7 +664,7 @@ impl Launcher
         {
             panic!(
                 "{} {:#?}",
-                t!("error.run.failure", task = "UninstallWorkflow"),
+                t!("error.run", task = "UninstallWorkflow"),
                 e
             );
         }

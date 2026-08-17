@@ -58,12 +58,12 @@ info:
 
 error:
   directory:
-    create.failure:
+    create:
       en: "Failed to create directory"
   console:
-    title.failure:
+    title:
       en: "Failed to set console title"
-    flag.failure:
+    flag:
       en: "Failed to disable console flag %{flag}"
   msgbox:
     en: "Showing MsgBox to notify user"
@@ -73,10 +73,10 @@ error:
     en: "Calling panic handler %{handler}"
   full:
     en: "Full Error"
-  run.failure:
+  run:
     en: "Failed to run %{task}"
   parse:
-    version.failure: 
+    version: 
       en: "Failed to parse version argument"
     any:
       en: "Failed to parse %{item}"
