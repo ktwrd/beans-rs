@@ -5,7 +5,7 @@ edition = "2024"
 authors = [
     "Kate Ward <kate@dariox.club>",
     "ToastXC <contact@toastxc.xyz>",
-    "Sour Dani <dani@prefortress.com>",
+    "Sour Dani <contact@sourdani.dev>",
     "dead_thing (https://github.com/rawra89)"
 ]
 description = "Open-Source Installer for Sourcemods"
