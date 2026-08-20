@@ -1,4 +1,4 @@
-# .github/workflows/release.yml
+name: Release
 
 on:
   workflow_dispatch:
@@ -6,25 +6,30 @@ on:
       tag:
         description: 'Github Release Tag'
         required: true
+        type: string
+
+run-name: Release ${{ inputs.tag }}
 
 jobs:
   release:
-    name: release ${{ matrix.os }}
+    name: Release ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
     strategy:
       fail-fast: false
       matrix:
         include:
           - os: ubuntu-22.04
-            filename: 'beans-rs'
             target: x86_64-unknown-linux-gnu
-
-          - os: windows-latest
+          - os: windows-2022
             target: x86_64-pc-windows-msvc
-            filename: 'beans-rs.exe'
 
     steps:
-      - uses: actions/checkout@master
+      - uses: actions/checkout@v7
+        with:
+          lfs: true
+      
       - name: Install Build Dependencies (ubuntu)
         if: ${{ matrix.os == 'ubuntu-22.04' }}
         run: |
@@ -53,37 +58,41 @@ jobs:
             libfltk1.3-dev \
             libssl-dev
 
-      - uses: actions-rs/toolchain@v1
+      - uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: nightly-2025-01-10
-          target: ${{ matrix.target }}
-
-      - uses: actions-rs/cargo@v1
-        with:
-          command: build
-          args: --release --target ${{ matrix.target }}
+          toolchain: nightly-2026-05-09
+          targets: ${{ matrix.target }}
+          
+      - name: Build
+        shell: bash
+        id: build
+        run: |
+          json=$(cargo build --release --target ${{ matrix.target }} --message-format=json-render-diagnostics "$@") && \
+          binary=$(printf "%s" "$json" | jq -js '[.[] | select(.reason == "compiler-artifact") | select(.executable != null)] | last | .executable')
+          echo "binary=$binary" >> "$GITHUB_OUTPUT"
 
       - name: Code Signing (Windows)
-        if: ${{ matrix.os == 'windows-latest' }}
-        uses: skymatic/code-sign-action@v1
+        if: ${{ matrix.os == 'windows-2022' }}
+        uses: skymatic/code-sign-action@v3
         with:
           certificate: '${{ secrets.CODESIGN }}'
           password: '${{ secrets.CODESIGN_PASSWORD }}'
-          folder: 'target/${{ matrix.target }}/release/'
-          description: 'beans-rs'
+          folder: 'target/${{ matrix.target }}/release'
+          description: 'Open-Source Installer for Sourcemods'
           certificatesha1: '${{ secrets.CODESIGN_HASH }}'
 
       - name: Upload binaries to release
         uses: softprops/action-gh-release@v1
         with:
-          files: target/${{ matrix.target }}/release/${{ matrix.filename }}
+          files: ${{ steps.build.outputs.binary }}
           tag_name: ${{ github.event.inputs.tag }}
           draft: false
           prerelease: true
           target_commitish: ${{ github.sha }}
+
       #- name: Create Sentry release
       #  if: ${{ matrix.os == 'ubuntu-latest' }}
-      #  uses: getsentry/action-release@v1
+      #  uses: getsentry/action-release@v3
       #  env:
       #    SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
       #    SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
