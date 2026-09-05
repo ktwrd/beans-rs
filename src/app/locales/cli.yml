@@ -24,7 +24,7 @@ tasks:
   install:
     from_to:
       en: "Manually installing from %{previous} to %{current}"
-  download:
+  download_to_file:
     en: "Downloading %{url} to %{file}"
   extract:
     count:

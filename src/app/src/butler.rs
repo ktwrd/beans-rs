@@ -70,7 +70,7 @@ pub async fn patch_dl(
     let tmp_file = get_tmp_file(patch_filename);
     info!(
         "[butler::patch_dl] {}",
-        t!("tasks.download", url = dl_url, file = tmp_file)
+        t!("tasks.download_to_file", url = dl_url, file = tmp_file)
     );
     helper::download_with_progress(dl_url, tmp_file.clone()).await?;
 
