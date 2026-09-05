@@ -54,3 +54,9 @@ error:
       en: "Failed to unmark read-only on file:"
   decompress:
     en: "Failed to decompress file"
+  find:
+    en: "Failed to find %{item}"
+  returned_none:
+    en: "%{function} returned None!"
+  not_in_reg_entry:
+    en: "Couldn't find any of the locations in %{registry}"

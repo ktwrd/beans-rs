@@ -1,4 +1,4 @@
-use std::fs::read_to_string;
+use std::{fmt::format, fs::read_to_string};
 
 use beans_core::{BeansError,
                  path::format_directory_path};
@@ -41,7 +41,7 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
             let last = split
                 .clone()
                 .last()
-                .expect("Failed to find SourceModInstallPath")
+                .expect(&format!("{}", t!("error.find", item = "SourceModInstallPath")))
                 .trim()
                 .replace("\"", "");
             return Ok(format_directory_path(last));
@@ -71,19 +71,19 @@ fn find_steam_reg_path() -> Result<String, BeansError>
                 None =>
                 {
                     debug!(
-                        "[helper::find_steam_reg_path] simple_home_dir::home_dir().to_str() returned None!"
+                        "[helper::find_steam_reg_path] {}", t!("error.returned_none", function = "simple_home_dir::home_dir().to_str()")
                     );
                     return Err(BeansError::SteamNotFound);
                 }
             },
             None =>
             {
-                debug!("[helper::find_steam_reg_path] simple_home_dir::home_dir() returned None!");
+                debug!("[helper::find_steam_reg_path] {}", t!("error.returned_none", function = "simple_home_dir::home_dir()"));
                 return Err(BeansError::SteamNotFound);
             }
         }
     }
-    error!("Couldn't find any of the locations in STEAM_POSSIBLE_DIR");
+    error!("{}", t!("error.not_in_reg_entry", registry = "STEAM_POSSIBLE_DIR"));
     Err(BeansError::SteamNotFound)
 }
 
