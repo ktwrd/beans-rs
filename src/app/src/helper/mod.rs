@@ -271,7 +271,12 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
     {
         if let Some(mp) = disk.mount_point().to_str()
         {
-            debug!("[get_free_space] space: {} {}", mp, disk.available_space());
+            debug!(
+                "[get_free_space] {} {} {}",
+                t!("info.space"),
+                mp,
+                disk.available_space()
+            );
             data.insert(mp.to_string(), disk.available_space());
         }
     }
@@ -279,7 +284,7 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
     let mut l = parse_location(location.clone());
     while !l.is_empty()
     {
-        debug!("[get_free_space] Checking if {} is in data", l);
+        debug!("[get_free_space] {}", t!("tasks.check_data", item = l));
         if let Some(x) = data.get(&l)
         {
             return Ok(*x);
@@ -312,7 +317,7 @@ pub async fn download_with_progress(
     );
     if crate::aria2::can_use_aria2() && !get_disable_aria2c()
     {
-        debug!("[helper::download_with_progress] using aria2c");
+        debug!("[helper::download_with_progress] {}", t!("aria2.use"));
         crate::aria2::download_file(url, out_location).await?;
     }
     else
@@ -346,14 +351,14 @@ async fn download_with_progress_reqwest(
 
     let total_size = res
         .content_length()
-        .expect("Failed to get length of data to download");
+        .expect(&format!("{}", t!("error.data_length")));
 
     let pb = ProgressBar::new(total_size);
     pb.set_style(ProgressStyle::with_template("{spinner:.green} [{elapsed_precise}] [{wide_bar:.cyan/blue}] {bytes}/{total_bytes} ({bytes_per_sec}, {eta})")
         .unwrap()
         .with_key("eta", |state: &indicatif::ProgressState, w: &mut dyn std::fmt::Write| write!(w, "{:.1}s", state.eta().as_secs_f64()).unwrap())
         .progress_chars("#>-"));
-    pb.set_message(format!("Downloading {}", &url));
+    pb.set_message(format!("{} {}", &t!("info.downloading"), &url));
 
     // download chunks
     let mut file = match std::fs::File::create(out_location.clone())
@@ -373,9 +378,8 @@ async fn download_with_progress_reqwest(
 
     while let Some(item) = stream.next().await
     {
-        let chunk = item.expect("Failed to write content to file");
-        file.write_all(&chunk)
-            .expect("Failed to write content to file");
+        let chunk = item.expect(&t!("error.write"));
+        file.write_all(&chunk).expect(&t!("error.write"));
         let new = std::cmp::min(downloaded + (chunk.len() as u64), total_size);
         downloaded = new;
         pb.set_position(new);
@@ -461,8 +465,7 @@ pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
         Ok(v) => v,
         Err(e) =>
         {
-            let message =
-                format!("Failed to get latest release from github: {GITHUB_RELEASES_URL:}");
+            let message = format!("{} {:}", t!("error.latest_release"), GITHUB_RELEASES_URL);
             let err = BeansError::Reqwest {
                 error_message: message,
                 error: e,
@@ -484,12 +487,20 @@ pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
                 backtrace: Backtrace::capture()
             };
             trace!(
-                "[beans_rs::beans_has_update] Failed to deserialize GithubReleaseItem from URL {GITHUB_RELEASES_URL:}\n{error:#?}"
+                "[beans_rs::beans_has_update] {} {:}\n{:#?}",
+                t!("error.deserialize_gh_url"),
+                GITHUB_RELEASES_URL,
+                error
             );
             return Err(error);
         }
     };
-    trace!("[beans_rs::beans_has_update] response data from URL {GITHUB_RELEASES_URL:}\n{data:#?}");
+    trace!(
+        "[beans_rs::beans_has_update] {} {:}\n{:#?}",
+        t!("info.response"),
+        GITHUB_RELEASES_URL,
+        data
+    );
     if !data.draft && !data.prerelease && data.tag_name != format!("v{}", beans_core::VERSION)
     {
         return Ok(Some(data.clone()));
@@ -503,15 +514,16 @@ pub fn restore_gameinfo(
 ) -> Result<(), BeansError>
 {
     let loc = ctx.gameinfo_location();
-    trace!("gameinfo location: {}", &loc);
+    trace!("{} {}", t!("info.location", item = "gameinfo"), &loc);
     if let Ok(m) = std::fs::metadata(&loc)
     {
-        trace!("gameinfo metadata: {:#?}", m);
+        trace!("{} {:#?}", t!("info.metadata", item = "gamedata"), m);
     }
     if let Err(e) = ctx.gameinfo_perms()
     {
         error!(
-            "[helper::restore_gameinfo] Failed to update permissions on gameinfo.txt {:}",
+            "[helper::restore_gameinfo] {} {:}",
+            t!("error.permissions.update", file = "gameinfo.txt"),
             e
         );
         sentry::capture_error(&e);
@@ -521,14 +533,16 @@ pub fn restore_gameinfo(
     {
         trace!("error: {:#?}", e);
         error!(
-            "[helper::restore_gameinfo] Failed to write gameinfo.txt backup {:}",
+            "[helper::restore_gameinfo] {} {:}",
+            t!("error.backup.write", item = "gameinfo.txt"),
             e
         );
     }
     if let Err(e) = ctx.gameinfo_perms()
     {
         error!(
-            "[helper::restore_gameinfo] Failed to update permissions on gameinfo.txt {:}",
+            "[helper::restore_gameinfo] {} {:}",
+            t!("error.permissions.update", file = "gameinfo.txt"),
             e
         );
         sentry::capture_error(&e);
@@ -553,7 +567,8 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
             debug!("backupdir: {}", backupdir);
             debug!("error: {:#?}", e);
             error!(
-                "[helper::backup_gameinfo] Failed to create backup directory {:}",
+                "[helper::backup_gameinfo] {} {:}",
+                t!("error.backup.write", item = backupdir),
                 e
             );
             return Err(BeansError::GameinfoBackupFailure {
@@ -579,8 +594,8 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
     if !file_exists(current_location.clone())
     {
         debug!(
-            "[helper::backup_gameinfo] can't backup since {} doesn't exist",
-            current_location
+            "[helper::backup_gameinfo] {}",
+            t!("error.backup.missing_source", item = current_location)
         );
         return Ok(());
     }
@@ -593,7 +608,8 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
             debug!("location: {}", current_location);
             debug!("error: {:#?}", e);
             error!(
-                "[helper::backup_gameinfo] Failed to read content of gameinfo.txt {:}",
+                "[helper::backup_gameinfo] {} {:}",
+                t!("error.read", file = "gameinfo.txt"),
                 e
             );
             return Err(BeansError::GameinfoBackupFailure {
@@ -613,7 +629,8 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
         if let Err(e) = std::fs::remove_file(&output_location)
         {
             warn!(
-                "[helper::backup_gameinfo] Failed to delete existing file, lets hope things don't break. {:} {}",
+                "[helper::backup_gameinfo] {} {:} {}",
+                t!("error.delete.existing"),
                 e,
                 output_location.clone()
             );
@@ -625,8 +642,9 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
         debug!("location: {}", output_location);
         debug!("error: {:#?}", e);
         error!(
-            "[helper::backup_gameinfo] Failed to write backup to {} ({:})",
-            output_location, e
+            "[helper::backup_gameinfo] {} ({:})",
+            t!("error.backup.write", item = output_location),
+            e
         );
         return Err(BeansError::GameinfoBackupFailure {
             reason: GameinfoBackupFailureReason::WriteFail(GameinfoBackupWriteFail {
@@ -636,7 +654,10 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
         });
     }
 
-    println!("[backup_gameinfo] Created backup at {}", output_location);
+    println!(
+        "[backup_gameinfo] {}",
+        t!("info.backup.created", item = output_location)
+    );
 
     Ok(())
 }

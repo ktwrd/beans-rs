@@ -29,6 +29,8 @@ tasks:
   extract:
     count:
       en: "Extracting %{count} files"
+  check_space:
+    en: "Checking if %{item} is in data"
     
 args:
   debug.about:
@@ -67,6 +69,20 @@ info:
     en: "Extracted:"
   extracting:
     en: "Extracting files"
+  space:
+    en: "Storage space:"
+  downloading:
+    en: "Downloading"
+  response:
+    en: "response data from URL"
+  location:
+    en: "%{item} location:"
+  metadata:
+    en: "%{item} metadata:"
+  backup:
+    created:
+      en: "Created backup at %{item}"
+  
 
 aria2:
   args:
@@ -76,6 +92,8 @@ aria2:
       en: "(Prepend) Extra arguments:"
   spawn:
     en: "Spawn process"
+  use:
+    en: "Using aria2c"
 
 dependency:
   exists:
