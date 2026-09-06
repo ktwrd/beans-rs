@@ -85,3 +85,5 @@ error:
     en: "Failed to read content of %{file}"
   delete.existing:
     en: "Failed to delete existing file, lets hope things don't break."
+  bad_gui_platform:
+    en: "Unsupported platform for GUI: %{platform}"

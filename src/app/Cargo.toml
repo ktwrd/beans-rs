@@ -104,4 +104,4 @@ strip = false
 
 [package.metadata.i18n]
 default-locale = "en"
-load-path = "locales"
+load-path = "../locales"

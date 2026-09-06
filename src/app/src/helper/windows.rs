@@ -46,7 +46,10 @@ pub fn unmark_readonly(location: String) -> Result<(), BeansError>
 {
     if !crate::helper::file_exists(location.clone())
     {
-        debug!("[windows::unmark_readonly] {}", t!("error.find.file" file = location));
+        debug!(
+            "[windows::unmark_readonly] {}",
+            t!("error.find.file" file = location)
+        );
         return Ok(());
     }
 

@@ -14,6 +14,7 @@ macro_rules! print {
 pub const OVERRIDE_ICON_LOCATION: Option<&'static str> = option_env!("ICON_LOCATION");
 pub const RUST_FLAGS: Option<&'static str> = option_env!("RUSTFLAGS");
 
+// Do not localize this file
 fn main()
 {
     windows_icon().expect("Failed to embed icon");

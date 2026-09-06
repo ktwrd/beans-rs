@@ -99,7 +99,10 @@ fn find_steam_reg_path() -> Result<String, BeansError>
     }
     error!(
         "{}",
-        t!("error.registry.not_in_entry", registry = "STEAM_POSSIBLE_DIR")
+        t!(
+            "error.registry.not_in_entry",
+            registry = "STEAM_POSSIBLE_DIR"
+        )
     );
     Err(BeansError::SteamNotFound)
 }

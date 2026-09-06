@@ -1,0 +1,9 @@
+text:
+  panic:
+    en: |
+      %{error}
+      ================
+      Something has gone terribly wrong!
+      
+      The developers have been notified, and we're (hopefully) getting
+      to fixing the issue.

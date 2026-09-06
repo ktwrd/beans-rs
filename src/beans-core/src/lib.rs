@@ -8,6 +8,10 @@ pub mod helper;
 pub mod path;
 pub mod version;
 
+#[macro_use]
+extern crate rust_i18n;
+i18n!();
+
 /// NOTE do not change, fetches from the version of beans-rs on build
 pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 /// sentry url, change on fork please.
@@ -16,8 +20,6 @@ pub const SENTRY_URL: &str = "https://9df80170f0a4411bb9c834ac54734380@sentry.ka
 /// updates
 pub const GITHUB_RELEASES_URL: &str =
     "https://api.github.com/repositories/805393469/releases/latest";
-/// content to display when showing a message box on panic.
-pub const PANIC_MSG_CONTENT: &str = include_str!("text/msgbox_panic_text.txt");
 /// once everything is done, do we wait for the user to press enter before
 /// exiting?
 ///
@@ -84,7 +86,10 @@ pub fn has_gui_support() -> bool
         }
         _ =>
         {
-            log::warn!("Unsupported platform for GUI {}", std::env::consts::OS);
+            log::warn!(
+                "{}",
+                t!("error.bad_gui_platform", platform = std::env::consts::OS)
+            );
             false
         }
     }

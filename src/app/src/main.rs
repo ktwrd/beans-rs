@@ -4,7 +4,6 @@ rust_i18n::i18n!();
 use std::str::FromStr;
 
 use beans_core::{BeansError,
-                 PANIC_MSG_CONTENT,
                  PAUSE_ONCE_DONE,
                  PROMPT_DO_WHATEVER,
                  appvar::AppVarData,
@@ -157,11 +156,7 @@ fn custom_panic_handle(msg: String)
             return;
         }
     }
-    let txt = PANIC_MSG_CONTENT
-        .to_string()
-        .replace("$err_msg", &msg)
-        .replace("\\n", "\n");
-
+    let txt = t!("text.panic", error = &msg).to_string();
     beans_rs::gui::DialogBuilder::new()
         .with_title(format!(
             "{} - {}",
