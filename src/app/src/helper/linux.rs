@@ -44,7 +44,7 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
                 .last()
                 .expect(&format!(
                     "{}",
-                    t!("error.find", item = "SourceModInstallPath")
+                    t!("error.find.any", item = "SourceModInstallPath")
                 ))
                 .trim()
                 .replace("\"", "");
@@ -99,7 +99,7 @@ fn find_steam_reg_path() -> Result<String, BeansError>
     }
     error!(
         "{}",
-        t!("error.not_in_reg_entry", registry = "STEAM_POSSIBLE_DIR")
+        t!("error.registry.not_in_entry", registry = "STEAM_POSSIBLE_DIR")
     );
     Err(BeansError::SteamNotFound)
 }

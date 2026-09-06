@@ -83,7 +83,6 @@ info:
     created:
       en: "Created backup at %{item}"
   
-
 aria2:
   args:
     custom:

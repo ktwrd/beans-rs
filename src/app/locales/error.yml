@@ -57,11 +57,17 @@ error:
   decompress:
     en: "Failed to decompress file"
   find:
-    en: "Failed to find %{item}"
+    file:
+      en: "File does not exist: %{file}"
+    any:
+      en: "Failed to find %{item}"
   returned_none:
     en: "%{function} returned None!"
-  not_in_reg_entry:
-    en: "Couldn't find any of the locations in %{registry}"
+  registry:
+    not_in_entry:
+      en: "Couldn't find any of the locations in %{registry}"
+    steam_not_found:
+      en: "Failed to find HKCU\\Software\\Valve. Steam might not be installed"
   data_length:
     en: "Failed to get length of data to download"
   write:

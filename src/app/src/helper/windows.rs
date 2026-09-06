@@ -25,15 +25,14 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
             {
                 Ok(val) => Ok(format_directory_path(val)),
                 Err(e) => Err(BeansError::RegistryKeyFailure {
-                    msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed"
-                        .to_string(),
+                    msg: t!("error.registry.steam_not_found"),
                     error: e,
                     backtrace: Backtrace::capture()
                 })
             }
         }
         Err(e) => Err(BeansError::RegistryKeyFailure {
-            msg: "Failed to find HKCU\\Software\\Valve. Steam might not be installed".to_string(),
+            msg: t!("error.registry.steam_not_found"),
             error: e,
             backtrace: Backtrace::capture()
         })
@@ -47,7 +46,7 @@ pub fn unmark_readonly(location: String) -> Result<(), BeansError>
 {
     if !crate::helper::file_exists(location.clone())
     {
-        debug!("[windows::unmark_readonly] file does not exist: {location:}");
+        debug!("[windows::unmark_readonly] {}", t!("error.find.file" file = location));
         return Ok(());
     }
 
@@ -87,8 +86,8 @@ pub fn unmark_readonly(location: String) -> Result<(), BeansError>
         Err(e) =>
         {
             let hr = e.code().0;
-            debug!("file.name={s}");
-            debug!("file.attr={new_attr:#?}");
+            debug!("file.name={}", s);
+            debug!("file.attr={:#?}", new_attr);
             Err(BeansError::WindowsSetFileAttributeError {
                 hresult: hr,
                 hresult_msg: e.message(),
@@ -106,7 +105,7 @@ fn set_file_attributes_win<P: AsRef<OsStr>>(
 {
     if let Some(location_str) = location.as_ref().to_str()
     {
-        if crate::helper::file_exists(format!("{location_str}"))
+        if crate::helper::file_exists(format!("{}", location_str))
         {
             let s = U16String::from_str(location_str);
             let mut a = attr.clone();
