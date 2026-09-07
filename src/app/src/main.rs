@@ -38,7 +38,7 @@ pub const DEFAULT_LOG_LEVEL_RELEASE: LevelFilter = LevelFilter::Info;
 pub const DEFAULT_LOG_LEVEL: LevelFilter = LevelFilter::Trace;
 #[cfg(not(debug_assertions))]
 pub const DEFAULT_LOG_LEVEL: LevelFilter = DEFAULT_LOG_LEVEL_RELEASE;
-
+pub const BIN_NAME: &str = env!("CARGO_BIN_NAME");
 fn main()
 {
     init_console();
@@ -160,7 +160,7 @@ fn custom_panic_handle(msg: String)
     beans_rs::gui::DialogBuilder::new()
         .with_title(format!(
             "{} - {}",
-            env!("CARGO_BIN_NAME"),
+            BIN_NAME,
             t!("error.fatal")
         ))
         .with_icon(DialogIconKind::Error)
@@ -197,7 +197,7 @@ impl Launcher
     {
         Arg::new("location")
             .long("location")
-            .help(t!("args.location.about", program = env!("CARGO_BIN_NAME")))
+            .help(t!("args.location.about", program = BIN_NAME))
             .required(false)
     }
     fn create_confirm_arg() -> Arg
@@ -210,7 +210,7 @@ impl Launcher
     }
     pub async fn run()
     {
-        let cmd = Command::new(env!("CARGO_BIN_NAME"))
+        let cmd = Command::new(BIN_NAME)
             .version(clap::crate_version!())
             .bin_name(clap::crate_name!())
             .subcommand(
@@ -246,7 +246,7 @@ impl Launcher
             )
             .subcommand(
                 Command::new("clean-tmp")
-                    .about(t!("commands.clean.about", program = env!("CARGO_BIN_NAME")))
+                    .about(t!("commands.clean.about", program = BIN_NAME))
             )
             .subcommand(
                 Command::new("uninstall")
@@ -267,14 +267,14 @@ impl Launcher
                     .action(ArgAction::SetTrue),
                 Arg::new("no-pause")
                     .long("no-pause")
-                    .help(t!("args.no-pause.about", program = env!("CARGO_BIN_NAME")))
+                    .help(t!("args.no-pause.about", program = BIN_NAME))
                     .action(ArgAction::SetTrue),
                 Self::create_location_arg(),
                 Self::create_confirm_arg()
             ]);
         println!(
             "{} v{} ({})",
-            env!("CARGO_BIN_NAME"),
+            BIN_NAME,
             beans_core::VERSION,
             COMPILED_ON
         );
@@ -290,7 +290,7 @@ impl Launcher
         {
             info!(
                 "{}",
-                t!("intro.new_version", program = env!("CARGO_BIN_NAME"))
+                t!("intro.new_version", program = BIN_NAME)
             );
             info!("{}", v.html_url);
         }
@@ -675,7 +675,7 @@ fn show_msgbox_error(text: String)
     beans_rs::gui::DialogBuilder::new()
         .with_title(format!(
             "{} - {}",
-            env!("CARGO_BIN_NAME"),
+            BIN_NAME,
             t!("error.fatal")
         ))
         .with_icon(DialogIconKind::Error)
