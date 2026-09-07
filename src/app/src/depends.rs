@@ -15,7 +15,6 @@ use beans_core::{BeansError,
                         join_path}};
 use log::{debug,
           error};
-use rust_i18n::t;
 
 use crate::helper;
 

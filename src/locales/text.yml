@@ -1,4 +1,16 @@
+_version: 2
+# IMPORTANT: Do not translate any values inside of %{}
+
 text:
+  menu: 
+    en: |
+      1 - Install or reinstall the game
+      2 - Check for and apply any available updates
+      3 - Verify and repair game files
+      c - Clean up temporary files
+      u - Uninstall %{game}
+      
+      q - Quit
   panic:
     en: |
       %{error}
@@ -7,3 +19,36 @@ text:
       
       The developers have been notified, and we're (hopefully) getting
       to fixing the issue.
+  install:
+    en: |
+    
+      Done! Make sure that the following is done;
+        1. Install Source SDK Base 2013 Multiplayer on Steam
+        2. Use the "previous2021" branch for Source SDK Base 2013 Multiplayer
+        3. Install Team Fortress 2
+        4. Restart Steam
+        5. Play %{game}
+  update:
+    en: |
+
+      Update complete! Make sure that the following is done;
+        1. Make sure that Source SDK Base 2013 Multiplayer is updated
+        2. Use the "previous2021" branch for Source SDK Base 2013 Multiplayer
+        3. Make sure that Team Fortress 2 has been updated
+        4. Launch %{game}
+  verify:
+    en: |
+
+      The verification process has completed, and any corruption has been repaired.
+  extra:
+    branch:
+      en: |
+
+        -- Important --
+        Use the "previous2021" branch for Source SDK Base 2013 Multiplayer
+    linux:
+      en: |
+
+        Make sure that Proton Experimental is enabled for both %{game} and Source SDK Base 2013 Multiplayer!
+    choice:
+      en: "Enter option below"

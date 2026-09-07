@@ -130,14 +130,8 @@ impl WizardContext
                 }
             }
         }
-        println!("1 - Install or reinstall the game");
-        println!("2 - Check for and apply any available updates");
-        println!("3 - Verify and repair game files");
-        println!("c - Clean up temporary files used by beans.");
-        println!("u - Uninstall {}", av.mod_info.name_stylized);
-        println!();
-        println!("q - Quit");
-        let user_input = helper::get_input("-- Enter option below --");
+        println!("{}", t!("text.menu", game = av.mod_info.name_stylized));
+        let user_input = helper::get_input(format!("-- {} --", t!("text.extra.choice")).replace("\n", "").as_str());
         match user_input.to_lowercase().as_str()
         {
             "1" | "install" => WizardContext::menu_error_catch(self.task_install().await),
