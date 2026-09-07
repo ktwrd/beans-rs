@@ -131,7 +131,7 @@ impl WizardContext
             }
         }
         println!("{}", t!("text.menu", game = av.mod_info.name_stylized));
-        let user_input = helper::get_input(format!("-- {} --", t!("text.extra.choice")).replace("\n", "").as_str());
+        let user_input = helper::get_input(format!("-- {} --", t!("text.extra.choice")).as_str());
         match user_input.to_lowercase().as_str()
         {
             "1" | "install" => WizardContext::menu_error_catch(self.task_install().await),
