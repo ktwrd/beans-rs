@@ -43,19 +43,27 @@ impl WizardContext
         if let Err(e) = depends::try_install_vcredist().await
         {
             sentry::capture_error(&e);
-            println!("Failed to install vcredist! {:}", e);
+
+            println!(
+                "{} {:}",
+                t!("error.install", item = t!("dependency.software.vcredist")),
+                e
+            );
             debug!("[WizardContext::run] {:#?}", e);
         }
         let sourcemod_path = parse_location(match sml_via
         {
             SourceModDirectoryParam::AutoDetect =>
             {
-                debug!("[WizardContext::run] Auto-detecting sourcemods directory");
+                debug!("[WizardContext::run] {}", t!("tasks.detecting_sm_dir"));
                 get_path()
             }
             SourceModDirectoryParam::WithLocation(loc) =>
             {
-                debug!("[WizardContext::run] Using specified location {}", loc);
+                debug!(
+                    "[WizardContext::run] {}",
+                    t!("args.location", location = loc)
+                );
                 loc
             }
         });
@@ -64,7 +72,10 @@ impl WizardContext
             Ok(v) => v,
             Err(e) =>
             {
-                trace!("[WizardContext::run] Failed to run version::get_version_list()");
+                trace!(
+                    "[WizardContext::run] {}",
+                    t!("error.run", task = "version::get_version_list()")
+                );
                 trace!("{:#?}", e);
                 sentry::capture_error(&e);
                 return Err(e);
@@ -97,15 +108,13 @@ impl WizardContext
         {
             if crate::aria2::get_executable_location().is_none()
             {
-                info!(
-                    "Could not find aria2c!\nFor faster downloads, install it with your package manager (usually called \"aria2\")"
-                );
+                info!("{}", t!("aria2.missing"));
             }
         }
 
         if get_disable_aria2c() && crate::aria2::get_executable_location().is_some()
         {
-            info!("== aria2c support disabled, even though it's available ==");
+            info!("== {} ==", t!("aria2.disable"));
         }
     }
 
@@ -123,8 +132,13 @@ impl WizardContext
                 if cv < rv
                 {
                     println!(
-                        "======== A new update for {} is available! (latest: v{}, current: v{}) ========",
-                        av.mod_info.name_stylized, rv, cv
+                        "======== {} ========",
+                        t!(
+                            "info.update_available",
+                            game = av.mod_info.name_stylized,
+                            remote = rv,
+                            current = cv
+                        )
                     );
                     println!();
                 }
@@ -145,7 +159,7 @@ impl WizardContext
             "d" | "debug" =>
             {
                 flags::add_flag(LaunchFlag::DEBUG_MODE);
-                info!("Debug mode enabled!");
+                info!("{}", t!("debug.enabled"));
                 self.menu().await;
             }
             "panic" =>
@@ -155,7 +169,7 @@ impl WizardContext
             "q" => std::process::exit(0),
             _ =>
             {
-                println!("Unknown option \"{}\"", user_input);
+                println!("{} \"{}\"", t!("error.bad_choice"), user_input);
                 self.menu_trigger_count += 1;
                 self.menu().await;
             }
@@ -182,13 +196,13 @@ impl WizardContext
     {
         if let Err(e) = UpdateWorkflow::wizard(&mut self.context).await
         {
-            error!("Failed to run UpdateWorkflow {:#?}", e);
+            error!("{} {:#?}", t!("error.run", task = "UpdateWorkflow"), e);
             return Err(e);
         }
 
         if let Err(e) = CleanWorkflow::wizard(&mut self.context)
         {
-            error!("Failed to run CleanWorkflow {:#?}", e);
+            error!("{} {:#?}", t!("error.run", task = "CleanWorkflow"), e);
             return Err(e);
         }
         Ok(())
@@ -203,7 +217,7 @@ impl WizardContext
 fn get_path() -> String
 {
     find_sourcemod_path().unwrap_or_else(|e| {
-        error!("[get_path] Failed to automatically detect sourcemods folder!");
+        error!("[get_path] {}", t!("error.missing_sm_dir"));
         debug!("{:#?}", e);
         prompt_sourcemod_location()
     })
@@ -211,15 +225,15 @@ fn get_path() -> String
 
 fn prompt_sourcemod_location() -> String
 {
-    let res = helper::get_input("Please provide your sourcemods folder, then press enter.");
+    let res = helper::get_input(&t!("args.sm_dir"));
     if !file_exists(res.clone())
     {
-        eprintln!("The location you provided doesn't exist. Try again.");
+        eprintln!("{}", t!("error.directory.missing"));
         prompt_sourcemod_location()
     }
     else if !is_directory(res.clone())
     {
-        eprintln!("The location you provided isn't a folder. Try again.");
+        eprintln!("{}", t!("error.directory.bad"));
         prompt_sourcemod_location()
     }
     else

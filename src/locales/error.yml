@@ -5,6 +5,10 @@ error:
   directory:
     create:
       en: "Failed to create directory"
+    missing:
+      en: "The location you provided doesn't exist. Try again."
+    bad:
+      en: "The location you provided isn't a folder. Try again."
   console:
     title:
       en: "Failed to set console title"
@@ -87,3 +91,7 @@ error:
     en: "Failed to delete existing file, lets hope things don't break."
   bad_gui_platform:
     en: "Unsupported platform for GUI: %{platform}"
+  bad_choice:
+    en: "Unknown option"
+  missing_sm_dir:
+    en: "Failed to automatically detect sourcemods folder!"

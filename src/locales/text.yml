@@ -4,7 +4,7 @@ _version: 2
 text:
   menu: 
     en: |
-      1 - Install or reinstall the game
+      1 - Install or reinstall %{game}
       2 - Check for and apply any available updates
       3 - Verify and repair game files
       c - Clean up temporary files

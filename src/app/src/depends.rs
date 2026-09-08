@@ -142,7 +142,7 @@ pub async fn try_install_vcredist() -> Result<(), BeansError>
         .spawn()
         .expect(
             "{}",
-            t!("error.install" item = t!("dependency.software.vcredist"))
+            t!("error.install", item = t!("dependency.software.vcredist"))
         )
         .wait()?;
 

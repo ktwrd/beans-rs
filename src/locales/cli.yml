@@ -31,18 +31,24 @@ tasks:
       en: "Extracting %{count} files"
   check_space:
     en: "Checking if %{item} is in data"
+  detecting_sm_dir:
+    en: "Auto-detecting sourcemods directory"
     
 args:
   debug.about:
     en: "Enable debug logging"
-  no-debug.about:
+  no_debug.about:
     en: "Disable mode. Mainly used for debug builds to not spew into the console."
-  no-pause.about:
+  no_pause.about:
     en: "When provided, %{program} will not wait for user input before exiting. It is suggested that server owners use this for any of their scripts."
   location.about:
     en: "Manually specify sourcemods directory. When not provided, %{program} will automatically detect the sourcemods directory."
   confirm.about:
     en: "When prompted to do something (as a multi-choice option), the default option will be automatically chosen when this switch is provided, and there is a default multi-choice option available."
+  location:
+    en: "Using specified location: %{location}"
+  sm_dir:
+    en: "Please provide your sourcemods folder, then press enter."
     
 intro:
   contributor_list:
@@ -82,6 +88,8 @@ info:
   backup:
     created:
       en: "Created backup at %{item}"
+  update_available:
+    en: "A new update for %{game} is available! (latest: v%{remote}, current: v%{current}"
   
 aria2:
   args:
@@ -93,10 +101,17 @@ aria2:
     en: "Spawn process"
   use:
     en: "Using aria2c"
+  missing:
+    en: |
+      Could not find aria2c!
+      For faster downloads, install it with your package manager (usually called "aria2")
+
+  disable:
+    en: "aria2c support disabled, even though it's available"
 
 dependency:
   exists:
-    en: Seems like %{item} is already installed
+    en: "Seems like %{item} is already installed"
   install:
     en: "Installing %{item}"
   software:

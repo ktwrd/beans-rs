@@ -158,11 +158,7 @@ fn custom_panic_handle(msg: String)
     }
     let txt = t!("text.panic", error = &msg).to_string();
     beans_rs::gui::DialogBuilder::new()
-        .with_title(format!(
-            "{} - {}",
-            BIN_NAME,
-            t!("error.fatal")
-        ))
+        .with_title(format!("{} - {}", BIN_NAME, t!("error.fatal")))
         .with_icon(DialogIconKind::Error)
         .with_content(txt)
         .run();
@@ -245,8 +241,7 @@ impl Launcher
                     .arg(Launcher::create_location_arg())
             )
             .subcommand(
-                Command::new("clean-tmp")
-                    .about(t!("commands.clean.about", program = BIN_NAME))
+                Command::new("clean-tmp").about(t!("commands.clean.about", program = BIN_NAME))
             )
             .subcommand(
                 Command::new("uninstall")
@@ -263,21 +258,16 @@ impl Launcher
                     .action(ArgAction::SetTrue),
                 Arg::new("no-debug")
                     .long("no-debug")
-                    .help(t!("args.no-debug.about"))
+                    .help(t!("args.no_debug.about"))
                     .action(ArgAction::SetTrue),
                 Arg::new("no-pause")
                     .long("no-pause")
-                    .help(t!("args.no-pause.about", program = BIN_NAME))
+                    .help(t!("args.no_pause.about", program = BIN_NAME))
                     .action(ArgAction::SetTrue),
                 Self::create_location_arg(),
                 Self::create_confirm_arg()
             ]);
-        println!(
-            "{} v{} ({})",
-            BIN_NAME,
-            beans_core::VERSION,
-            COMPILED_ON
-        );
+        println!("{} v{} ({})", BIN_NAME, beans_core::VERSION, COMPILED_ON);
         println!("Copyright (c) 2024 Kate Ward");
         println!("License {}", env!("CARGO_PKG_LICENSE"));
         println!();
@@ -288,10 +278,7 @@ impl Launcher
         let mut i = Self::new(&cmd.get_matches());
         if let Ok(Some(v)) = helper::beans_has_update().await
         {
-            info!(
-                "{}",
-                t!("intro.new_version", program = BIN_NAME)
-            );
+            info!("{}", t!("intro.new_version", program = BIN_NAME));
             info!("{}", v.html_url);
         }
         i.subcommand_processor().await;
@@ -673,11 +660,7 @@ impl Launcher
 fn show_msgbox_error(text: String)
 {
     beans_rs::gui::DialogBuilder::new()
-        .with_title(format!(
-            "{} - {}",
-            BIN_NAME,
-            t!("error.fatal")
-        ))
+        .with_title(format!("{} - {}", BIN_NAME, t!("error.fatal")))
         .with_icon(DialogIconKind::Error)
         .with_content(text.replace("\\n", "\n"))
         .run();
