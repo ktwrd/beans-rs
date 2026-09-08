@@ -205,7 +205,13 @@ impl InstallWorkflow
     fn install_from_post()
     {
         let av = AppVarData::get();
-        println!("{}", av.sub(INSTALL_FINISH_MSG.to_string()));
+        let mut msg: String = t!("text.install", game = av.mod_info.name_stylized).to_string()
+            + &t!("text.extra.branch").to_string();
+        #[cfg(not(target_os = "windows"))]
+        {
+            msg += &t!("text.extra.linux", game = av.mod_info.name_stylized);
+        }
+        println!("{}", msg);
         debug!("[InstallWorkflow::install_from] Displayed INSTALL_FINISH_MSG");
 
         #[cfg(target_os = "windows")]
@@ -221,8 +227,3 @@ impl InstallWorkflow
         });
     }
 }
-
-#[cfg(not(target_os = "windows"))]
-pub const INSTALL_FINISH_MSG: &str = include_str!("../text/install_complete_linux.txt");
-#[cfg(target_os = "windows")]
-pub const INSTALL_FINISH_MSG: &str = include_str!("../text/install_complete_windows.txt");
