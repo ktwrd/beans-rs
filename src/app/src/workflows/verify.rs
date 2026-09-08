@@ -68,7 +68,12 @@ impl VerifyWorkflow
     fn post_verify_msg()
     {
         let av = AppVarData::get();
-        println!("{}", av.sub(VERIFY_FINISH_MSG.to_string()));
+        let mut msg: String = t!("text.verify").to_string() + &t!("text.extra.branch").to_string();
+        #[cfg(not(target_os = "windows"))]
+        {
+            msg += &t!("text.extra.linux", game = av.mod_info.name_stylized);
+        }
+        println!("{}", msg);
         debug!("[VerifyWorkflow::post_verify_msg] Displayed INSTALL_FINISH_MSG");
 
         #[cfg(target_os = "windows")]
@@ -84,8 +89,3 @@ impl VerifyWorkflow
         });
     }
 }
-
-#[cfg(not(target_os = "windows"))]
-pub const VERIFY_FINISH_MSG: &str = include_str!("../text/verify_complete_linux.txt");
-#[cfg(target_os = "windows")]
-pub const VERIFY_FINISH_MSG: &str = include_str!("../text/verify_complete_windows.txt");
