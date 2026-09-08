@@ -128,7 +128,13 @@ impl UpdateWorkflow
     fn post_update_msg()
     {
         let av = AppVarData::get();
-        println!("{}", av.sub(UPDATE_FINISH_MSG.to_string()));
+        let mut msg: String = t!("text.update", game = av.mod_info.name_stylized).to_string()
+            + &t!("text.extra.branch").to_string();
+        #[cfg(not(target_os = "windows"))]
+        {
+            msg += &t!("text.extra.linux", game = av.mod_info.name_stylized);
+        }
+        println!("{}", msg);
         debug!("[UpdateWorkflow::post_update_msg] Displayed INSTALL_FINISH_MSG");
 
         #[cfg(target_os = "windows")]
@@ -144,8 +150,3 @@ impl UpdateWorkflow
         });
     }
 }
-
-#[cfg(not(target_os = "windows"))]
-pub const UPDATE_FINISH_MSG: &str = include_str!("../text/update_complete_linux.txt");
-#[cfg(target_os = "windows")]
-pub const UPDATE_FINISH_MSG: &str = include_str!("../text/update_complete_windows.txt");
