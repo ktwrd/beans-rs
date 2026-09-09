@@ -27,7 +27,7 @@ error:
   parse:
     version: 
       en: "Failed to parse version argument"
-    any:
+    item:
       en: "Failed to parse %{item}"
   aria2:
     spawn:
@@ -48,7 +48,7 @@ error:
   remove:
     installer:
       en: "Failed to remove installer" 
-    any:
+    item:
       en: "Failed to remove %{item}"
   butler:
     code:
@@ -63,8 +63,10 @@ error:
   find:
     file:
       en: "File does not exist: %{file}"
-    any:
+    item:
       en: "Failed to find %{item}"
+    folder:
+      en: "Failed to find %{folder} folder."
   returned_none:
     en: "%{function} returned None!"
   registry:

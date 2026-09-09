@@ -45,9 +45,8 @@ pub fn try_write_deps()
             error!("[depends::try_write_deps] {:#?}", e);
         }
         debug!(
-            "[depends::try_write_deps] {} {}",
-            t!("info.permissions.set"),
-            get_butler_location()
+            "[depends::try_write_deps] {}",
+            t!("info.permissions.set", location = get_butler_location())
         );
     }
 }

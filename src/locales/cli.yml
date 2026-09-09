@@ -70,7 +70,7 @@ info:
     en: "Press enter/return to exit"
   permissions:
     set:
-      en: "Set perms on"
+      en: "Set permissions on %{location}"
   extracted:
     en: "Extracted:"
   extracting:

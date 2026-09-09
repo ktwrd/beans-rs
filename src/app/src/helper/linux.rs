@@ -44,7 +44,7 @@ pub fn find_sourcemod_path() -> Result<String, BeansError>
                 .last()
                 .expect(&format!(
                     "{}",
-                    t!("error.find.any", item = "SourceModInstallPath")
+                    t!("error.find.item", item = "SourceModInstallPath")
                 ))
                 .trim()
                 .replace("\"", "");
