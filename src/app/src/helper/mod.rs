@@ -486,7 +486,7 @@ pub async fn beans_has_update() -> Result<Option<GithubReleaseItem>, BeansError>
             };
             trace!(
                 "[beans_rs::beans_has_update] {} {:}\n{:#?}",
-                t!("error.deserialize_gh_url"),
+                t!("error.deserialize.from_url", item = "GithubReleaseItem"),
                 GITHUB_RELEASES_URL,
                 error
             );

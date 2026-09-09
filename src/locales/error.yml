@@ -80,8 +80,9 @@ error:
     en: "Failed to write content to file"
   latest_release:
     en: "Failed to get latest release from github:"
-  deserialize_gh_url:
-    en: "Failed to deserialize GithubReleaseItem from URL"
+  deserialize:
+    from_url:
+      en: "Failed to deserialize %{item} from URL"
   backup:
     write:
         en: "Failed to write backup: %{item}"
