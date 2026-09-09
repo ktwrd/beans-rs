@@ -42,7 +42,7 @@ error:
   extract:
     en: "Failed to extract: %{location}"
   unpack:
-    en: "Failed to unpack file"
+    en: "Failed to unpack %{file}"
   install:
     en: "Failed to install %{item}!"
   remove:

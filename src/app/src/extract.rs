@@ -147,9 +147,8 @@ pub fn unpack_tarball(
                     {
                         pb.finish_and_clear();
                         error!(
-                            "[extract::unpack_tarball] {} {} ({:})",
-                            t!("error.unpack"),
-                            filename,
+                            "[extract::unpack_tarball] {} ({:})",
+                            t!("error.unpack", file = filename),
                             error
                         );
                         return Err(BeansError::TarUnpackItemFailure {
@@ -188,7 +187,7 @@ pub fn unpack_tarball(
                 );
                 error!(
                     "[extract::unpack_tarball] {} ({:})",
-                    t!("error.unpack"),
+                    t!("error.unpack", file = tarball_location.clone()),
                     error
                 );
                 return Err(BeansError::TarExtractFailure {
