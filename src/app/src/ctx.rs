@@ -42,9 +42,14 @@ impl RunnerContext
         if let Err(e) = depends::try_install_vcredist().await
         {
             sentry::capture_error(&e);
-            println!("Failed to install vcredist! {:}", e);
+            println!(
+                "{} {:}",
+                t!("error.install", item = t!("dependency.software.vcredist")),
+                e
+            );
             debug!(
-                "[RunnerContext::create_auto] Failed to install vcredist! {:#?}",
+                "[RunnerContext::create_auto] {} {:#?}",
+                t!("error.install", item = t!("dependency.software.vcredist")),
                 e
             );
         }
@@ -57,7 +62,8 @@ impl RunnerContext
                 {
                     sentry::capture_error(&e);
                     debug!(
-                        "[RunnerContext::create_auto] Failed to find sourcemods folder. {:#?}",
+                        "[RunnerContext::create_auto] {} {:#?}",
+                        t!("error.find.folder", folder = "sourcemod"),
                         e
                     );
                     return Err(BeansError::SourceModLocationNotFound);
@@ -66,8 +72,8 @@ impl RunnerContext
             SourceModDirectoryParam::WithLocation(l) =>
             {
                 debug!(
-                    "[RunnerContext::create_auto] Using specified location {}",
-                    l
+                    "[RunnerContext::create_auto] {}",
+                    t!("args.location", location = l)
                 );
                 l
             }
@@ -236,7 +242,8 @@ impl RunnerContext
                 return Err(xe);
             }
             debug!(
-                "[RunnerContext::gameinfo_perms] set permissions on {location} to {:#?}",
+                "[RunnerContext::gameinfo_perms] {}: {:#?}",
+                t!("info.permissions.set", location = location),
                 perm
             );
         }
@@ -262,7 +269,7 @@ impl RunnerContext
         {
             if !helper::has_free_space(out_loc.clone(), size)?
             {
-                panic!("Not enough free space to install latest version!");
+                panic!("{}", t!("error.free_space.latest"));
             }
         }
 
@@ -273,12 +280,15 @@ impl RunnerContext
         };
         out_loc = join_path(out_loc, out_filename);
 
-        info!("[RunnerContext::download_package] writing to {}", out_loc);
+        info!(
+            "[RunnerContext::download_package] {}",
+            t!("tasks.write", location = out_loc)
+        );
         helper::download_with_progress(
             format!(
                 "{}{}",
                 &av.remote_info.base_url,
-                version.file.expect("No URL for latest package!")
+                version.file.expect(&t!("error.missing_url"))
             ),
             out_loc.clone()
         )
@@ -300,8 +310,10 @@ impl RunnerContext
         {
             debug!("{:#?}", e);
             error!(
-                "[RunnerContext::extract_package] Failed to decompress file {} ({:})",
-                zstd_location, e
+                "[RunnerContext::extract_package] {} {} ({:})",
+                t!("error.decompress"),
+                zstd_location,
+                e
             );
             return Err(e);
         }
@@ -309,8 +321,9 @@ impl RunnerContext
         {
             debug!("{:#?}", e);
             error!(
-                "[RunnerContext::extract_package] Failed to unpack tarball {} ({:})",
-                tar_tmp_location, e
+                "[RunnerContext::extract_package] {} ({:})",
+                t!("error.unpack", file = tar_tmp_location,),
+                e
             );
             return Err(e);
         }
@@ -320,12 +333,14 @@ impl RunnerContext
             {
                 sentry::capture_error(&e);
                 error!(
-                    "[RunnerContext::extract_package] Failed to delete temporary file: {:}",
+                    "[RunnerContext::extract_package] {} {:}",
+                    t!("error.delete.temporary"),
                     e
                 );
                 debug!(
-                    "[RunnerContext::extract_package] Failed to delete {}\n{:#?}",
-                    tar_tmp_location, e
+                    "[RunnerContext::extract_package] {}\n{:#?}",
+                    t!("error.delete.item", item = tar_tmp_location),
+                    e
                 );
             }
         }
@@ -346,8 +361,9 @@ impl RunnerContext
                 if let Err(e) = std::fs::remove_file(&ln_location)
                 {
                     debug!(
-                        "[RunnerContext::prepare_symlink] failed to remove {}\n{:#?}",
-                        ln_location, e
+                        "[RunnerContext::prepare_symlink] {}\n{:#?}",
+                        t!("error.remove.item", item = ln_location),
+                        e
                     );
                     return Err(e.into());
                 }

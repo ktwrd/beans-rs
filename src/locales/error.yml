@@ -89,8 +89,13 @@ error:
       en: "Can't backup since %{item} doesn't exist"
   read:
     en: "Failed to read content of %{file}"
-  delete.existing:
-    en: "Failed to delete existing file, lets hope things don't break."
+  delete:
+    existing:
+      en: "Failed to delete existing file, lets hope things don't break."
+    temporary:
+      en: "Failed to delete temporary file"
+    item:
+      en: "Failed to delete %{item}"
   bad_gui_platform:
     en: "Unsupported platform for GUI: %{platform}"
   bad_choice:
