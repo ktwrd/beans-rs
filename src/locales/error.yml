@@ -108,5 +108,5 @@ error:
       en: "Not enough free space to install latest version!"
     folder:
       en: "Not enough free space in %{folder}"
-  missing_url:
+  url.missing:
     en: "No URL for latest package!"

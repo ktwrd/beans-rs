@@ -288,7 +288,7 @@ impl RunnerContext
             format!(
                 "{}{}",
                 &av.remote_info.base_url,
-                version.file.expect(&t!("error.missing_url"))
+                version.file.expect(&t!("error.url.missing"))
             ),
             out_loc.clone()
         )
