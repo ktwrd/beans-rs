@@ -33,6 +33,8 @@ tasks:
     en: "Checking if %{item} is in data"
   detecting_sm_dir:
     en: "Auto-detecting sourcemods directory"
+  write:
+    en: "Writing to %{location}"
     
 args:
   debug.about:
@@ -72,11 +74,11 @@ info:
     set:
       en: "Set permissions on %{location}"
   extracted:
-    en: "Extracted:"
+    en: "Extracted: %{item}"
   extracting:
     en: "Extracting files"
   space:
-    en: "Storage space:"
+    en: "Storage space: %{location} - %{space}"
   downloading:
     en: "Downloading"
   response:

@@ -61,18 +61,16 @@ fn safe_write_file(
         {
             sentry::capture_error(&e);
             error!(
-                "[depends::try_write_deps] {} {}",
-                t!("error.extract"),
-                location
+                "[depends::try_write_deps] {}",
+                t!("error.extract", location = location)
             );
             error!("[depends::try_write_deps] {:#?}", e);
         }
         else
         {
             debug!(
-                "[depends::try_write_deps] {} {}",
-                t!("info.extracted"),
-                location
+                "[depends::try_write_deps] {}",
+                t!("info.extracted", location = location)
             );
         }
     }

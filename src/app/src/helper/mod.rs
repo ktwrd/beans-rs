@@ -272,10 +272,8 @@ pub fn get_free_space(location: String) -> Result<u64, BeansError>
         if let Some(mp) = disk.mount_point().to_str()
         {
             debug!(
-                "[get_free_space] {} {} {}",
-                t!("info.space"),
-                mp,
-                disk.available_space()
+                "[get_free_space]{}",
+                t!("info.space", location = mp, space = disk.available_space()),
             );
             data.insert(mp.to_string(), disk.available_space());
         }

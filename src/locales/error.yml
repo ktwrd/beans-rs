@@ -40,7 +40,7 @@ error:
     update:
       en: "Failed to update permissions on %{file}"
   extract:
-    en: "Failed to extract:"
+    en: "Failed to extract: %{location}"
   unpack:
     en: "Failed to unpack file"
   install:
@@ -97,3 +97,10 @@ error:
     en: "Unknown option"
   missing_sm_dir:
     en: "Failed to automatically detect sourcemods folder!"
+  free_space:
+    latest:
+      en: "Not enough free space to install latest version!"
+    folder:
+      en: "Not enough free space in %{folder}"
+  missing_url:
+    en: "No URL for latest package!"
