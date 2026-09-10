@@ -83,13 +83,18 @@ error:
   deserialize:
     from_url:
       en: "Failed to deserialize %{item} from URL"
+    data:
+      en: "Failed to deserialize data at %{location}"
   backup:
     write:
         en: "Failed to write backup: %{item}"
     missing_source:
       en: "Can't backup since %{item} doesn't exist"
   read:
-    en: "Failed to read content of %{file}"
+    file:
+      en: "Failed to read %{file}"
+    version:
+      en: "Failed to read mod version file"
   delete:
     existing:
       en: "Failed to delete existing file, lets hope things don't break."
@@ -110,3 +115,28 @@ error:
       en: "Not enough free space in %{folder}"
   url.missing:
     en: "No URL for latest package!"
+  # Do not translate the word "usize"
+  version:
+    usize:
+      generated:
+        en: "Failed to get generated version file's usize"
+      item:
+        en: Failed to convert version to usize! (%{item})
+  open.item:
+    en:
+      "Failed to open %{item}"
+  vpk:
+    missing:
+      en: "VPK not found"
+    item:
+      en: "%{item} not found in %{pack}"
+  filemap:
+    local.version:
+      en: "Local version not found in remote filemap. Remote FileMap potentially outdated."
+    remote.version:
+      en: "Failed to get available versions from URL %{url}"
+  adastral.set:
+    en: "Failed to set version to %{version} in .adastral"
+  reqwest:
+    create:
+      en: "Failed to create reqwest client (with user agent: %{agent}"

@@ -607,7 +607,7 @@ pub fn backup_gameinfo(ctx: &mut RunnerContext) -> Result<(), BeansError>
             debug!("error: {:#?}", e);
             error!(
                 "[helper::backup_gameinfo] {} {:}",
-                t!("error.read", file = "gameinfo.txt"),
+                t!("error.read.file", file = "gameinfo.txt"),
                 e
             );
             return Err(BeansError::GameinfoBackupFailure {

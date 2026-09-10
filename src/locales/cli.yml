@@ -82,7 +82,7 @@ info:
   downloading:
     en: "Downloading"
   response:
-    en: "response data from URL"
+    en: "response data from URL:"
   location:
     en: "%{item} location:"
   metadata:
@@ -124,3 +124,12 @@ butler:
   exit:
     en:
       "Exited with"
+
+adastral:
+  generated:
+    en: "Generated .adastral file at location %{location}" 
+  data:
+    en: "location: %{location:}, content: %{data}"
+  # Do not translate the word "install_state"
+  state:
+    en: "install_state is %{state}, ignoring."

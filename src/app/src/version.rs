@@ -49,7 +49,8 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
                 trace!("{:#?}", e);
                 sentry::capture_error(&e);
                 panic!(
-                    "[WizardContext::run] Failed to run version::generate_version_file. {:#?}",
+                    "[WizardContext::run] {} {:#?}",
+                    t!("error.run", task = "version::generate_version_file"),
                     e
                 );
             }
@@ -67,7 +68,8 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
                 debug!("{:#?}", ex);
                 sentry::capture_error(&ex);
                 panic!(
-                    "[version::get_current_version] Failed to get generated version file's usize. {:#?}",
+                    "[version::get_current_version] {} {:#?}",
+                    t!("error.version.usize"),
                     ex
                 );
             }
@@ -90,7 +92,7 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
                     };
                     debug!("{:#?}", ex);
                     sentry::capture_error(&ex);
-                    panic!("Failed to open {} {:#?}", location, ex);
+                    panic!("{} {:#?}", t!("error.open.item", item = location), ex);
                 }
             };
             let data: AdastralVersionFile = match serde_json::from_str(&content)
@@ -106,8 +108,9 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
                     debug!("{:#?}", ex);
                     sentry::capture_error(&ex);
                     panic!(
-                        "[version::get_current_version] Failed to deserialize data at {} {:#?}",
-                        location, ex
+                        "[version::get_current_version] {} {:#?}",
+                        t!("error.deserialize.data", location = location),
+                        ex
                     )
                 }
             };
@@ -124,8 +127,9 @@ pub async fn get_current_version(sourcemods_location: Option<String>) -> Option<
                     debug!("{:#?}", ex);
                     sentry::capture_error(&ex);
                     panic!(
-                        "[version::get_current_version] Failed to convert version to usize! ({}) {:#?}",
-                        data.version, ex
+                        "[version::get_current_version] {} {:#?}",
+                        t!("error.version.usize.item", item = data.version),
+                        ex
                     )
                 }
             };
@@ -164,8 +168,8 @@ async fn read_mod_version_file(
             Err(e) =>
             {
                 error!(
-                    "[version::read_mod_verion_file] Failed to read {}. {:}",
-                    mod_version_full_path.clone(),
+                    "[version::read_mod_verion_file] {} {:}",
+                    t!("error.read.file", file = mod_version_full_path.clone()),
                     e
                 );
                 debug!("{:#?}", e);
@@ -186,7 +190,11 @@ async fn read_mod_version_file(
             Ok(v) => v,
             Err(e) =>
             {
-                error!("[version::read_mod_version_file] VPK not found. {:}", e);
+                error!(
+                    "[version::read_mod_version_file] {} {:}",
+                    t!("error.vpk.missing"),
+                    e
+                );
                 debug!("{:#?}", e);
                 return Err(BeansError::VpkOpenFailure {
                     location: files.version_file.clone(),
@@ -202,8 +210,13 @@ async fn read_mod_version_file(
             Err(e) =>
             {
                 error!(
-                    "[version::read_mod_version_file] {} not found in {}. {:}",
-                    files.version_file, files.pack_file, e
+                    "[version::read_mod_version_file] {} {:}",
+                    t!(
+                        "error.vpk.item",
+                        item = files.version_file,
+                        pack = files.pack_file
+                    ),
+                    e
                 );
                 debug!("{:#?}", e);
                 return Err(BeansError::VpkReadFailure {
@@ -220,8 +233,9 @@ async fn read_mod_version_file(
             Err(e) =>
             {
                 error!(
-                    "[version::read_mod_version_file] Failed to open {}. {:}",
-                    files.version_file, e
+                    "[version::read_mod_version_file] {} {:}",
+                    t!("error.open.item", item = files.version_file),
+                    e
                 );
                 debug!("{:#?}", e);
                 return Err(BeansError::VpkInternalFileReadFailure {
@@ -253,7 +267,8 @@ async fn generate_version_file(
         Err(e) =>
         {
             error!(
-                "[WizardContext::run] Failed to run version::get_file_map() {:#?}",
+                "[WizardContext::run] {} {:#?}",
+                t!("error.run", task = "version::get_file_map()"),
                 e
             );
             trace!("{:#?}", e);
@@ -269,7 +284,8 @@ async fn generate_version_file(
             Err(e) =>
             {
                 error!(
-                    "[version::read_mod_version_file] Failed to read mod version file. {:#?}",
+                    "[version::read_mod_version_file] {} {:#?}",
+                    t!("error.read.version"),
                     e
                 );
                 trace!("{:#?}", e);
@@ -297,7 +313,8 @@ async fn generate_version_file(
         };
         debug!("{:#?}", ex);
         error!(
-            "[version::generate_version_file] Local version not found in remote filemap. Remote FileMap potentially outdated. {:#?}",
+            "[version::generate_version_file] {} {:#?}",
+            t!("error.filemap.local.version"),
             ex
         );
         sentry::capture_error(&ex);
@@ -316,8 +333,8 @@ async fn generate_version_file(
         {
             debug!("{:#?}", e);
             error!(
-                "[version::generate_version_file] Failed to set version to {} in .adastral {:#?}",
-                adastral_value.clone(),
+                "[version::generate_version_file] {} {:#?}",
+                t!("error.adastral.set", version = adastral_value.clone()),
                 e
             );
             sentry::capture_error(&e);
@@ -331,7 +348,7 @@ async fn generate_version_file(
         None => return Err(BeansError::SourceModLocationNotFound)
     };
 
-    log::info!("Generated .adastral file at location {}", mod_path);
+    log::info!("{}", t!("adastral.generated", location = mod_path));
 
     Ok(mod_version_translation)
 }
@@ -382,7 +399,10 @@ pub fn set_current_version(
             let data = AdastralVersionFile {
                 version: format!("{new_version}")
             };
-            debug!("[set_current_version] location: {location:}, content: {data:?}");
+            debug!(
+                "[set_current_version] {}",
+                t!("adastral.data", location = location, data = data.version)
+            );
             let mut writer = BufWriter::new(file);
             match serde_json::to_writer(&mut writer, &data)
             {
@@ -438,23 +458,23 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
         InstallType::NotInstalled =>
         {
             debug!(
-                "[version::update_version_file] install_state is {:#?}, ignoring.",
-                install_state
+                "[version::update_version_file] {}",
+                t!("adstral.state", state = format!("{:#?}", install_state))
             );
         }
         InstallType::Adastral =>
         {
             debug!(
-                "[version::update_version_file] install_state is {:#?}, ignoring.",
-                install_state
+                "[version::update_version_file] {}",
+                t!("adstral.state", state = format!("{:#?}", install_state))
             );
         }
 
         InstallType::OtherSourceManual =>
         {
             debug!(
-                "[version::update_version_file] install_state is {:#?}, ignoring.",
-                install_state
+                "[version::update_version_file] {}",
+                t!("adstral.state", state = format!("{:#?}", install_state))
             );
         }
         InstallType::OtherSource =>
@@ -468,7 +488,8 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                     Err(e) =>
                     {
                         error!(
-                            "[version::update_version_file] Could not find sourcemods folder! {:}",
+                            "[version::update_version_file] {} {:}",
+                            t!("error.folder", folder = "sourcemod"),
                             e
                         );
                         debug!("{:#?}", e);
@@ -487,8 +508,9 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                 Err(e) =>
                 {
                     debug!(
-                        "[version::update_version_file] failed to read {}. {:#?}",
-                        old_version_file_location, e
+                        "[version::update_version_file] {} {:#?}",
+                        t!("error.read.file", file = old_version_file_location),
+                        e
                     );
                     sentry::capture_error(&e);
                     return Err(BeansError::VersionFileReadFailure {
@@ -503,8 +525,9 @@ pub fn update_version_file(sourcemods_location: Option<String>) -> Result<(), Be
                 Err(e) =>
                 {
                     debug!(
-                        "[version::update_version_file] Failed to parse content {} caused error {:}",
-                        old_version_file_content, e
+                        "[version::update_version_file] {} {:}",
+                        t!("error.parse.item", item = old_version_file_content),
+                        e
                     );
                     sentry::capture_error(&e);
                     return Err(BeansError::VersionFileParseFailure {
@@ -565,11 +588,8 @@ pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
         Ok(v) => v,
         Err(e) =>
         {
-            let message = format!(
-                "Failed to create reqwest client (with user agent: {:})",
-                user_agent
-            );
-            error!("[version::get_version_list] {message:} {:}", e);
+            let message = format!("{}", t!("error.reqwest.create", agent = user_agent));
+            error!("[version::get_version_list] {:} {:}", message, e);
             let error = BeansError::Reqwest {
                 error_message: message,
                 error: e,
@@ -587,10 +607,13 @@ pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
         Err(e) =>
         {
             let message = format!(
-                "Failed to get available versions from URL {:}",
-                av.remote_info.versions_url
+                "{:}",
+                t!(
+                    "error.filemap.remote.version",
+                    url = av.remote_info.versions_url
+                )
             );
-            error!("[version::get_version_list] {message} {:}", e);
+            error!("[version::get_version_list] {:} {:}", message, e);
             let error = BeansError::Reqwest {
                 error_message: message,
                 error: e,
@@ -603,7 +626,9 @@ pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
     };
     let response_text = response.text().await?;
     trace!(
-        "[version::get_version_list] response text: {}",
+        "[version::get_version_list] {} {}\n{}",
+        t!("info.response"),
+        av.remote_info.versions_url,
         response_text
     );
 
@@ -618,8 +643,12 @@ pub async fn get_version_list() -> Result<RemoteVersionResponse, BeansError>
                 backtrace: Backtrace::capture()
             };
             trace!(
-                "[version::get_version_list] failed to deserialize response from {:}\nerror: {:#?}",
-                av.remote_info.versions_url, error
+                "[version::get_version_list] {}\n{:#?}",
+                t!(
+                    "error.deserialize.data",
+                    location = av.remote_info.versions_url
+                ),
+                error
             );
             Err(error)
         }
@@ -636,10 +665,10 @@ pub async fn get_file_map() -> Result<RemoteFileMapResponse, BeansError>
         Err(e) =>
         {
             let message = format!(
-                "Failed to get available versions! {:}",
-                av.remote_info.versions_url
+                "{:}",
+                t!("error.filemap.remote.version", url = av.remote_info.versions_url)
             );
-            error!("[version::get_file_map] {message} {:}", e);
+            error!("[version::get_file_map] {} {:}", message, e);
             sentry::capture_error(&e);
             return Err(BeansError::Reqwest {
                 error_message: message,
@@ -649,7 +678,7 @@ pub async fn get_file_map() -> Result<RemoteFileMapResponse, BeansError>
         }
     };
     let response_text = response.text().await?;
-    trace!("[version::get_file_map] response text: {}", response_text);
+    trace!("[version::get_file_map] {} {}", t!("info.response"), response_text);
 
     let data: RemoteFileMapResponse = serde_json::from_str(&response_text)?;
     Ok(data)
