@@ -74,7 +74,7 @@ impl VerifyWorkflow
             msg += &t!("text.extra.linux", game = av.mod_info.name_stylized);
         }
         println!("{}", msg);
-        debug!("[VerifyWorkflow::post_verify_msg] Displayed INSTALL_FINISH_MSG");
+        debug!("[VerifyWorkflow::post_verify_msg] Displayed VERIFY_FINISH_MSG");
 
         #[cfg(target_os = "windows")]
         winconsole::window::show(true);

@@ -135,7 +135,7 @@ impl UpdateWorkflow
             msg += &t!("text.extra.linux", game = av.mod_info.name_stylized);
         }
         println!("{}", msg);
-        debug!("[UpdateWorkflow::post_update_msg] Displayed INSTALL_FINISH_MSG");
+        debug!("[UpdateWorkflow::post_update_msg] Displayed UPDATE_FINISH_MSG");
 
         #[cfg(target_os = "windows")]
         winconsole::window::show(true);
