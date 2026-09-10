@@ -666,7 +666,10 @@ pub async fn get_file_map() -> Result<RemoteFileMapResponse, BeansError>
         {
             let message = format!(
                 "{:}",
-                t!("error.filemap.remote.version", url = av.remote_info.versions_url)
+                t!(
+                    "error.filemap.remote.version",
+                    url = av.remote_info.versions_url
+                )
             );
             error!("[version::get_file_map] {} {:}", message, e);
             sentry::capture_error(&e);
@@ -678,7 +681,11 @@ pub async fn get_file_map() -> Result<RemoteFileMapResponse, BeansError>
         }
     };
     let response_text = response.text().await?;
-    trace!("[version::get_file_map] {} {}", t!("info.response"), response_text);
+    trace!(
+        "[version::get_file_map] {} {}",
+        t!("info.response"),
+        response_text
+    );
 
     let data: RemoteFileMapResponse = serde_json::from_str(&response_text)?;
     Ok(data)

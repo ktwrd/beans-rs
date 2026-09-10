@@ -61,12 +61,15 @@ impl AppVarData
     /// generated data, since this is only done by `AppVarData::reset()`.
     pub fn parse() -> Self
     {
-        debug!("[AppVarData::parse] trying to get JSON_DATA");
+        debug!(
+            "[AppVarData::parse] {}",
+            t!("tasks.parse", item = "JSON_DATA")
+        );
         match JSON_DATA.read()
         {
             Ok(data) =>
             {
-                debug!("[AppVarData::parse] JSON_DATA= {:#?}", data);
+                debug!("[AppVarData::parse] JSON_DATA = {:#?}", data);
                 match serde_json::from_str(&data)
                 {
                     Ok(v) => v,
@@ -78,7 +81,8 @@ impl AppVarData
                             backtrace: Backtrace::capture()
                         };
                         panic!(
-                            "Failed to deserialize embedded appvar.json!!!\n{:#?}",
+                            "{}\n{:#?}",
+                            t!("error.deserialize.embedded", item = "appvar.json"),
                             error
                         );
                     }
@@ -86,7 +90,11 @@ impl AppVarData
             }
             Err(e) =>
             {
-                panic!("[AppVarData::parse] Failed to read JSON_DATA {:#?}", e);
+                panic!(
+                    "[AppVarData::parse] {} {:#?}",
+                    t!("error.read.file", file = "JSON_DATA"),
+                    e
+                );
             }
         }
     }
@@ -104,13 +112,20 @@ impl AppVarData
             if let Some(x) = vc
             {
                 #[cfg(debug_assertions)]
-                debug!("[AppVarData::get] Instance exists in AVD_INSTANCE, so lets return that.");
+                debug!(
+                    "[AppVarData::get] {}",
+                    t!("info.exists.return", item = "AVD_INSTANCE")
+                );
                 return x;
             }
         }
         else if let Err(e) = avd_read
         {
-            panic!("[AppVarData::get] Failed to read AVD_INSTANCE {:#?}", e);
+            panic!(
+                "[AppVarData::get] {} {:#?}",
+                t!("error.read.file", file = "AVD_INSTANCE"),
+                e
+            );
         }
 
         Self::reset()
@@ -129,13 +144,21 @@ impl AppVarData
             {
                 *data = Some(instance.clone());
                 debug!(
-                    "[reset_appvar] set content of AVD_INSTANCE to {:#?}",
-                    instance
+                    "[reset_appvar] {}",
+                    t!(
+                        "tasks.content.set",
+                        source = "AVD_INSTANCE",
+                        content = instance
+                    )
                 );
             }
             Err(e) =>
             {
-                panic!("[AppVarData::reset] Failed to set AVD_INSTANCE! {:#?}", e);
+                panic!(
+                    "[AppVarData::reset] {} {:#?}",
+                    t!("error.set.item", item = "AVD_INSTANCE"),
+                    e
+                );
             }
         }
 
@@ -159,7 +182,9 @@ impl AppVarData
                 {
                     *ms = v.to_string();
                     debug!(
-                        "[AppVarData::set_json_data] successfully set data, calling reset_appvar()"
+                        "[AppVarData::set_json_data] {}, {}",
+                        t!("info.data.set"),
+                        t!("info.call", function = "reset_appvar()")
                     );
                 }
                 Self::reset();
@@ -168,7 +193,8 @@ impl AppVarData
             Err(e) =>
             {
                 error!(
-                    "[AppVarData::set_json_data] Failed to serialize data to string! {:}",
+                    "[AppVarData::set_json_data] {} {:}",
+                    t!("error.serialize.string"),
                     e
                 );
                 debug!("{:#?}", e);
