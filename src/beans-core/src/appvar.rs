@@ -91,22 +91,6 @@ impl AppVarData
         }
     }
 
-    /// Substitute values in the `source` string for what is defined in here.
-    pub fn sub(
-        &self,
-        source: String
-    ) -> String
-    {
-        source
-            .clone()
-            .replace("$MOD_NAME_STYLIZED", &self.mod_info.name_stylized)
-            .replace("$MOD_NAME_SHORT", &self.mod_info.short_name)
-            .replace("$MOD_NAME", &self.mod_info.sourcemod_name)
-            .replace("$URL_BASE", &self.remote_info.base_url)
-            .replace("$URL_VERSIONS", &self.remote_info.versions_url)
-            .replace("$URL_FILEMAP", &self.remote_info.filemap_url)
-    }
-
     /// Try and read the data from `AVD_INSTANCE` and return when some.
     /// Otherwise, when it's none, we return `AppVarData::reset()`
     ///
