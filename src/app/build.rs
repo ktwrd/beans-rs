@@ -51,12 +51,15 @@ fn path_exists(path: String) -> bool
 #[cfg(target_os = "windows")]
 fn windows_icon() -> Result<(), BuildError>
 {
-    let icon_location = OVERRIDE_ICON_LOCATION.unwrap_or("icon.ico");
+    let mut icon_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+    icon_path = icon_path.join("icon.ico");
+    let icon_location_default = icon_path.to_str().unwrap();
+    let icon_location = OVERRIDE_ICON_LOCATION.unwrap_or(icon_location_default);
     if env::var_os("CARGO_CFG_WINDOWS").is_some()
     {
         if !path_exists(icon_location.to_string())
         {
-            print!("icon.ico not found. Not embedding icon");
+            print!("Unable to embed icon since it wasn't found ({icon_location})");
             return Ok(());
         }
         WindowsResource::new()
