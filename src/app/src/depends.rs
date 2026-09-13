@@ -16,7 +16,7 @@ use beans_core::{BeansError,
                         get_tmp_dir}};
 use log::{debug,
           error};
-          
+
 #[cfg(target_os = "windows")]
 use crate::helper;
 
